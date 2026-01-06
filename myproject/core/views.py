@@ -1,9 +1,10 @@
+import os
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
@@ -13,8 +14,19 @@ from .serializers import (
     UserSerializer,
     UserRegistrationSerializer,
     UserLoginSerializer,
-    GoogleAuthSerializer
+    GoogleAuthSerializer,
+    ForgotPasswordSerializer,
+    ResetPasswordSerializer,
+    VerifyOTPSerializer,
+    ResetPasswordOTPSerializer
 )
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
+import random
+from django.utils import timezone
+from datetime import timedelta
 
 
 @api_view(['GET'])
@@ -35,6 +47,9 @@ def api_root(request):
                 'refresh_token': '/api/auth/refresh/',
                 'profile': '/api/auth/profile/',
                 'update_profile': '/api/auth/profile/update/',
+                'forgot_password': '/api/auth/forgot-password/',
+                'verify_otp': '/api/auth/verify-otp/',
+                'reset_password_otp': '/api/auth/reset-password-otp/',
             },
             'admin': '/admin/',
             'documentation': '/api/docs/',
@@ -299,5 +314,170 @@ def refresh_token_view(request):
     except Exception as e:
         return Response({
             'error': 'Invalid token',
+            'detail': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def forgot_password_view(request):
+    """
+    Send OTP via email
+    POST /api/auth/forgot-password/
+    Body: { "email": "user@example.com" }
+    """
+    serializer = ForgotPasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    email = serializer.validated_data['email']
+    try:
+        user = User.objects.get(email=email)
+        
+        # Generate 6-digit OTP
+        otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        user.otp = otp
+        user.otp_created_at = timezone.now()
+        user.save()
+        
+        # Send email
+        subject = 'Your LogiCT OTP'
+        message = f'Hi {user.name},\n\nYour OTP for password reset is: {otp}\n\nThis OTP is valid for 10 minutes. If you did not request this, please ignore this email.'
+        
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        
+        return Response({
+            'message': 'OTP has been sent to your email'
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response({
+            'message': 'If your email is registered, you will receive an OTP shortly'
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            'error': 'Failed to send OTP',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_otp_view(request):
+    """
+    Verify OTP
+    POST /api/auth/verify-otp/
+    Body: { "email": "user@example.com", "otp": "123456" }
+    """
+    serializer = VerifyOTPSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    email = serializer.validated_data['email']
+    otp = serializer.validated_data['otp']
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        # Check OTP
+        if user.otp != otp:
+            return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check expiry (10 minutes)
+        if timezone.now() > user.otp_created_at + timedelta(minutes=10):
+            return Response({'error': 'OTP has expired'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        return Response({'message': 'OTP verified successfully'}, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password_otp_view(request):
+    """
+    Reset password with OTP
+    POST /api/auth/reset-password-otp/
+    Body: { "email": "user@example.com", "otp": "123456", "new_password": "...", "confirm_password": "..." }
+    """
+    serializer = ResetPasswordOTPSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    email = serializer.validated_data['email']
+    otp = serializer.validated_data['otp']
+    new_password = serializer.validated_data['new_password']
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        # Verify OTP again
+        if user.otp != otp:
+            return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if timezone.now() > user.otp_created_at + timedelta(minutes=10):
+            return Response({'error': 'OTP has expired'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Update password
+        user.password = make_password(new_password)
+        user.otp = None  # Clear OTP after use
+        user.otp_created_at = None
+        user.save()
+        
+        return Response({'message': 'Password has been reset successfully'}, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password_view(request):
+    """
+    Reset password using token
+    POST /api/auth/reset-password/
+    Body: { "uidb64": "...", "token": "...", "new_password": "...", "confirm_password": "..." }
+    """
+    serializer = ResetPasswordSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    uidb64 = serializer.validated_data['uidb64']
+    token = serializer.validated_data['token']
+    new_password = serializer.validated_data['new_password']
+    
+    try:
+        # Decode user id
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+        
+        # Verify token
+        if not default_token_generator.check_token(user, token):
+            return Response({
+                'error': 'Invalid or expired token'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set new password
+        user.password = make_password(new_password)
+        user.save()
+        
+        return Response({
+            'message': 'Password has been reset successfully'
+        }, status=status.HTTP_200_OK)
+        
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        return Response({
+            'error': 'Invalid user identification'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({
+            'error': 'Reset password failed',
             'detail': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)

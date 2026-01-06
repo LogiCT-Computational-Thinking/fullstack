@@ -65,6 +65,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      return await authService.forgotPassword(email);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const resetPassword = async (resetData) => {
+    try {
+      return await authService.resetPassword(resetData);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const verifyOTP = async (email, otp) => {
+    try {
+      return await authService.verifyOTP(email, otp);
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const resetPasswordOTP = async (resetData) => {
+    try {
+      return await authService.resetPasswordOTP(resetData);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -73,6 +105,10 @@ export const AuthProvider = ({ children }) => {
     googleLogin,
     logout,
     updateProfile,
+    forgotPassword,
+    resetPassword,
+    verifyOTP,
+    resetPasswordOTP,
     isAuthenticated: !!user,
   };
 

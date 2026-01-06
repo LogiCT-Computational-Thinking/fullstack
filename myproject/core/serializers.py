@@ -110,3 +110,40 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = '__all__'
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    """Serializer for forgot password request"""
+    email = serializers.EmailField()
+
+
+class ResetPasswordSerializer(serializers.Serializer):
+    """Serializer for resetting password"""
+    uidb64 = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True, min_length=6)
+    confirm_password = serializers.CharField(write_only=True, min_length=6)
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
+        return data
+
+
+class VerifyOTPSerializer(serializers.Serializer):
+    """Serializer to verify OTP"""
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
+
+class ResetPasswordOTPSerializer(serializers.Serializer):
+    """Serializer to reset password with OTP"""
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(write_only=True, min_length=6)
+    confirm_password = serializers.CharField(write_only=True, min_length=6)
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
+        return data

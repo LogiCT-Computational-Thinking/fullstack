@@ -203,6 +203,7 @@ export default function Register() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -228,12 +229,12 @@ export default function Register() {
                   />
                   Remember me
                 </label>
-                <a
-                  href="#"
+                <Link
+                  to="/forgot-password"
                   className="text-xs text-slate-500 hover:underline"
                 >
                   Lupa Kata Sandi?
-                </a>
+                </Link>
               </div>
 
               {/* Sign Up Button */}

@@ -10,6 +10,8 @@ import Modules from './pages/Modules'
 import ProfilingQuiz from './pages/ProfilingQuiz'
 import QuizBank from './pages/QuizBank'
 import Settings from './pages/Settings'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function DashboardLayout() {
   const location = useLocation();
@@ -168,6 +170,8 @@ function App() {
         {/* Public Routes - No Layout */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
         <Route path="/quiz" element={<Quiz />} />
 
         {/* Dashboard Routes - With Layout */}

@@ -22,9 +22,16 @@ class User(models.Model):
     last_login = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    otp = models.CharField(max_length=6, blank=True, null=True)
+    otp_created_at = models.DateTimeField(blank=True, null=True)
 
     USERNAME_FIELD = 'email'
+    EMAIL_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
+
+    @classmethod
+    def get_email_field_name(cls):
+        return cls.EMAIL_FIELD
 
     def __str__(self):
         return f"{self.name} ({self.role})"

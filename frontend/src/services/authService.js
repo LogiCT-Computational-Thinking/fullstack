@@ -5,13 +5,13 @@ const authService = {
   register: async (userData) => {
     try {
       const response = await api.post('/auth/register/', userData);
-      
+
       if (response.data.tokens) {
         localStorage.setItem('access_token', response.data.tokens.access);
         localStorage.setItem('refresh_token', response.data.tokens.refresh);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -22,13 +22,13 @@ const authService = {
   login: async (email, password) => {
     try {
       const response = await api.post('/auth/login/', { email, password });
-      
+
       if (response.data.tokens) {
         localStorage.setItem('access_token', response.data.tokens.access);
         localStorage.setItem('refresh_token', response.data.tokens.refresh);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -42,13 +42,13 @@ const authService = {
         token: credential,
         role: role,
       });
-      
+
       if (response.data.tokens) {
         localStorage.setItem('access_token', response.data.tokens.access);
         localStorage.setItem('refresh_token', response.data.tokens.refresh);
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -59,7 +59,7 @@ const authService = {
   logout: async () => {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
-      
+
       if (refreshToken) {
         await api.post('/auth/logout/', { refresh: refreshToken });
       }
@@ -93,11 +93,11 @@ const authService = {
   updateProfile: async (userData) => {
     try {
       const response = await api.patch('/auth/profile/update/', userData);
-      
+
       if (response.data.user) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
-      
+
       return response.data;
     } catch (error) {
       throw error.response?.data || error.message;
@@ -112,6 +112,46 @@ const authService = {
   // Get access token
   getAccessToken: () => {
     return localStorage.getItem('access_token');
+  },
+
+  // Forgot password request
+  forgotPassword: async (email) => {
+    try {
+      const response = await api.post('/auth/forgot-password/', { email });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Reset password
+  resetPassword: async (resetData) => {
+    try {
+      const response = await api.post('/auth/reset-password/', resetData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Verify OTP
+  verifyOTP: async (email, otp) => {
+    try {
+      const response = await api.post('/auth/verify-otp/', { email, otp });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Reset password with OTP
+  resetPasswordOTP: async (resetData) => {
+    try {
+      const response = await api.post('/auth/reset-password-otp/', resetData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   },
 };
 
