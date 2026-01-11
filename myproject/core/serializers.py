@@ -1,0 +1,112 @@
+from rest_framework import serializers
+from .models import User, Course, Module, Quiz, QuizQuestion, Enrollment
+from django.contrib.auth.hashers import make_password
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer for User model"""
+    password = serializers.CharField(write_only=True, required=False)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'name', 'email', 'password', 'role', 'profilePicture']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'profilePicture': {'required': False}
+        }
+    
+    def create(self, validated_data):
+        """Create user with hashed password"""
+        if 'password' in validated_data:
+            validated_data['password'] = make_password(validated_data['password'])
+        return super().create(validated_data)
+    
+    def update(self, instance, validated_data):
+        """Update user with hashed password if provided"""
+        if 'password' in validated_data:
+            validated_data['password'] = make_password(validated_data['password'])
+        return super().update(instance, validated_data)
+
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    """Serializer for user registration"""
+    password = serializers.CharField(write_only=True, min_length=6)
+    password_confirm = serializers.CharField(write_only=True, min_length=6)
+    
+    class Meta:
+        model = User
+        fields = ['name', 'email', 'password', 'password_confirm', 'role']
+    
+    def validate_email(self, value):
+        """Check if email already exists"""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Email already registered")
+        return value
+    
+    def validate(self, data):
+        """Check if passwords match"""
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        return data
+    
+    def create(self, validated_data):
+        """Create user with hashed password"""
+        validated_data.pop('password_confirm')
+        validated_data['password'] = make_password(validated_data['password'])
+        return User.objects.create(**validated_data)
+
+
+class UserLoginSerializer(serializers.Serializer):
+    """Serializer for user login"""
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+
+
+class GoogleAuthSerializer(serializers.Serializer):
+    """Serializer for Google OAuth"""
+    token = serializers.CharField()
+    role = serializers.ChoiceField(
+        choices=['student', 'teacher'], 
+        required=False,
+        allow_blank=True,
+        default='student'
+    )
+
+
+class CourseSerializer(serializers.ModelSerializer):
+    """Serializer for Course model"""
+    class Meta:
+        model = Course
+        fields = '__all__'
+
+
+class ModuleSerializer(serializers.ModelSerializer):
+    """Serializer for Module model"""
+    class Meta:
+        model = Module
+        fields = '__all__'
+
+
+class QuizQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for QuizQuestion model"""
+    class Meta:
+        model = QuizQuestion
+        fields = '__all__'
+
+
+class QuizSerializer(serializers.ModelSerializer):
+    """Serializer for Quiz model"""
+    questions = QuizQuestionSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Quiz
+        fields = '__all__'
+
+
+class EnrollmentSerializer(serializers.ModelSerializer):
+    """Serializer for Enrollment model"""
+    course_details = CourseSerializer(source='course', read_only=True)
+    
+    class Meta:
+        model = Enrollment
+        fields = '__all__'
