@@ -1,4 +1,24 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
+
+@font-face {
+  font-family: 'Barmeno';
+  src: url('/fonts/Barmeno Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Graphik Web';
+  src: local('Graphik'), local('Graphik Web');
+}
+
+@font-face {
+  font-family: 'BM HANNA_TTF';
+  src: url('/fonts/bm-hanna-pro.otf.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
 
 @tailwind base;
 @tailwind components;
@@ -10,7 +30,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
 }
@@ -32,9 +53,12 @@ body {
 
 /* Custom Animations */
 @keyframes bounce-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }

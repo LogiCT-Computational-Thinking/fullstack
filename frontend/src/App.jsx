@@ -12,6 +12,8 @@ import QuizBank from './pages/QuizBank'
 import Settings from './pages/Settings'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import LandingPage from './pages/LandingPage'
+
 
 function DashboardLayout() {
   const location = useLocation();
@@ -45,7 +47,8 @@ function DashboardLayout() {
   // Handle logout
   const handleLogout = async () => {
     await logout();
-    navigate('/');
+    navigate('/login');
+
   };
 
   // Get current page title
@@ -168,8 +171,10 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes - No Layout */}
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
         <Route path="/quiz" element={<Quiz />} />

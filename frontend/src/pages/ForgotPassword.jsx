@@ -82,7 +82,7 @@ export default function ForgotPassword() {
             setMessage('Password berhasil diperbarui! Mengalihkan ke halaman login...');
             playSuccess();
             setTimeout(() => {
-                navigate('/');
+                navigate('/login');
             }, 3000);
         } catch (err) {
             setError(err.detail || err.error || 'Gagal mereset password.');
@@ -284,7 +284,7 @@ export default function ForgotPassword() {
                     {/* Back to Login Link */}
                     <div className="text-center">
                         <Link
-                            to="/"
+                            to="/login"
                             onClick={() => playClick()}
                             className="inline-flex items-center gap-2 text-sm text-slate-600 font-semibold hover:text-[#1284FD] transition-colors"
                         >

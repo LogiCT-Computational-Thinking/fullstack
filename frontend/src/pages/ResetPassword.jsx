@@ -47,7 +47,7 @@ export default function ResetPassword() {
             setMessage('Password has been reset successfully. Redirecting to login...');
             playSuccess();
             setTimeout(() => {
-                navigate('/');
+                navigate('/login');
             }, 3000);
         } catch (err) {
             setError(err.error || 'Failed to reset password. The link may be expired.');
