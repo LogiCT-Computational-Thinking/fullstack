@@ -51,6 +51,27 @@ body {
   height: 100%;
 }
 
+/* Performance optimizations */
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);
+  /* Enable hardware acceleration */
+  backface-visibility: hidden;
+}
+
+/* Optimized transitions for common elements */
+button:hover,
+a:hover {
+  will-change: transform, background-color, color, border-color;
+}
+
+button:active,
+a:active {
+  will-change: auto;
+}
+
 /* Custom Animations */
 @keyframes bounce-slow {
 

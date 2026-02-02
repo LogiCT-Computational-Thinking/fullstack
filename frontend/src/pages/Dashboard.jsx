@@ -59,7 +59,7 @@ export default function Dashboard() {
                   {semester.modules.map((module) => (
                     <div
                       key={module.id}
-                      className="w-24 h-24 bg-white rounded-full shadow hover:shadow-lg transition-all cursor-pointer hover:scale-105 flex items-center justify-center"
+                      className="w-24 h-24 bg-white rounded-full shadow hover:shadow-lg transition-all duration-150 cursor-pointer hover:scale-[1.03] active:scale-95 flex items-center justify-center"
                       title={module.name}
                     >
                       <span className="text-gray-400 text-xs font-medium">M{module.id}</span>
@@ -68,7 +68,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* See More Button */}
-                <button className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors whitespace-nowrap ml-6">
+                <button className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors duration-150 active:scale-95 whitespace-nowrap ml-6">
                   See More
                 </button>
               </div>
