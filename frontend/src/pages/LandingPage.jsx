@@ -8,18 +8,20 @@ const LandingPage = () => {
             style={{ backgroundImage: "url('/images/sky bg 1.png')" }}
         >
             {/* Header */}
-            <header className="flex justify-between items-center px-8 py-6 md:px-16 animate-fade-down">
-                <div className="flex items-center gap-2">
-                    <img src="/images/logo-logict.png" alt="LogiCT Logo" className="h-8 w-auto" />
-                    <span className="text-2xl font-bold text-[#1A73E8]">LogiCT</span>
-                </div>
-                <div className="flex gap-3">
-                    <Link
-                        to="/login"
-                        className="px-7 py-1.5 border border-[#1A73E8] text-[#1A73E8] rounded-full font-bold text-sm hover:bg-[#1A73E8]/5 transition-colors"
-                    >
-                        Log in
-                    </Link>
+            <header className="px-8 py-6 md:px-16">
+                <div className="flex justify-between items-center animate-fade-down">
+                    <div className="flex items-center gap-2">
+                        <img src="/images/logo-logict.png" alt="LogiCT Logo" className="h-8 w-auto" />
+                        <span className="text-2xl font-bold text-[#1A73E8]">LogiCT</span>
+                    </div>
+                    <div className="flex gap-3">
+                        <Link
+                            to="/login"
+                            className="px-7 py-1.5 border border-[#1A73E8] text-[#1A73E8] rounded-full font-bold text-sm hover:bg-[#1A73E8]/5 transition-colors duration-200"
+                        >
+                            Log in
+                        </Link>
+                    </div>
                 </div>
             </header>
 
@@ -29,56 +31,65 @@ const LandingPage = () => {
                 <div className="flex-1 max-w-2xl z-10 pt-10 lg:pt-0">
                     <div className="mb-8 select-none">
                         {/* think SMARTER */}
-                        <div className="flex flex-col -mb-2 animate-fade-right" style={{ animationDelay: '0.2s' }}>
-                            <span
-                                className="text-4xl md:text-5xl font-normal ml-1 mb-1 bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
-                                style={{ fontFamily: "'Graphik Web', 'Inter', sans-serif" }}
-                            >
-                                think
-                            </span>
-                            <span
-                                className="text-7xl md:text-9xl lg:text-[130px] font-light leading-[0.8] bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
-                                style={{
-                                    fontFamily: "'Barmeno', 'Outfit', sans-serif",
-                                    letterSpacing: '0.1em',
-                                    WebkitFontSmoothing: 'antialiased'
-                                }}
-                            >
-                                SMARTER
-                            </span>
+                        <div className="animate-fade-right" style={{ animationDelay: '0.2s' }}>
+                            <div className="flex flex-col -mb-2">
+                                <span
+                                    className="text-4xl md:text-5xl font-normal ml-1 mb-1 bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
+                                    style={{ fontFamily: "'Graphik Web', 'Inter', sans-serif" }}
+                                >
+                                    think
+                                </span>
+                                <span
+                                    className="text-7xl md:text-9xl lg:text-[130px] font-light leading-[0.8] bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
+                                    style={{
+                                        fontFamily: "'Barmeno', 'Outfit', sans-serif",
+                                        letterSpacing: '0.1em',
+                                        WebkitFontSmoothing: 'antialiased'
+                                    }}
+                                >
+                                    SMARTER
+                                </span>
+                            </div>
                         </div>
                         {/* fly HIGHER */}
-                        <div className="flex items-start gap-4 -mt-2 animate-fade-right" style={{ animationDelay: '0.4s' }}>
-                            <span
-                                className="text-4xl md:text-5xl font-normal mt-2 bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
-                                style={{ fontFamily: "'BM HANNA_TTF', 'Black Han Sans', sans-serif" }}
-                            >
-                                fly
-                            </span>
-                            <span
-                                className="text-7xl md:text-9xl lg:text-[130px] font-light leading-[0.8] bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
-                                style={{
-                                    fontFamily: "'Barmeno', 'Outfit', sans-serif",
-                                    letterSpacing: '0.1em',
-                                    WebkitFontSmoothing: 'antialiased'
-                                }}
-                            >
-                                HIGHER
-                            </span>
+                        <div className="flex items-start gap-4 -mt-2">
+                            <div className="animate-fade-right" style={{ animationDelay: '0.4s' }}>
+                                <span
+                                    className="text-4xl md:text-5xl font-normal mt-2 bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
+                                    style={{ fontFamily: "'BM HANNA_TTF', 'Black Han Sans', sans-serif" }}
+                                >
+                                    fly
+                                </span>
+                            </div>
+                            <div className="animate-fade-right" style={{ animationDelay: '0.4s' }}>
+                                <span
+                                    className="text-7xl md:text-9xl lg:text-[130px] font-light leading-[0.8] bg-clip-text text-transparent bg-gradient-to-b from-[#0C88C6] to-[#005782]"
+                                    style={{
+                                        fontFamily: "'Barmeno', 'Outfit', sans-serif",
+                                        letterSpacing: '0.1em',
+                                        WebkitFontSmoothing: 'antialiased'
+                                    }}
+                                >
+                                    HIGHER
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <p className="text-lg md:text-xl text-gray-800 mb-10 max-w-md leading-relaxed animate-fade-right" style={{ animationDelay: '0.6s' }}>
-                        Learn how to think, not just what to learn through Computational Thinking.
-                    </p>
+                    <div className="animate-fade-right" style={{ animationDelay: '0.6s' }}>
+                        <p className="text-lg md:text-xl text-gray-800 mb-10 max-w-md leading-relaxed">
+                            Learn how to think, not just what to learn through Computational Thinking.
+                        </p>
+                    </div>
 
-                    <Link
-                        to="/register"
-                        className="inline-block px-12 py-3.5 bg-black text-white border-2 border-black rounded-full font-bold text-lg shadow-xl hover:bg-white hover:text-black transition-all duration-300 active:scale-95 animate-pop-in"
-                        style={{ animationDelay: '0.8s' }}
-                    >
-                        Register Now
-                    </Link>
+                    <div className="animate-pop-in" style={{ animationDelay: '0.8s' }}>
+                        <Link
+                            to="/register"
+                            className="inline-block px-12 py-3.5 bg-black text-white border-2 border-black rounded-full font-bold text-lg shadow-xl hover:bg-white hover:text-black transition-all duration-200 active:scale-95"
+                        >
+                            Register Now
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Right Side: Bird Mascot */}

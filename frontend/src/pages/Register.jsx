@@ -241,8 +241,7 @@ export default function Register() {
               <button
                 type="submit"
                 disabled={loading}
-                onMouseEnter={() => !loading && playClick()}
-                className="w-full py-3 sm:py-3.5 px-4 bg-[#1284FD] text-white font-bold text-base rounded-[10px] border-2 border-transparent transition-all duration-200 hover:bg-white hover:text-[#1284FD] hover:border-[#1284FD] active:bg-black active:text-white active:border-black disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 sm:py-3.5 px-4 bg-[#1284FD] text-white font-bold text-base rounded-[10px] border-2 border-[#1284FD] transition-colors duration-150 hover:bg-white hover:text-[#1284FD] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Loading...' : 'Sign up'}
               </button>

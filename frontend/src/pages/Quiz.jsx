@@ -111,14 +111,14 @@ export default function Quiz() {
       const correctCount = newAnswers.filter(
         (answer, idx) => answer === quizData[idx].correctAnswer
       ).length;
-      
+
       // Redirect ke dashboard dengan hasil
-      navigate('/dashboard', { 
-        state: { 
-          quizCompleted: true, 
+      navigate('/dashboard', {
+        state: {
+          quizCompleted: true,
           score: correctCount,
-          total: totalQuestions 
-        } 
+          total: totalQuestions
+        }
       });
     }
   };
@@ -127,17 +127,17 @@ export default function Quiz() {
     <div className="min-h-screen bg-gradient-to-tr from-[#a8cc4c] to-[#F3F7D2] flex flex-col items-center justify-center p-4">
       {/* Logo Header */}
       <div className="absolute top-4 sm:top-8 left-1/2 transform -translate-x-1/2">
-        <img 
-            src="/images/welkam_atas.png" 
-            alt="LogiCT Mascot" 
-            className="h-8 sm:h-10 lg:h-12 w-auto object-contain drop-shadow-lg"
+        <img
+          src="/images/welkam_atas.png"
+          alt="LogiCT Mascot"
+          className="h-8 sm:h-10 lg:h-12 w-auto object-contain drop-shadow-lg"
         />
       </div>
 
       {/* Progress Bar */}
       <div className="absolute top-16 sm:top-20 left-0 right-0 px-4 sm:px-8 max-w-3xl mx-auto">
         <div className="h-1.5 sm:h-2 bg-gray-300 rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
@@ -145,10 +145,9 @@ export default function Quiz() {
       </div>
 
       {/* Content Card */}
-      <div 
-        className={`w-full max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-10 lg:p-12 mt-12 sm:mt-16 transition-all duration-300 ${
-          isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-        }`}
+      <div
+        className={`w-full max-w-2xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-10 lg:p-12 mt-12 sm:mt-16 transition-all duration-300 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          }`}
       >
         {currentStep === 'welcome' ? (
           <WelcomeScreen onContinue={handleContinueWelcome} />
@@ -183,19 +182,18 @@ function WelcomeScreen({ onContinue }) {
       <div className="relative">
 
         {/* Burung Animasi */}
-        <div 
-          className={`mt-8 sm:mt-16 lg:mt-24 transition-all duration-700 ${
-            birdAnimation 
-              ? 'opacity-100 scale-100 rotate-0' 
+        <div
+          className={`mt-8 sm:mt-16 lg:mt-24 transition-all duration-700 ${birdAnimation
+              ? 'opacity-100 scale-100 rotate-0'
               : 'opacity-0 scale-50 -rotate-12'
-          }`}
+            }`}
         >
           <div className="relative inline-block animate-bounce-slow">
             {/* Placeholder untuk gambar burung - ganti dengan gambar asli */}
             <div className="w-40 h-40 sm:w-48 sm:h-48 lg:w-56 lg:h-56 relative">
-              <img 
-                src="/images/welkam.png" 
-                alt="LogiCT Mascot" 
+              <img
+                src="/images/welkam.png"
+                alt="LogiCT Mascot"
                 className="w-full h-full object-contain drop-shadow-xl"
               />
             </div>
@@ -206,7 +204,7 @@ function WelcomeScreen({ onContinue }) {
       {/* Continue Button */}
       <button
         onClick={onContinue}
-        className="mt-6 sm:mt-8 px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold text-base sm:text-lg rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 active:scale-95"
+        className="mt-6 sm:mt-8 px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold text-base sm:text-lg rounded-full shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-150 active:scale-95"
       >
         Continue
       </button>
@@ -215,13 +213,13 @@ function WelcomeScreen({ onContinue }) {
 }
 
 // Question Screen Component
-function QuestionScreen({ 
-  question, 
-  questionNumber, 
-  totalQuestions, 
-  selectedAnswer, 
-  onAnswerSelect, 
-  onContinue 
+function QuestionScreen({
+  question,
+  questionNumber,
+  totalQuestions,
+  selectedAnswer,
+  onAnswerSelect,
+  onContinue
 }) {
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -236,11 +234,10 @@ function QuestionScreen({
           <button
             key={index}
             onClick={() => onAnswerSelect(index)}
-            className={`w-full px-4 sm:px-6 py-3 sm:py-4 text-left text-gray-700 text-sm sm:text-base font-medium rounded-xl sm:rounded-2xl border-2 transition-all duration-200 active:scale-[0.98] ${
-              selectedAnswer === index
-                ? 'border-blue-500 bg-blue-50 shadow-md scale-[1.02]'
+            className={`w-full px-4 sm:px-6 py-3 sm:py-4 text-left text-gray-700 text-sm sm:text-base font-medium rounded-xl sm:rounded-2xl border-2 transition-all duration-150 active:scale-[0.98] ${selectedAnswer === index
+                ? 'border-blue-500 bg-blue-50 shadow-md scale-[1.01]'
                 : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
-            }`}
+              }`}
           >
             {option}
           </button>
@@ -251,11 +248,10 @@ function QuestionScreen({
       <button
         onClick={onContinue}
         disabled={selectedAnswer === null}
-        className={`w-full px-6 sm:px-8 py-3 sm:py-4 font-semibold text-base sm:text-lg rounded-full shadow-lg transition-all duration-300 active:scale-95 ${
-          selectedAnswer !== null
-            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:shadow-xl hover:scale-[1.02] cursor-pointer'
+        className={`w-full px-6 sm:px-8 py-3 sm:py-4 font-semibold text-base sm:text-lg rounded-full shadow-lg transition-all duration-150 active:scale-95 ${selectedAnswer !== null
+            ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:shadow-xl hover:scale-[1.01] cursor-pointer'
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
+          }`}
       >
         {questionNumber === totalQuestions ? 'Selesai' : 'Continue'}
       </button>

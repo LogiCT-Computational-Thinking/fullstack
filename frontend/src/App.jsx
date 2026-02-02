@@ -82,7 +82,7 @@ function DashboardLayout() {
               <Link
                 key={item.id}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-all duration-150 active:scale-95 ${isActive
                   ? 'bg-blue-50 text-blue-600'
                   : 'text-gray-700 hover:bg-gray-50'
                   }`}
@@ -114,7 +114,7 @@ function DashboardLayout() {
               </div>
 
               {/* Notification Icon */}
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150 active:scale-90">
                 <Bell className="w-5 h-5 text-gray-600" />
               </button>
 
@@ -122,7 +122,7 @@ function DashboardLayout() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
+                  className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors duration-150 active:scale-90"
                 >
                   <User className="w-5 h-5 text-gray-600" />
                 </button>
@@ -139,7 +139,7 @@ function DashboardLayout() {
                     {/* Logout Button */}
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 active:bg-red-100 flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
                       Logout
