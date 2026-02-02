@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+core/migrations/00*.py
+!core/migrations/__init__.py
+media/
+static/
+.env
+
+# Node / Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Project Specific
+myproject/media/
+myproject/static/
+profiling_questions_sample.csv
+PROFILING_GUIDE.md

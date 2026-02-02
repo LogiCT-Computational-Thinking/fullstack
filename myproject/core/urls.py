@@ -18,6 +18,11 @@ urlpatterns = [
     path('auth/profile/', views.user_profile_view, name='user-profile'),
     path('auth/profile/update/', views.update_profile_view, name='update-profile'),
     
+    # Profiling endpoints
+    path('profiling/questions/', views.get_profiling_questions, name='profiling-questions'),
+    path('profiling/submit/', views.submit_profiling_answers, name='profiling-submit'),
+    path('profiling/upload-csv/', views.bulk_upload_questions, name='profiling-upload-csv'),
+    
     # Password reset endpoints
     path('auth/forgot-password/', views.forgot_password_view, name='forgot-password'),
     path('auth/verify-otp/', views.verify_otp_view, name='verify-otp'),

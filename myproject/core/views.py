@@ -1,4 +1,5 @@
-import os
+import os, csv, json, io
+from django.shortcuts import render
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -18,8 +19,11 @@ from .serializers import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
     VerifyOTPSerializer,
-    ResetPasswordOTPSerializer
+    ResetPasswordOTPSerializer,
+    PretestQuestionSerializer,
+    ProfilingSubmissionSerializer
 )
+from .models import User, PretestQuestion, Pretest, PretestResponse
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -481,3 +485,184 @@ def reset_password_view(request):
             'error': 'Reset password failed',
             'detail': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# =========================================================
+# 6️⃣ PROFILING QUIZ LOGIC
+# =========================================================
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_profiling_questions(request):
+    """
+    Get randomized profiling questions (21 total: 6 pedagogy, 15 cognitive)
+    """
+    # 1. Select 1 random question for each level (1-6) of Pedagogy
+    pedagogy_questions = []
+    for level in range(1, 7):
+        q = PretestQuestion.objects.filter(
+            category='PROFILING_PEDAGOGY', 
+            level=level
+        ).order_by('?').first()
+        if q:
+            pedagogy_questions.append(q)
+            
+    # 2. Select 5 random questions for each Cognitive category
+    cognitive_tp = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_TP').order_by('?')[:5])
+    cognitive_ga = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_GA').order_by('?')[:5])
+    cognitive_ir = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_IR').order_by('?')[:5])
+    
+    all_questions = pedagogy_questions + cognitive_tp + cognitive_ga + cognitive_ir
+    
+    # Randomize order
+    random.shuffle(all_questions)
+    
+    serializer = PretestQuestionSerializer(all_questions, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def submit_profiling_answers(request):
+    """
+    Submit profiling responses and calculate result (e.g., "2TAR")
+    """
+    serializer = ProfilingSubmissionSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    user = request.user
+    responses_data = serializer.validated_data['responses']
+    
+    # Create a Pretest record for this profiling
+    pretest = Pretest.objects.create(user=user, result="Profiling")
+    
+    # Store answers for lookup
+    answers_map = {r['question_id']: r['answer'] for r in responses_data}
+    
+    # -----------------------------------------------------
+    # 1. PEDAGOGY SCORING (Sequential Levels 1-6)
+    # -----------------------------------------------------
+    final_level = 1
+    for level in range(1, 7):
+        # Find the question in our answers for this level
+        level_q = PretestQuestion.objects.filter(
+            pk__in=answers_map.keys(), 
+            category='PROFILING_PEDAGOGY', 
+            level=level
+        ).first()
+        
+        if not level_q:
+            continue # Should not happen if frontend is correct
+            
+        user_ans = answers_map[level_q.id]
+        is_correct = user_ans.strip().lower() == level_q.correctAns.strip().lower()
+        
+        # Save response
+        PretestResponse.objects.create(
+            user=user,
+            question=level_q,
+            response_value=None,
+            answer=is_correct
+        )
+        
+        if is_correct:
+            final_level = level
+        else:
+            # If wrong, we stop here. 
+            # If wrong at Level 1, level remains 1. 
+            # If wrong at level N, level is N-1.
+            break
+            
+    # -----------------------------------------------------
+    # 2. COGNITIVE SCORING (Sum-based, Threshold 18)
+    # -----------------------------------------------------
+    def get_cognitive_label(category, label1, label2):
+        qs = PretestQuestion.objects.filter(pk__in=answers_map.keys(), category=category)
+        total_score = 0
+        for q in qs:
+            ans = answers_map[q.id]
+            try:
+                val = int(ans)
+                total_score += val
+                # Save response
+                PretestResponse.objects.create(
+                    user=user,
+                    question=q,
+                    response_value=val,
+                    answer=True # Cognitive scale is not correct/incorrect
+                )
+            except ValueError:
+                pass
+        return label2 if total_score > 18 else label1
+
+    label_tp = get_cognitive_label('PROFILING_COGNITIVE_TP', 'T', 'P')
+    label_ga = get_cognitive_label('PROFILING_COGNITIVE_GA', 'G', 'A')
+    label_ir = get_cognitive_label('PROFILING_COGNITIVE_IR', 'I', 'R')
+    
+    # -----------------------------------------------------
+    # 3. COMBINE & SAVE
+    # -----------------------------------------------------
+    result_code = f"{final_level}{label_tp}{label_ga}{label_ir}"
+    
+    user.preferences = result_code
+    user.is_profiled = True
+    user.save()
+    
+    # Update pretest result
+    pretest.result = result_code
+    pretest.score = float(final_level) # Just as a reference
+    pretest.save()
+    
+    return Response({
+        'message': 'Profiling completed successfully',
+        'result_code': result_code,
+        'is_profiled': user.is_profiled
+    })
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def bulk_upload_questions(request):
+    """
+    Bulk upload profiling questions via CSV
+    Expects CSV with columns: question, type, category, level, option, correctAns, image_filename
+    """
+    if 'file' not in request.FILES:
+        return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    csv_file = request.FILES['file']
+    decoded_file = csv_file.read().decode('utf-8')
+    io_string = io.StringIO(decoded_file)
+    reader = csv.DictReader(io_string)
+    
+    count = 0
+    for row in reader:
+        # Parse options if it exists and is a JSON string
+        options = []
+        if row.get('option'):
+            try:
+                options = json.loads(row['option'])
+            except:
+                options = [opt.strip() for opt in row['option'].split('|')] if '|' in row['option'] else []
+
+        PretestQuestion.objects.create(
+            question=row['question'],
+            type=row['type'],
+            category=row['category'],
+            level=int(row.get('level', 1)),
+            option=options,
+            correctAns=row.get('correctAns', ''),
+            image=row.get('image_filename', None) # Note: file must exist in media/questions/
+        )
+        count += 1
+        
+    return Response({'message': f'Successfully uploaded {count} questions'})
+
+
+@permission_classes([IsAuthenticated])
+def profiling_tester_view(request):
+    """
+    A simple view to test the profiling quiz flow
+    """
+    return render(request, 'core/profiling_tester.html')

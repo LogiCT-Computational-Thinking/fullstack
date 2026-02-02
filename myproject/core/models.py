@@ -1,10 +1,35 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
 # =========================================================
-# 1️⃣ USER
+# 1️⃣ USER MANAGER
 # =========================================================
-class User(models.Model):
+class UserManager(BaseUserManager):
+    def get_by_natural_key(self, email):
+        return self.get(email=email)
+
+    def create_user(self, email, name, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email address is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, name=name, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, name, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('role', 'admin')
+        return self.create_user(email, name, password, **extra_fields)
+
+# =========================================================
+# 2️⃣ USER MODEL
+# =========================================================
+class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
         ('student', 'Student'),
         ('teacher', 'Teacher'),
@@ -12,7 +37,7 @@ class User(models.Model):
     ]
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255, blank=True)
+    password = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
     profilePicture = models.URLField(blank=True, null=True)
     preferences = models.TextField(blank=True, null=True)
@@ -24,35 +49,15 @@ class User(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
+    is_profiled = models.BooleanField(default=False)
+
+    objects = UserManager()
 
     USERNAME_FIELD = 'email'
-    EMAIL_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
-
-    @classmethod
-    def get_email_field_name(cls):
-        return cls.EMAIL_FIELD
 
     def __str__(self):
         return f"{self.name} ({self.role})"
-    
-    @property
-    def is_authenticated(self):
-        """Always return True for authenticated users"""
-        return True
-    
-    @property
-    def is_anonymous(self):
-        """Always return False for authenticated users"""
-        return False
-    
-    def has_perm(self, perm, obj=None):
-        """Does the user have a specific permission?"""
-        return self.is_superuser
-    
-    def has_module_perms(self, app_label):
-        """Does the user have permissions to view the app `app_label`?"""
-        return self.is_superuser
 
 
 
@@ -108,10 +113,21 @@ class PretestQuestion(models.Model):
     TYPE_CHOICES = [
         ('multiple_choice', 'Multiple Choice'),
         ('true_false', 'True/False'),
-        ('short_answer', 'Short Answer'),
+        ('short_answer', 'Short Answer / Essay'),
+        ('scale', 'Scale (1-6)'),
+    ]
+    CATEGORY_CHOICES = [
+        ('GENERAL', 'General Pretest'),
+        ('PROFILING_PEDAGOGY', 'Profiling: Pedagogy'),
+        ('PROFILING_COGNITIVE_TP', 'Profiling: Cognitive TP'),
+        ('PROFILING_COGNITIVE_GA', 'Profiling: Cognitive GA'),
+        ('PROFILING_COGNITIVE_IR', 'Profiling: Cognitive IR'),
     ]
     question = models.TextField()
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='GENERAL')
+    level = models.IntegerField(default=1, help_text="Level 1-6 for Pedagogy")
+    image = models.ImageField(upload_to='questions/', blank=True, null=True)
     score = models.FloatField(default=1.0)
     result = models.CharField(max_length=100, blank=True, null=True)
     option = models.JSONField(default=list, blank=True)

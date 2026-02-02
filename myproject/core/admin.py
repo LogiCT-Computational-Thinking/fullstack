@@ -29,3 +29,21 @@ class ModuleAdmin(admin.ModelAdmin):
 class QuizAdmin(admin.ModelAdmin):
     list_display = ("id", "course")
     list_filter = ("course",)
+
+
+from .models import Pretest, PretestQuestion, PretestResponse
+
+@admin.register(PretestQuestion)
+class PretestQuestionAdmin(admin.ModelAdmin):
+    list_display = ("id", "question", "type", "category", "level")
+    list_filter = ("category", "level", "type")
+    search_fields = ("question",)
+
+@admin.register(Pretest)
+class PretestAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "result", "score")
+    list_filter = ("result",)
+
+@admin.register(PretestResponse)
+class PretestResponseAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "question", "answer", "response_value")

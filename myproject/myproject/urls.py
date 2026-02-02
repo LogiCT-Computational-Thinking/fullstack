@@ -32,8 +32,17 @@ def root_redirect(request):
         }
     })
 
+from django.conf import settings
+from django.conf.urls.static import static
+
+from core import views as core_views
+
 urlpatterns = [
     path('', root_redirect, name='root'),
     path('admin/', admin.site.urls),
     path('api/', include('core.urls')),
+    path('profiling-tester/', core_views.profiling_tester_view, name='profiling-tester'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_address=settings.MEDIA_ROOT)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Course, Module, Quiz, QuizQuestion, Enrollment
+from .models import User, Course, Module, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse
 from django.contrib.auth.hashers import make_password
 
 
@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'password', 'role', 'profilePicture']
+        fields = ['id', 'name', 'email', 'password', 'role', 'profilePicture', 'preferences', 'is_profiled']
         extra_kwargs = {
             'password': {'write_only': True},
             'profilePicture': {'required': False}
@@ -94,6 +94,13 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PretestQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for PretestQuestion model"""
+    class Meta:
+        model = PretestQuestion
+        fields = ['id', 'question', 'type', 'category', 'level', 'image', 'option', 'scaleMin', 'scaleMax']
+
+
 class QuizSerializer(serializers.ModelSerializer):
     """Serializer for Quiz model"""
     questions = QuizQuestionSerializer(many=True, read_only=True)
@@ -147,3 +154,14 @@ class ResetPasswordOTPSerializer(serializers.Serializer):
         if data['new_password'] != data['confirm_password']:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match"})
         return data
+
+
+class ProfilingResponseSerializer(serializers.Serializer):
+    """Serializer for a single profiling response"""
+    question_id = serializers.IntegerField()
+    answer = serializers.CharField()  # Can be MC choice or Scale value (string)
+
+
+class ProfilingSubmissionSerializer(serializers.Serializer):
+    """Serializer for submitting all profiling questions"""
+    responses = ProfilingResponseSerializer(many=True)
