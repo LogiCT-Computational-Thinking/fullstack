@@ -10,7 +10,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
 
-from .models import User
+from .models import User, PretestQuestion, Pretest, PretestResponse
 from .serializers import (
     UserSerializer,
     UserRegistrationSerializer,
@@ -23,7 +23,6 @@ from .serializers import (
     PretestQuestionSerializer,
     ProfilingSubmissionSerializer
 )
-from .models import User, PretestQuestion, Pretest, PretestResponse
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -583,7 +582,8 @@ def submit_profiling_answers(request):
         for q in qs:
             ans = answers_map[q.id]
             try:
-                val = int(ans)
+                # Ensure we handle empty strings or non-numeric answers safely
+                val = int(ans) if ans and str(ans).strip() else 0
                 total_score += val
                 # Save response
                 PretestResponse.objects.create(
@@ -592,7 +592,7 @@ def submit_profiling_answers(request):
                     response_value=val,
                     answer=True # Cognitive scale is not correct/incorrect
                 )
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
         return label2 if total_score > 18 else label1
 
@@ -646,11 +646,18 @@ def bulk_upload_questions(request):
             except:
                 options = [opt.strip() for opt in row['option'].split('|')] if '|' in row['option'] else []
 
+        # Safely parse level
+        raw_level = row.get('level')
+        try:
+            level_val = int(raw_level) if raw_level and str(raw_level).strip() else 1
+        except (ValueError, TypeError):
+            level_val = 1
+
         PretestQuestion.objects.create(
             question=row['question'],
             type=row['type'],
             category=row['category'],
-            level=int(row.get('level', 1)),
+            level=level_val,
             option=options,
             correctAns=row.get('correctAns', ''),
             image=row.get('image_filename', None) # Note: file must exist in media/questions/
