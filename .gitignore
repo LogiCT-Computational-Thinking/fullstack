@@ -33,3 +33,5 @@ myproject/media/
 myproject/static/
 profiling_questions_sample.csv
 PROFILING_GUIDE.md
+bulk - bulk.csv
+bulk_fixed_final.csv

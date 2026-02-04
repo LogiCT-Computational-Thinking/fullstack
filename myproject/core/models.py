@@ -128,6 +128,9 @@ class Pretest(models.Model):
 class PretestQuestion(models.Model):
     TYPE_CHOICES = [
         ('multiple_choice', 'Multiple Choice'),
+        ('multiple_choice_image', 'Multiple Choice (Images)'),
+        ('multi_select', 'Multi Select (Checkboxes)'),
+        ('multi_select_image', 'Multi Select (Images)'),
         ('true_false', 'True/False'),
         ('short_answer', 'Short Answer / Essay'),
         ('scale', 'Scale (1-6)'),
@@ -140,7 +143,7 @@ class PretestQuestion(models.Model):
         ('PROFILING_COGNITIVE_IR', 'Profiling: Cognitive IR'),
     ]
     question = models.TextField()
-    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=30, choices=TYPE_CHOICES)
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='GENERAL')
     level = models.IntegerField(default=1, help_text="Level 1-6 for Pedagogy")
     image = models.ImageField(upload_to='questions/', blank=True, null=True)

@@ -518,6 +518,7 @@ def get_profiling_questions(request):
     """
     # 1. Select 1 random question for each level (1-6) of Pedagogy
     pedagogy_questions = []
+    missing_levels = []
     for level in range(1, 7):
         q = PretestQuestion.objects.filter(
             category='PROFILING_PEDAGOGY', 
@@ -525,16 +526,22 @@ def get_profiling_questions(request):
         ).order_by('?').first()
         if q:
             pedagogy_questions.append(q)
+        else:
+            missing_levels.append(level)
             
+    if missing_levels:
+        print(f"Warning: Missing pedagogy questions for levels: {missing_levels}")
+
     # 2. Select 5 random questions for each Cognitive category
     cognitive_tp = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_TP').order_by('?')[:5])
     cognitive_ga = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_GA').order_by('?')[:5])
     cognitive_ir = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_IR').order_by('?')[:5])
     
-    all_questions = pedagogy_questions + cognitive_tp + cognitive_ga + cognitive_ir
+    # Combine all questions
+    cognitive_questions = cognitive_tp + cognitive_ga + cognitive_ir
+    random.shuffle(cognitive_questions)
     
-    # Randomize order
-    random.shuffle(all_questions)
+    all_questions = pedagogy_questions + cognitive_questions
     
     serializer = PretestQuestionSerializer(all_questions, many=True)
     return Response(serializer.data)
@@ -582,7 +589,22 @@ def submit_profiling_answers(request):
             continue # Should not happen if frontend is correct
             
         user_ans = answers_map[level_q.id]
-        is_correct = user_ans.strip().lower() == level_q.correctAns.strip().lower()
+        
+        # Check if it's a multi-select type
+        if level_q.type in ['multi_select', 'multi_select_image']:
+            # Handle multiple answers (comma or | separated)
+            user_ans_set = set([a.strip().lower() for a in user_ans.replace('[', '').replace(']', '').replace('"', '').split(',') if a.strip()])
+            correct_ans_set = set([a.strip().lower() for a in level_q.correctAns.replace('[', '').replace(']', '').replace('"', '').split(',') if a.strip()])
+            
+            # If comma split results in 1 item, try pipe
+            if len(user_ans_set) <= 1 and '|' in user_ans:
+                user_ans_set = set([a.strip().lower() for a in user_ans.split('|') if a.strip()])
+            if len(correct_ans_set) <= 1 and '|' in level_q.correctAns:
+                correct_ans_set = set([a.strip().lower() for a in level_q.correctAns.split('|') if a.strip()])
+                
+            is_correct = user_ans_set == correct_ans_set
+        else:
+            is_correct = user_ans.strip().lower() == level_q.correctAns.strip().lower()
         
         # Save response
         PretestResponse.objects.create(
@@ -702,8 +724,42 @@ def bulk_upload_questions(request):
     csv_file = request.FILES['file']
     decoded_file = csv_file.read().decode('utf-8')
     io_string = io.StringIO(decoded_file)
-    reader = csv.DictReader(io_string)
+    reader = list(csv.DictReader(io_string)) # Read all into list for two-pass or better handling
     
+    # --- PHASE 1: VALIDATION ---
+    missing_files = []
+    questions_dir = os.path.join(settings.MEDIA_ROOT, 'questions')
+    
+    # Ensure directory exists check (optional but good)
+    if not os.path.exists(questions_dir):
+        os.makedirs(questions_dir, exist_ok=True)
+
+    for row_idx, row in enumerate(reader, start=2): # Start at 2 for CSV header
+        # Check question image
+        q_img = row.get('image_filename')
+        if q_img:
+            if not os.path.exists(os.path.join(questions_dir, q_img)):
+                missing_files.append(f"Row {row_idx}: Question image '{q_img}' not found in media/questions/")
+        
+        # Check option images for image-based types
+        q_type = row.get('type', '')
+        if '_image' in q_type and row.get('option'):
+            try:
+                opts = json.loads(row['option'])
+            except:
+                opts = [opt.strip() for opt in row['option'].split('|')] if '|' in row['option'] else []
+            
+            for opt_img in opts:
+                if not os.path.exists(os.path.join(questions_dir, opt_img)):
+                    missing_files.append(f"Row {row_idx}: Option image '{opt_img}' not found in media/questions/")
+
+    if missing_files:
+        return Response({
+            'error': 'Missing image files',
+            'details': missing_files
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # --- PHASE 2: UPLOAD ---
     count = 0
     for row in reader:
         # Parse options if it exists and is a JSON string
@@ -721,14 +777,20 @@ def bulk_upload_questions(request):
         except (ValueError, TypeError):
             level_val = 1
 
+        # Prepare image path for Django ImageField (must be relative to MEDIA_ROOT)
+        img_filename = row.get('image_filename')
+        image_path = None
+        if img_filename:
+            image_path = f"questions/{img_filename}" if not img_filename.startswith('questions/') else img_filename
+
         PretestQuestion.objects.create(
-            question=row['question'],
-            type=row['type'],
-            category=row['category'],
+            question=row.get('question', ''),
+            type=row.get('type', 'multiple_choice'),
+            category=row.get('category', 'GENERAL'),
             level=level_val,
             option=options,
             correctAns=row.get('correctAns', ''),
-            image=row.get('image_filename', None) # Note: file must exist in media/questions/
+            image=image_path
         )
         count += 1
         

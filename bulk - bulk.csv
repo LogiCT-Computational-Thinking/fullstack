@@ -1,0 +1,196 @@
+question,type,category,level,option,correctAns,image_filename
+"Sebuah keluarga ingin mengemas apel sesuai aturan sebagai berikut: 
+1. Apel ditaruh di kantong. Setiap kantong diisi dengan 8 apel. Jika tersisa kurang dari 8 apel, apel dibiarkan tidak dikemas. 
+2. Kantong akan dimasukkan ke kardus, Setiap kardus berisi 8 kantong. Jika tersisa kurang dari 8 kantong, kantong yang tersisa tidak dimasukkan ke kardus. 
+Apabila mereka panen 275 apel. Ada berapa banyak apel yang tidak dimasukkan ke kantong?",multiple_choice,PROFILING_PEDAGOGY,1,"[""6"", ""1"", ""7"", ""3""]",3,
+"Terdapat 12 spot parkir dengan kode 1 hingga 12 dengan ketentuan spot yang terisi sebagai berikut:
+Senin -> 1 - 3 - 6 - 9 - 11
+Selasa -> 1 - 4 -10 - 11 - 12
+Berapa jumlah spot parkir yang tidak terisi pada hari senin dan selasa?",multiple_choice,PROFILING_PEDAGOGY,1,"[""3"", ""6"", ""4"", ""5""]",4,
+"Apabila terdapat 4 kaleng cat dengan warna sebagai berikut:
+Merah (M) -> Cukup untuk 5 pagar
+Hijau (H) -> Cukup untuk 3 pagar
+Kuning (K) -> Cukup untuk 7 pagar
+Biru (B) -> Cukup untuk 2 pagar.
+Urutan pengecatan -> M-H-K-B-dst
+Berapa pagar yang dapat dicat apabila tidak boleh ada pagar berdampingan dengan warna yang sama?",multiple_choice,PROFILING_PEDAGOGY,1,"[""8"", ""17"", ""15"", ""5""]",15,
+,multiple_choice,PROFILING_PEDAGOGY,1,"[""Apakah lengan panjang"", ""Apakah ada kancingnya"", ""Apakah ada resletingnya"", """"Apakah ada sakunya""""]",Apakah ada kancingnya,4.png
+,multiple_choice,PROFILING_PEDAGOGY,1,"[""2"", ""3"", ""5"", ""Tidak mungkin mengunjungi semua petak""]",3,5.png
+"Bella mempunyai banyak balon. Ia selalu menaruh balonnya dalam posisi sebuah barisan sehingga urutan warnanya sama jika dilihat dari ujung kiri ke kanan, maupun dari ujung kanan ke kiri. Sayangnya, ia hanya bisa melihat 4 warna berbeda yaitu hijau (G), kuning (Y), merah (R) and biru (B). Bagi Bella, ungu (P) tampak sama dengan kuning (Y). Barisan balon manakah yang urutannya terlihat sama di mata bella?",multiple_choice,PROFILING_PEDAGOGY,2,"[""YPBGBYP"", ""GRYPYPG"", ""BGRYPGB"", ""PGGGBGY""]",YPBGBYP,
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""7_a.png"", ""7_b.png"", ""7_c.png"", ""7_d.png""]",15,7.png
+"Ali mengumpulkan sejumlah batang kayu dengan panjang 10m dan ingin memberikan batang kayu dengan jumlah sesedikit mungkin kepada Joni.
+Apabila Joni membutuhkan 7 batang kayu dengan panjang 4m dan 7 batang kayu dengan panjang 3m, berapa banyak kayu paling sedikit yang perlu dikumpulkan oleh Ali?",multiple_choice,PROFILING_PEDAGOGY,2,"[""YPBGBYP"", ""GRYPYPG"", ""BGRYPGB"", """"PGGGBGY""""]",YPBGBYP,
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""A"", ""B"", ""C"", ""D""]",B,9.png
+,multiple_choice_image,PROFILING_PEDAGOGY,2,"[""10_a.png"", ""10_b.png"", ""10_c.png"", ""10_d.png""]",10_c.png,10.png
+"Apabila terdapat 3 baris bunga dengan urutan sebagai berikut:
+1. pagar - A - B - C - D
+2. pagar - A - C - B - A
+3. pagar - D - B - A - C
+Manakah urutan bunga yang sesuai apabila bunga B harus berada lebih dekat dengan pagar dibandingkan bunga C",multiple_choice,PROFILING_PEDAGOGY,2,"[""Baris 1"", ""Baris 1 dan 2"", ""Baris 1 dan 3"", ""Semua baris""]",Baris 1 dan 3,
+"Terdapat sebuah kata dengan contoh penulisan sebagai berikut:
+1. A
+2. B
+3. C
+4. ABA
+5. CBC
+Manakah dari opsi jawaban berikut yang tidak sesuai dengan contoh penulisan yang ada?",multiple_choice,PROFILING_PEDAGOGY,2,"[""BBBABBBB"", ""AAA"", ""CBAABC"", ""BCABBACB""]",BBBABBBB,
+"Sebuah toko bunga memiliki 4 jenis bunga dengan kode A, B, C, dan D serta 3 warna dengan kode 1, 2, 3. Apabila terdapat pembeli dengan keinginan sebagai berikut:
+1. Setiap warna muncul 2 kali
+2. Tidak boleh ada bunga berjenis sama dengan warna yang sama
+3. Paling banyak hanya 2 bunga untuk tiap jenisnya pada satu rangkaian
+Opsi rangkaian mana yang sesuai dengan keinginan pembeli tersebut?",multiple_choice,PROFILING_PEDAGOGY,2,"[""A1 - B2 - B1 - C3 - D2 - C1"", ""A2 - B2- A3 - B1 - D3 - A1"", ""A1 - B2 - D3 - D3 - B1 - C2"", ""A1 - B2 - C3 - D3 - B1 - D2""]",A1 - B2 - C3 - D3 - B1 - D2,
+"Beba ingin memakan permen loli sebanyak mungkin. Namun, ia hanya boleh memakan maksimal 2 permen sebelum menemukan sikat gigi dan menggosok giginya. Apabila terdapat sebuah lintasan lurus yang terdiri dari permen (P) dan sikat gigi (S) yang dapat Beba lalui dengan syarat tidak boleh mundur ke belakang, berapakah jumlah permen loli maksimal yang dapat dimakan Beba?
+Lintasan:
+mulai - P - S - P - P - S - S - P - P - P - S - P - selesai",multiple_choice,PROFILING_PEDAGOGY,2,"[""3"", ""5"", ""6"", ""7""]",6,
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""3"", ""4"", ""6"", ""7""]",3,15.png
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""INFORMATION IS COOL"", ""INFORMATICS IS COOL"", ""MATHEMATICS IS COOL"", ""INFORMATION SECRET""]",INFORMATICS IS COOL,16.png
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""1 batu putih"", ""2 batu putih"", ""3 batu putih"", ""tidak peduli berapapun batu""]",3 batu putih,17.png
+,multiple_choice_image,PROFILING_PEDAGOGY,2,"[""18_a.png"", ""18_b.png"", ""18_c.png"", ""18_d.png""]",18_c.png,18.png
+,multiple_choice_image,PROFILING_PEDAGOGY,2,"[""19_a.png"", ""19_b.png"", ""19_c.png"", ""19_d.png""]",19_b.png,19.png
+,multiple_choice_image,PROFILING_PEDAGOGY,2,"[""20_a.png"", ""20_b.png"", ""20_c.png"", ""20_d.png""]",20_b.png,20.png
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""4"", ""5"", ""6"", ""7"", ""8""]",7,21.png
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""Start       
+Ulangi 4{            
+Ulangi 4{Tanam; Maju(2)},            
+KeKanan(90)}  
+Stop "", ""Start       
+Ulangi 4{            
+Ulangi 4{ Tanam, Maju (2)},            
+KeKiri(90)}  
+Stop "", ""Start       
+Ulangi 4{            
+Ulangi 4{ Maju (2), Tanam },            
+KeKiri (90)}  
+Stop "", ""Start       
+Ulangi 4{            
+Ulangi 4{ Maju (1), Tanam },            
+KeKanan (90)}  
+Stop ""]","Start       
+Ulangi 4{            
+Ulangi 4{Tanam; Maju(2)},           
+KeKanan(90)}  
+Stop",22.png
+,multiple_choice_image,PROFILING_PEDAGOGY,2,"[""24_a.png"", ""24_b.png"", ""24_c.png"", ""24_d.png""]",24_b.png,24.png
+,multiple_choice_image,PROFILING_PEDAGOGY,2,"[""25_a.png"", ""25_b.png"", ""25_c.png"", ""25_d.png""]",25_b.png,25.png
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""Wira-Wiri"", ""Biasa"", ""Cepat"", ""Express""]",Wara-Wiri,26.png
+,multiple_choice_image,PROFILING_PEDAGOGY,2,"[""27_a.png"", ""27_b.png"", ""27_c.png"", ""27_d.png""]",27_b.png,27.png
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""Bob, Vino, Desi"", ""Vino, Ari, Rosa"", ""Ari, Kati, Vino"", ""Ari, Vino, Bob""]","Ari, Kati, Vino",28.png
+"Pada suatu hari yang cerah, Maya, David, Iva, dan Marko bermain sepak bola. Malangnya, salah satu
+melempar bola dan memecahkan kaca kelas. Bu Guru ingin tahu siapa yang menyebabkan kaca jendela
+tsb pecah. Bu Guru mengenal dengan baik bahwa tiga di antara anak tersebut tidak pernah bohong. Tapi
+ia tidak yakin siapa yang bersalah.
+
+Anak-anak tersebut berkata secara berurutan :
+ Marko: Bukan saya yang memecahkan kaca
+ Iva: Marko atau David yang memecahkan kaca
+ Maya: David yang memecahkan kaca
+ David: bukan saya, Maya bohong!
+Tantangan:
+Siapa yang memecahkan kaca jendela?",multiple_choice,PROFILING_PEDAGOGY,2,"[""David"", ""Marko"", ""Maya"", ""Iva""]",David,
+,multiple_choice,PROFILING_PEDAGOGY,2,"[""A1 B1 B2 B3 C3 D3 D4 D5 D6 E6 F6"", ""A1 B1 B2 B3 C3 D3 E3 E4 F4 F5 F6"", ""A1 B1 B2 B3 C3 D3 E3 F3 F4 F5 F6"", ""A1 B1 B2 B3 B4 C4 D4 D5 D6 E6 F6""]",A1 B1 B2 B3 C3 D3 E3 F3 F4 F5 F6,30.png
+,multiple_choice,PROFILING_PEDAGOGY,3,"[""1"", ""2"", ""3"", ""4"", ""5"", ""6""]",3,31.png
+,multiple_choice,PROFILING_PEDAGOGY,3,"[""Harus dicat warna merah"", ""Harus dicat warna biru"", ""Harus dicat warna hijau"", ""Boleh memilih biru atau hijau""]",Harus dicat warna biru,32.png
+,multiple_choice,PROFILING_PEDAGOGY,4,"[""6"", ""7"", ""8"", ""9"", ""10"", ""11""]]",8,33.png
+,multiple_choice,PROFILING_PEDAGOGY,4,"[""OUT(H2)-IN(C2);OUT(H9)-IN(C9);OUT(C9)-IN(C2);OUT(H9)-IN(C2)"", ""OUT(C2)-IN(H9);OUT(H2)-IN(C9);OUT(C2)-IN(H2);OUT(C9)-IN(H9)"", ""OUT(H9)-IN(C9);OUT(H9)-IN(H2);OUT(C2)-IN(H2);OUT(C9)-IN(H2)"", ""OUT(C2)-IN(C9);OUT(H2)-IN(H9);OUT(C2)-IN(H2);OUT(C9)-IN(H9)""]",OUT(C2)-IN(H9);OUT(H2)-IN(C9);OUT(C2)-IN(H2);OUT(C9)-IN(H9),34.png
+"Terdapat sebuah pesan yang diubah menjadi kode sebagai berikut:
+MEET
+B I LL
+YBEA
+VERA
+T6XX
+MEETBILLYBEAVERAT6 -> MBYVTEIBE6ELERXTLAAX
+Apabila terdapat sebuah kode sebagai berikut, OIERKLTEILH!WBEX. Apa pesan asli yang ingin disampaikan?",multiple_choice,PROFILING_PEDAGOGY,5,"[""OKWHERETOMEET!"", ""OKIWILLBETHERE!"", ""WILLYOUBETHERETOO?"", ""OKIWILLMEETHIM!""]",OKIWILLBETHERE!,
+,multiple_choice_image,PROFILING_PEDAGOGY,5,"[""36_a.png"", ""36_b.png"", ""36_c.png"", ""36_d.png""]",36_c.png,36.png
+"Terdapat kumpulan bantal dengan berbagai huruf sebagai berikut:
+C A B A F
+D F C E C
+B A F A
+C E B C A
+Apabil sebuah tim hanya dapat dibentuk dari 3 pemain dengan huruf bantal yang sama. Maka berapakah total tim yang dapat dibentuk dan total bantal yang tidak digunakan?",multiple_choice,PROFILING_PEDAGOGY,5,"[""1 tim, 13 bantal"", ""2 tim, 10 bantal"", ""3 tim, 10 bantal"", ""4 tim, 7 bantal""]","4 tim, 7 bantal",
+"Terdapat sebuah lintasan lingkaran dengan panjang 15 posisi melangkah. Kode posisi dimulai dari angka 0 dan diakhiri dengan angka 14. Pada lintasan tersebut, terdapat 3 hewan yang ingin berkompetisi dengan panjang langkah sebagai berikut:
+A -> maju 5 posisi tiap 1 tiupan peluit
+B -> maju 3 posisi tiap 1 tiupan peluit
+C -> maju 2 posisi tiap 1 tiupan peluit
+Apabila salah satu hewan telah mencapai posisi 14, maka ia akan kembali ke posisi 0 pada langkah berikutnya dan akan berulang hingga pertandingan selesai. Seluruh posisi awal hewan adalah di posisi 0, apabila pertandingan dilaksanakan dengan 4 tiupan peluit, maka dimanakan posisi tiap hewan yang bertanding?",multiple_choice,PROFILING_PEDAGOGY,5,"[""A-3, B-5, C-9"", ""A-5, B-12, C-8"", ""A-9, B-1, C-4"", ""A-20, B-12, C-8""]","A-5, B-12, C-8",
+,multiple_choice,PROFILING_PEDAGOGY,5,"[""4"", ""3"", ""2"", ""1""]",4,39.png
+,multiple_choice,PROFILING_PEDAGOGY,5,"[""1"", ""2"", ""3"", ""4""]",3,40.png
+,multiple_choice,PROFILING_PEDAGOGY,5,"[""41_a.png"", ""41_b.png"", ""41_c.png"", ""41_d.png""]",41_c.png,41.png
+,short_answer,PROFILING_PEDAGOGY,5,,41,42.png
+,short_answer,PROFILING_PEDAGOGY,5,,23,43.png
+,short_answer,PROFILING_PEDAGOGY,5,,2,44.png
+"Terdapat mainan dengan berbagai ukuran sebagai berikut:
+1. 20x20
+2. 25x30
+3. 40x40
+4. 10x10
+5. 50x35
+6. 35x45
+Apabila mainan yang lebih kecil dapat dimasukkan ke mainan yang lebih besar, berikan urutan nomor mainan dari yang terluar hingga terdalam! (Pilih kemungkinan dengan jumlah mainan terbanyak)
+Note: Tidak semua mainan dapat dimasukkan",multiple_choice,PROFILING_PEDAGOGY,6,"[""5-6-2-4-1-3"", ""5-2-1-4"", ""6-5-3-2-1-4"", ""3-5-2-1-4""]",5-2-1-4,
+"Terdapat 5 warna mobil berbeda dengan jumlah mobil sebagai berikut:
+Putih -> Biru - 7
+Merah -> 24
+Hitam -> Biru + 5
+Biru -> Merah - 9
+Hijau -> Hitam - 7
+Apabila terdapat diagram batang terurut dengan posisi mobil merah di paling kanan. Mobil apakah yang terletak pada diagram batang ke-3 dari kiri?",multiple_choice,PROFILING_PEDAGOGY,6,"[""Putih"", ""Hijau"", ""Hitam"", ""Biru""]",Biru,
+"Apabila terdapat 3 ketentuan sebagai berikut:
+1. A dapat berubah menjadi A A
+2. A dapat berubah menjadi C B
+3. B dapat berubah menjadi B
+Contoh: 
+ketentuan 1 - ketentuan 2 - ketentuan 3 - ketentuan 1
+A -> A A -> A C B -> A C B B -> A A C B B
+Manakah diantara opsi jawaban yang tidak menerapkan 3 ketentuan yang tersedia?",multiple_choice,PROFILING_PEDAGOGY,6,"[""A C B B B"", ""C B C"", ""A A A A"", ""C B B B C B B B""]",C B C,
+"Toko donat di desa Bebras dapat membuat 1 donat setiap 2 menit. Ada antrian di depan toko, pelanggan dilayani satu persatu. Setiap pelanggan ingin membeli sejumlah donat. Saking larisnya, setiap orang hanya boleh membeli 3 donat pada satu saat. Jika ingin membeli lebih, harus antri lagi ke belakang. Toko donat buka dan mulai membuat donat pada pukul 7 pagi, dan sudah ada 3 bebras yang antri: yang pertama adalah Ali ingin membeli 7 donat, kedua adalah Bilgin ingin membeli 3 donat, dan yang ketiga Yasemin ingin membeli 5 donat. Berapa menit setelah toko buka, Yasemin akan dilayani dan mendapat semua donat yang ingin dibelinya?",multiple_choice,PROFILING_PEDAGOGY,6,"[""12"", ""10"", ""26"", ""28""]",26,
+,multiple_choice_image,PROFILING_PEDAGOGY,6,"[""49_a.png"", ""49_b.png"", ""49_c.png"", ""49_d.png""]",49_d.png,49.png
+,multiple_choice,PROFILING_PEDAGOGY,6,"[""DGE"", ""GGE"", ""AGE"", ""DBC""]",DGE,50.png
+,multiple_choice,PROFILING_PEDAGOGY,6,"[""12"", ""15"", ""18"", ""20""]",18,51.png
+,multiple_choice,PROFILING_PEDAGOGY,6,"[""KELINCI"", ""BERANG BERANG"", ""BERUANG"", ""KUCING""]",BERUANG,52.png
+,multiple_choice,PROFILING_PEDAGOGY,6,"[""Mobil B"", ""Mobil C"", ""Mobil F"", ""Mobil G"", ""Mobil H"", ""Mobil I"", ""Mobil K"", ""Mobil J""]",Mobil I,53.png
+"Sekolah Bebras akan mengadakan pertunjukan menari, dengan penari berpasangan. Ada 6 penari yaitu : 
+Ana, Budi, Cinta, Dori, Evi, Fani. 
+Mereka akan menari berpasangan : 
+1. Ana - Budi 
+2. Evi - Dori 
+3. Ana - Evi 
+4. Budi - Cinta 
+5. Dori - Ana 
+6. Fani - Budi 
+7. Cinta - Evi 
+8. Budi – Dori 
+9. Dori - Fani 
+10. Fani - Evi 
+Pelatih ingin menjadwalkan gladi resik untuk suatu tarian berantai. Dalam sebuah tarian berantai, urutan 
+tarian ditentukan sedemikian rupa sehingga dari satu tarian ke tarian berikutnya, salah satu dari pasangan 
+penari akan tetap tinggal di panggung untuk pertunjukan berikutnya. Selain itu, ada aturan bahwa 
+seorang penari tak boleh dijdwal menari 3 kali berturut-turut, sebab akan kelelahan. 
+Contoh: saat Ana dan Evi menari, salah satu alternatif berikutnya adalah Cinta dan Evi. Setelah itu, Evi 
+tidak dapat menari lagi. 
+Pertanyaan: 
+Penari mana yang tak boleh dijadwalkan pada tarian pertama karena akan menyebabkan tidak mungkin 
+membuat pertunjukan tarian berantai?",multiple_choice,PROFILING_PEDAGOGY,6,"[""Ana"", ""Cinta"", ""Evi"", ""Dori"", ""Budi"", ""Fani""]",Cinta,
+,multiple_choice,PROFILING_PEDAGOGY,6,"[""8"", ""17"", ""15"", ""5""]",8,55.png
+,multi_select,PROFILING_PEDAGOGY,6,"[""1"", ""2"", ""3"", ""4"", ""5""]",5 | 2,56.png
+"Sebuah alat untuk melakukan diagnosa harus menggoncang spesimen secara berulang-ulang. Alat ini
+bekerja berdasarkan sebuah program komputer, yang ditulis dalam beberapa baris yang diberi nomor.
+Alat membaca program baris demi baris, dan mengeksekusinya segera setelah membaca.
+Jika baris mengandung perintah go to X, maka alat akan langsung ke baris X dan meneruskan membaca
+serta mengeksekusinya
+Program mampu untuk:
+- menyimpan sebuah nilai bilangan dalam lokasi A dengan instruksi “set”,
+- menambahkan 1 pada nilai yang disimpan pada lokasi A dengan instruksi “add”,
+- dan membandingkan nilai A dengan sebuah bilangan lain (=, <, ≤, >, ≥, ≠).
+Tantangan: Berapa kali alat akan menggoncang spesimen jika prosedurnya ditulis dengan program
+sebagai berikut:
+1. set A to 0
+2. add 1 to A
+3. go to 6
+4. jika A = 60 go to 8
+5. set A to 0
+6. add 1 to A
+7. go to 2
+8. ulangi A kali menggoncang spesimen
+9. stop",multiple_choice,PROFILING_PEDAGOGY,6,"[""Spesimen digoncang dua kali"", ""Spesimen digoncang satu kali"", ""Spesimen digoncang 60 kali"", ""Prosedur tidak akan pernah berhenti dan tidak pernah mengguncang spesimen.""]",Prosedur tidak akan pernah berhenti dan tidak pernah mengguncang spesimen,
+,short_answer,PROFILING_PEDAGOGY,6,,534,59.png
+,multiple_choice_image,PROFILING_PEDAGOGY,6,"[""60_a.png"", ""60_b.png"", ""60_c.png"", ""60_d.png""]",60_c.png,60.png

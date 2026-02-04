@@ -1,26 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LogiCT Profiling Tester</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; background: #f4f7f6; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        h1 { color: #2c3e50; text-align: center; }
-        .question-block { border-left: 5px solid #3498db; padding: 15px; margin-bottom: 25px; display: none; }
-        .question-block.active { display: block; }
-        .btn { display: inline-block; background: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
-        .btn:hover { background: #2980b9; }
-        .btn-success { background: #27ae60; }
-        .options-list { list-style: none; padding: 0; }
-        .options-list li { margin: 10px 0; }
-        .result { font-weight: bold; color: #e67e22; font-size: 24px; text-align: center; margin-top: 20px; }
-        img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
-        input[type="number"] { width: 60px; padding: 8px; border-radius: 4px; border: 1px solid #ddd; }
-        .upload-section { background: #fff; padding: 20px; border: 2px dashed #3498db; border-radius: 8px; margin-bottom: 30px; text-align: center; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f4f7f6;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .question-block {
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin-bottom: 25px;
+            display: none;
+        }
+
+        .question-block.active {
+            display: block;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .options-list li {
+            margin: 10px 0;
+        }
+
+        .result {
+            font-weight: bold;
+            color: #e67e22;
+            font-size: 24px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .upload-section {
+            background: #fff;
+            padding: 20px;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
     </style>
 </head>
+
 <body>
 
     <h1>LogiCT Profiling Tester 🧪</h1>
@@ -70,7 +148,7 @@
             const response = await fetch('/api/profiling/questions/');
             questions = await response.json();
             if (questions.length === 0) return alert("Belum ada soal! Upload CSV dulu.");
-            
+
             currentIndex = 0;
             userResponses = [];
             document.getElementById('quizContent').innerHTML = '';
@@ -87,15 +165,29 @@
             let html = `<div class="question-block active">
                 <p><strong>Soal ${currentIndex + 1} of ${questions.length}</strong> (${q.category})</p>
                 <p>${q.question}</p>`;
-            
+
             if (q.image) {
                 html += `<img src="${q.image}" alt="Question Image">`;
             }
 
-            if (q.type === 'multiple_choice') {
+            if (q.type === 'multiple_choice' || q.type === 'multiple_choice_image' || q.type === 'multi_select' || q.type === 'multi_select_image') {
+                const isMulti = q.type.startsWith('multi_select');
+                const inputType = isMulti ? 'checkbox' : 'radio';
+
                 html += `<ul class="options-list">`;
                 q.option.forEach(opt => {
-                    html += `<li><label><input type="radio" name="q_ans" value="${opt}"> ${opt}</label></li>`;
+                    if (q.type.includes('_image')) {
+                        const imgSrc = opt.startsWith('http') ? opt : `/media/questions/${opt}`;
+                        html += `<li><label>
+                            <input type="${inputType}" name="q_ans" value="${opt}">
+                            <div style="display: inline-block; vertical-align: middle; margin-left: 10px;">
+                                <img src="${imgSrc}" style="max-width: 150px; display: block; margin: 5px 0;">
+                                <small>${opt}</small>
+                            </div>
+                        </label></li>`;
+                    } else {
+                        html += `<li><label><input type="${inputType}" name="q_ans" value="${opt}"> ${opt}</label></li>`;
+                    }
                 });
                 html += `</ul>`;
             } else if (q.type === 'scale') {
@@ -112,10 +204,15 @@
             const q = questions[currentIndex];
             let answer = "";
 
-            if (q.type === 'multiple_choice') {
-                const selected = document.querySelector('input[name="q_ans"]:checked');
-                if (!selected) return alert("Pilih jawaban!");
-                answer = selected.value;
+            if (q.type.includes('multiple_choice') || q.type.includes('multi_select')) {
+                const selected = document.querySelectorAll('input[name="q_ans"]:checked');
+                if (selected.length === 0) return alert("Pilih jawaban!");
+
+                if (q.type.startsWith('multi_select')) {
+                    answer = Array.from(selected).map(el => el.value).join('|');
+                } else {
+                    answer = selected[0].value;
+                }
             } else if (q.type === 'scale') {
                 answer = document.getElementById('q_ans_num').value;
             } else {
@@ -139,7 +236,7 @@
         async function submitQuiz() {
             const response = await fetch('/api/profiling/submit/', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
@@ -168,4 +265,5 @@
         }
     </script>
 </body>
+
 </html>

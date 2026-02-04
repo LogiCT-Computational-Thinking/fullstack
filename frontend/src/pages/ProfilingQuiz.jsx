@@ -38,7 +38,9 @@ export default function ProfilingQuiz() {
 
             // Separate cognitive and pedagogic questions
             const cog = allQuestions.filter(q => q.category.startsWith('PROFILING_COGNITIVE'));
-            const ped = allQuestions.filter(q => q.category === 'PROFILING_PEDAGOGY');
+            const ped = allQuestions
+                .filter(q => q.category === 'PROFILING_PEDAGOGY')
+                .sort((a, b) => (a.level || 0) - (b.level || 0));
 
             setCognitiveQuestions(cog);
             setPedagogicQuestions(ped);
@@ -127,7 +129,23 @@ export default function ProfilingQuiz() {
     };
 
     const handlePedagogicAnswer = (index, value) => {
-        setPedagogicAnswers(prev => ({ ...prev, [index]: value }));
+        const question = pedagogicQuestions[index];
+        const isMulti = question.type.startsWith('multi_select');
+
+        if (isMulti) {
+            setPedagogicAnswers(prev => {
+                const current = prev[index] || "";
+                const answers = current ? current.split('|') : [];
+                if (answers.includes(value)) {
+                    const filtered = answers.filter(a => a !== value);
+                    return { ...prev, [index]: filtered.join('|') };
+                } else {
+                    return { ...prev, [index]: [...answers, value].join('|') };
+                }
+            });
+        } else {
+            setPedagogicAnswers(prev => ({ ...prev, [index]: value }));
+        }
     };
 
     const handleFinish = async () => {
@@ -143,10 +161,10 @@ export default function ProfilingQuiz() {
             });
 
             // Add pedagogic responses
-            Object.entries(pedagogicAnswers).forEach(([index, answerIndex]) => {
+            Object.entries(pedagogicAnswers).forEach(([index, answerValue]) => {
                 const question = pedagogicQuestions[index];
-                const actualAnswer = question.option[answerIndex];
-                responses.push({ question_id: question.id, answer: actualAnswer });
+                // Send as string (index for MC, pipe-separated string for Multi)
+                responses.push({ question_id: question.id, answer: String(answerValue) });
             });
 
             const response = await api.post('/profiling/submit/', { responses });
@@ -523,26 +541,55 @@ export default function ProfilingQuiz() {
                                     {pedagogicQ.challenge}
                                 </p>
                                 {pedagogicQ.image && (
-                                    <div className="flex justify-center mb-4">
-                                        <img src={`/media/${pedagogicQ.image}`} alt="Question Diagram" className="max-h-40 object-contain rounded-lg border border-gray-100" />
+                                    <div className="flex justify-center mb-6">
+                                        <img
+                                            src={pedagogicQ.image.startsWith('/media/') ? pedagogicQ.image : `/media/${pedagogicQ.image}`}
+                                            alt="Question Diagram"
+                                            className="max-h-60 w-auto object-contain rounded-xl shadow-sm border border-gray-100"
+                                        />
                                     </div>
                                 )}
-                                <div className="grid grid-cols-2 gap-3">
-                                    {(pedagogicQ.option || []).map((opt, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handlePedagogicAnswer(qPedIndex, idx)}
-                                            className={`p-3 rounded-xl border-2 transition-all font-bold ${pedagogicAnswers[qPedIndex] === idx
-                                                ? 'border-[#419FB1] bg-[#E0F2F1] text-[#006064]'
-                                                : 'border-[#B2EBF2] bg-[#E1F5FE] text-[#01579B] hover:border-[#81D4FA]'
-                                                }`}
-                                        >
-                                            {pedagogicQ.type === 'image_choice' ? (
-                                                <img src={opt} alt={`Option ${idx}`} className="w-full h-auto rounded-lg" />
-                                            ) : opt}
-                                        </button>
-                                    ))}
-                                </div>
+
+                                {pedagogicQ.type === 'short_answer' ? (
+                                    <div className="mt-4">
+                                        <input
+                                            type="text"
+                                            value={pedagogicAnswers[qPedIndex] || ""}
+                                            onChange={(e) => handlePedagogicAnswer(qPedIndex, e.target.value)}
+                                            placeholder="Type your answer here..."
+                                            className="w-full bg-gray-50 border-2 border-gray-100 text-gray-900 font-bold rounded-2xl px-5 py-4 outline-none focus:border-[#419FB1] transition-all"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className={`grid ${pedagogicQ.type.includes('_image') ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+                                        {(pedagogicQ.option || []).map((opt, idx) => {
+                                            const isMulti = pedagogicQ.type.startsWith('multi_select');
+                                            const currentAns = pedagogicAnswers[qPedIndex] || "";
+                                            const isSelected = isMulti
+                                                ? currentAns.split('|').includes(opt)
+                                                : currentAns === opt;
+
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handlePedagogicAnswer(qPedIndex, opt)}
+                                                    className={`p-3 rounded-xl border-2 transition-all font-bold ${isSelected
+                                                        ? 'border-[#419FB1] bg-[#E0F2F1] text-[#006064]'
+                                                        : 'border-[#B2EBF2] bg-[#E1F5FE] text-[#01579B] hover:border-[#81D4FA]'
+                                                        }`}
+                                                >
+                                                    {pedagogicQ.type.includes('_image') ? (
+                                                        <img
+                                                            src={`/media/questions/${opt}`}
+                                                            alt={`Option ${idx}`}
+                                                            className="w-full h-auto rounded-lg"
+                                                        />
+                                                    ) : opt}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         </StepCard>
                     );
