@@ -17,9 +17,11 @@ urlpatterns = [
     # User profile endpoints
     path('auth/profile/', views.user_profile_view, name='user-profile'),
     path('auth/profile/update/', views.update_profile_view, name='update-profile'),
+    path('auth/profiling/student-info/', views.update_student_info_view, name='update-student-info'),
     
     # Profiling endpoints
     path('profiling/questions/', views.get_profiling_questions, name='profiling-questions'),
+    path('profiling/cognitive-submit/', views.submit_cognitive_answers, name='cognitive-submit'),
     path('profiling/submit/', views.submit_profiling_answers, name='profiling-submit'),
     path('profiling/upload-csv/', views.bulk_upload_questions, name='profiling-upload-csv'),
     

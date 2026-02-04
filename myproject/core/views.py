@@ -21,7 +21,8 @@ from .serializers import (
     VerifyOTPSerializer,
     ResetPasswordOTPSerializer,
     PretestQuestionSerializer,
-    ProfilingSubmissionSerializer
+    ProfilingSubmissionSerializer,
+    UpdateStudentInfoSerializer
 )
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -50,6 +51,8 @@ def api_root(request):
                 'refresh_token': '/api/auth/refresh/',
                 'profile': '/api/auth/profile/',
                 'update_profile': '/api/auth/profile/update/',
+                'update_student_info': '/api/auth/profiling/student-info/',
+                'submit_cognitive': '/api/profiling/cognitive-submit/',
                 'forgot_password': '/api/auth/forgot-password/',
                 'verify_otp': '/api/auth/verify-otp/',
                 'reset_password_otp': '/api/auth/reset-password-otp/',
@@ -267,7 +270,6 @@ def user_profile_view(request):
     serializer = UserSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-
 @api_view(['PUT', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def update_profile_view(request):
@@ -289,6 +291,24 @@ def update_profile_view(request):
             'user': serializer.data
         }, status=status.HTTP_200_OK)
     
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def update_student_info_view(request):
+    """
+    Update student information from profiling quiz
+    POST /api/auth/profiling/student-info/
+    """
+    user = request.user
+    serializer = UpdateStudentInfoSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response({
+            'message': 'Student information updated successfully',
+            'user': UserSerializer(user).data
+        }, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -491,7 +511,7 @@ def reset_password_view(request):
 # =========================================================
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_profiling_questions(request):
     """
     Get randomized profiling questions (21 total: 6 pedagogy, 15 cognitive)
@@ -521,17 +541,24 @@ def get_profiling_questions(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def submit_profiling_answers(request):
     """
     Submit profiling responses and calculate result (e.g., "2TAR")
     """
+    print(f"=== Profiling Submission ===")
+    print(f"User: {request.user}")
+    print(f"Authenticated: {request.user.is_authenticated}")
+    print(f"Data received: {request.data}")
+    
     serializer = ProfilingSubmissionSerializer(data=request.data)
     if not serializer.is_valid():
+        print(f"Validation Errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     user = request.user
     responses_data = serializer.validated_data['responses']
+    print(f"Processing {len(responses_data)} responses")
     
     # Create a Pretest record for this profiling
     pretest = Pretest.objects.create(user=user, result="Profiling")
@@ -619,6 +646,47 @@ def submit_profiling_answers(request):
         'result_code': result_code,
         'is_profiled': user.is_profiled
     })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_cognitive_answers(request):
+    """
+    Save cognitive responses only, without finishing the profiling.
+    """
+    serializer = ProfilingSubmissionSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    user = request.user
+    responses_data = serializer.validated_data['responses']
+    
+    # Check if a pretest already exists for this profiling or create a placeholder
+    pretest, created = Pretest.objects.get_or_create(
+        user=user, 
+        result="Profiling In Progress",
+        defaults={'score': 0.0}
+    )
+    
+    for r in responses_data:
+        try:
+            question = PretestQuestion.objects.get(pk=r['question_id'])
+            val = int(r['answer'])
+            
+            # Save or update response
+            PretestResponse.objects.update_or_create(
+                user=user,
+                question=question,
+                defaults={
+                    'response_value': val,
+                    'answer': True # Cognitive doesn't have "wrong" answer
+                }
+            )
+        except Exception as e:
+            print(f"Error saving cognitive response: {e}")
+            continue
+            
+    return Response({'message': 'Cognitive answers saved successfully'})
 
 
 @api_view(['POST'])

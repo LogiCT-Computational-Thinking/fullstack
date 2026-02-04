@@ -24,13 +24,13 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle token refresh
+// Response interceptor - Handle token refresh and cleanup
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't tried to refresh yet
+    // 1. Handle Token Expired (401)
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -54,12 +54,24 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed, logout user
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/';
+        localStorage.clear();
+        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
+    }
+
+    // 2. Handle Invalid Token / Port Change / Forbidden (403 or token_not_valid)
+    // Ini krusial jika pengguna pindah port atau ada sisa token rusak di browser
+    const errorDetail = error.response?.data?.detail;
+    if (
+      error.response?.status === 403 ||
+      error.response?.data?.code === 'token_not_valid' ||
+      (typeof errorDetail === 'string' && errorDetail.includes('token_not_valid'))
+    ) {
+      console.warn('Invalid token detected, clearing local storage...');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
     }
 
     return Promise.reject(error);

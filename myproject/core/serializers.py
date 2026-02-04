@@ -9,10 +9,18 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'name', 'email', 'password', 'role', 'profilePicture', 'preferences', 'is_profiled']
+        fields = [
+            'id', 'name', 'first_name', 'last_name', 'email', 'password', 'role', 
+            'profilePicture', 'preferences', 'is_profiled', 'birth_date', 
+            'gender', 'student_class', 'student_id'
+        ]
         extra_kwargs = {
             'password': {'write_only': True},
-            'profilePicture': {'required': False}
+            'profilePicture': {'required': False},
+            'birth_date': {'required': False},
+            'gender': {'required': False},
+            'student_class': {'required': False},
+            'student_id': {'required': False},
         }
     
     def create(self, validated_data):
@@ -165,3 +173,11 @@ class ProfilingResponseSerializer(serializers.Serializer):
 class ProfilingSubmissionSerializer(serializers.Serializer):
     """Serializer for submitting all profiling questions"""
     responses = ProfilingResponseSerializer(many=True)
+
+
+class UpdateStudentInfoSerializer(serializers.ModelSerializer):
+    """Serializer for updating student information specifically"""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'birth_date', 'gender', 'student_class', 'student_id']
+

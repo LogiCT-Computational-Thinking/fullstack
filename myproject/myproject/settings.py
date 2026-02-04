@@ -215,6 +215,14 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
+]
+
 # Google OAuth Configuration
 GOOGLE_OAUTH_CLIENT_ID = '328574145642-9go5mo6nh18nl739bco05871p4vrqgh2.apps.googleusercontent.com'
 GOOGLE_OAUTH_CLIENT_SECRET = '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'

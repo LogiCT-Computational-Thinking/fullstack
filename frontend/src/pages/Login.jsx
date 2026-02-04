@@ -23,9 +23,13 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(email, password);
+      const data = await login(email, password);
       playSuccess(); // Play success sound
-      navigate('/quiz');
+      if (data.user?.is_profiled) {
+        navigate('/dashboard');
+      } else {
+        navigate('/profiling-quiz');
+      }
     } catch (err) {
       playError(); // Play error sound
       setError(err.error || 'Login failed. Please check your credentials.');
@@ -41,9 +45,13 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await googleLogin(credentialResponse.credential, 'student');
+      const data = await googleLogin(credentialResponse.credential, 'student');
       playSuccess(); // Play success sound
-      navigate('/quiz');
+      if (data.user?.is_profiled) {
+        navigate('/dashboard');
+      } else {
+        navigate('/profiling-quiz');
+      }
     } catch (err) {
       playError(); // Play error sound
       console.error('Google login error - Full error:', err);

@@ -7,7 +7,7 @@ import SuccessModal from '../components/SuccessModal';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register, googleLogin } = useAuth();
+  const { register, googleLogin, user } = useAuth();
   const { playClick, playSuccess, playError, playFocus } = useSound();
   const [formData, setFormData] = useState({
     firstName: '',
@@ -39,7 +39,7 @@ export default function Register() {
       // Combine first and last name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
-      await register({
+      const data = await register({
         name: fullName,
         email: formData.email,
         password: formData.password,
@@ -52,11 +52,17 @@ export default function Register() {
       // Auto redirect after 2 seconds
       setTimeout(() => {
         setShowSuccessModal(false);
-        navigate('/');
+        if (data.user?.is_profiled) {
+          navigate('/dashboard');
+        } else {
+          navigate('/profiling-quiz');
+        }
       }, 2000);
     } catch (err) {
       playError(); // Play error sound
-      setError(err.error || err.email?.[0] || 'Registration failed. Please try again.');
+      // Handle Django Rest Framework error format
+      const errorMessage = err.email ? "Email already registered" : (err.error || 'Registration failed. Please try again.');
+      setError(errorMessage);
       console.error('Register error:', err);
     } finally {
       setLoading(false);
@@ -69,14 +75,18 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await googleLogin(credentialResponse.credential, 'student');
+      const data = await googleLogin(credentialResponse.credential, 'student');
       playSuccess(); // Play success sound
       setShowSuccessModal(true); // Show success modal
 
       // Auto redirect after 2 seconds
       setTimeout(() => {
         setShowSuccessModal(false);
-        navigate('/');
+        if (data.user?.is_profiled) {
+          navigate('/dashboard');
+        } else {
+          navigate('/profiling-quiz');
+        }
       }, 2000);
     } catch (err) {
       playError(); // Play error sound
@@ -98,7 +108,11 @@ export default function Register() {
         show={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false);
-          navigate('/');
+          if (user?.is_profiled) {
+            navigate('/dashboard');
+          } else {
+            navigate('/profiling-quiz');
+          }
         }}
         title="Welcome to LogiCT!"
         message="Your account was successfully created"

@@ -24,7 +24,7 @@ function DashboardLayout() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard' },
-    { id: 'profiling', label: 'Profiling Quiz', icon: ClipboardList, path: '/dashboard/profiling-quiz', title: 'Profiling Quiz' },
+    { id: 'profiling', label: 'Profiling Quiz', icon: ClipboardList, path: '/profiling-quiz', title: 'Profiling Quiz' },
     { id: 'modules', label: 'Modules', icon: BookOpen, path: '/dashboard/modules', title: 'Modules' },
     { id: 'quiz-bank', label: 'Quiz Bank', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Quiz Bank' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/dashboard/settings', title: 'Settings' }
@@ -155,7 +155,6 @@ function DashboardLayout() {
         <main className="p-8">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/profiling-quiz" element={<ProfilingQuiz />} />
             <Route path="/modules" element={<Modules />} />
             <Route path="/quiz-bank" element={<QuizBank />} />
             <Route path="/settings" element={<Settings />} />
@@ -178,6 +177,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
         <Route path="/quiz" element={<Quiz />} />
+        <Route path="/profiling-quiz" element={<ProfilingQuiz />} />
 
         {/* Dashboard Routes - With Layout */}
         <Route path="/dashboard/*" element={<DashboardLayout />} />
