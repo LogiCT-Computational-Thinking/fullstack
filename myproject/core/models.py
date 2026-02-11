@@ -75,6 +75,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return f"{self.name or self.email} ({self.role})"
 
+    @property
+    def archetype_info(self):
+        """Returns the archetype details based on the user's preferences (last 3 chars)"""
+        if not self.preferences or len(self.preferences) < 3:
+            return None
+        
+        # Taking the last 3 characters (e.g., "2TAR" -> "TAR")
+        archetype_code = self.preferences[-3:].upper()
+        return ProfilingArchetype.objects.filter(code=archetype_code).first()
+
 
 
 # =========================================================
@@ -169,7 +179,27 @@ class PretestResponse(models.Model):
 
 
 # =========================================================
-# 5️⃣ QUIZ, QUESTION, RESPONSE, FEEDBACK, HINTS
+# 5️⃣ PROFILING ARCHETYPE & PEDAGOGY LEVEL MAPPING
+# =========================================================
+class ProfilingArchetype(models.Model):
+    code = models.CharField(max_length=3, unique=True, help_text="Example: PAR, PAI, TAR, etc.")
+    archetype_name = models.CharField(max_length=50)
+    description = models.TextField()
+
+    def __str__(self):
+        return f"{self.code} - {self.archetype_name}"
+
+
+class PedagogyLevel(models.Model):
+    level = models.IntegerField(unique=True)
+    title = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"Level {self.level} - {self.title}"
+
+
+# =========================================================
+# 6️⃣ QUIZ, QUESTION, RESPONSE, FEEDBACK, HINTS
 # =========================================================
 class Quiz(models.Model):
     course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name='quiz')

@@ -1,18 +1,25 @@
 from rest_framework import serializers
-from .models import User, Course, Module, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse
+from .models import User, Course, Module, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype
 from django.contrib.auth.hashers import make_password
 
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model"""
     password = serializers.CharField(write_only=True, required=False)
+    archetype_info = serializers.SerializerMethodField()
+
+    def get_archetype_info(self, obj):
+        archetype = obj.archetype_info
+        if archetype:
+            return ProfilingArchetypeSerializer(archetype).data
+        return None
     
     class Meta:
         model = User
         fields = [
             'id', 'name', 'first_name', 'last_name', 'email', 'password', 'role', 
             'profilePicture', 'preferences', 'is_profiled', 'birth_date', 
-            'gender', 'student_class', 'student_id'
+            'gender', 'student_class', 'student_id', 'archetype_info'
         ]
         extra_kwargs = {
             'password': {'write_only': True},
@@ -34,6 +41,13 @@ class UserSerializer(serializers.ModelSerializer):
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
         return super().update(instance, validated_data)
+
+
+class ProfilingArchetypeSerializer(serializers.ModelSerializer):
+    """Serializer for ProfilingArchetype model"""
+    class Meta:
+        model = ProfilingArchetype
+        fields = ['code', 'archetype_name', 'description']
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

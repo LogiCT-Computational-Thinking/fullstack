@@ -5,6 +5,7 @@ import maleIcon from '../assets/Male.png';
 import femaleIcon from '../assets/Female.png';
 import genderIcon from '../assets/Gender.png';
 import api from '../services/api';
+import ProfilingResultModal from '../components/ProfilingResultModal';
 
 export default function ProfilingQuiz() {
     const navigate = useNavigate();
@@ -25,6 +26,11 @@ export default function ProfilingQuiz() {
     const [isLoading, setIsLoading] = useState(true);
     const [cognitiveAnswers, setCognitiveAnswers] = useState({});
     const [pedagogicAnswers, setPedagogicAnswers] = useState({});
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [profilingResult, setProfilingResult] = useState(null);
+
+    const cogEndAt = 7 + cognitiveQuestions.length;
+    const pedStartAt = 9 + cognitiveQuestions.length;
 
     useEffect(() => {
         fetchQuestions();
@@ -170,7 +176,16 @@ export default function ProfilingQuiz() {
             const response = await api.post('/profiling/submit/', { responses });
 
             console.log('Submission success:', response.data);
-            navigate('/dashboard', { state: { profileCompleted: true, profilingResult: response.data } });
+
+            // Update local user data with the new profiling results
+            if (response.data.user) {
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+            }
+
+            setProfilingResult(response.data.user?.archetype_info);
+            setShowResultModal(true);
+            // We'll navigate when the modal is closed
+            // navigate('/dashboard', { state: { profileCompleted: true, profilingResult: response.data } });
         } catch (error) {
             console.error('Failed to submit profiling:', error);
             alert('Failed to submit survey. Please try again.');
@@ -182,17 +197,14 @@ export default function ProfilingQuiz() {
             case 0:
                 return (
                     <div className="flex flex-col items-center justify-center h-full text-white text-center p-8">
-                        <div className="bg-[#4CAF50] rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center transition-all">
-                            <h1 className="text-7xl font-bold mb-8 leading-tight">Student Information</h1>
-                            <div className="w-full h-1 bg-white opacity-40 mb-10 max-w-[80%]"></div>
-                            <p className="text-3xl font-semibold tracking-[0.3em] uppercase opacity-90">5 QUESTION</p>
-                        </div>
-                        <button
+                        <div
                             onClick={nextStep}
-                            className="mt-16 bg-white text-[#4CAF50] px-20 py-6 rounded-full font-bold text-3xl shadow-xl hover:scale-110 active:scale-95 transition-all"
+                            className="bg-gradient-to-b from-[#115429] to-[#2EBD40] hover:from-[#9BFC9B] hover:to-[#BDFFBD] rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 group border-2 border-transparent hover:border-[#115429]"
                         >
-                            START
-                        </button>
+                            <h1 className="text-7xl font-medium mb-8 leading-tight text-white group-hover:text-[#115429] transition-colors duration-300">Student Information</h1>
+                            <div className="w-full h-[2px] bg-white group-hover:bg-[#115429] opacity-40 group-hover:opacity-100 mb-10 max-w-[80%] transition-all duration-300"></div>
+                            <p className="text-3xl font-normal tracking-[0.3em] uppercase text-white/90 group-hover:text-[#115429] transition-colors duration-300">5 QUESTION</p>
+                        </div>
                     </div>
                 );
             case 1:
@@ -202,6 +214,8 @@ export default function ProfilingQuiz() {
                         onNext={nextStep}
                         onPrev={prevStep}
                         isNextDisabled={!formData.firstName || !formData.lastName}
+                        step={step}
+                        cogEndAt={cogEndAt}
                     >
                         <div className="flex gap-4">
                             <div className="flex-1">
@@ -236,6 +250,8 @@ export default function ProfilingQuiz() {
                         onNext={nextStep}
                         onPrev={prevStep}
                         isNextDisabled={!formData.birthDay || !formData.birthMonth || !formData.birthYear}
+                        step={step}
+                        cogEndAt={cogEndAt}
                     >
                         <div className="flex gap-3">
                             <div className="flex-1">
@@ -244,7 +260,7 @@ export default function ProfilingQuiz() {
                                     name="birthDay"
                                     value={formData.birthDay}
                                     onChange={handleChange}
-                                    className="w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] text-gray-900 font-bold rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all"
+                                    className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.birthDay ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                 >
                                     <option value="">Day</option>
                                     {[...Array(31)].map((_, i) => (
@@ -258,7 +274,7 @@ export default function ProfilingQuiz() {
                                     name="birthMonth"
                                     value={formData.birthMonth}
                                     onChange={handleChange}
-                                    className="w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] text-gray-900 font-bold rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all"
+                                    className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.birthMonth ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                 >
                                     <option value="">Month</option>
                                     {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => (
@@ -272,7 +288,7 @@ export default function ProfilingQuiz() {
                                     name="birthYear"
                                     value={formData.birthYear}
                                     onChange={handleChange}
-                                    className="w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] text-gray-900 font-bold rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all"
+                                    className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.birthYear ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                 >
                                     <option value="">Year</option>
                                     {[...Array(50)].map((_, i) => (
@@ -290,6 +306,8 @@ export default function ProfilingQuiz() {
                         onNext={nextStep}
                         onPrev={prevStep}
                         isNextDisabled={!formData.gender}
+                        step={step}
+                        cogEndAt={cogEndAt}
                     >
                         <div className="flex gap-4 sm:gap-6 justify-between items-stretch mb-4">
                             {[
@@ -356,6 +374,8 @@ export default function ProfilingQuiz() {
                         onPrev={prevStep}
                         nextLabel="NEXT"
                         isNextDisabled={!formData.studentClass || !formData.studentId}
+                        step={step}
+                        cogEndAt={cogEndAt}
                     >
                         <div className="flex gap-4">
                             <div className="flex-1">
@@ -364,7 +384,7 @@ export default function ProfilingQuiz() {
                                     name="studentClass"
                                     value={formData.studentClass}
                                     onChange={handleChange}
-                                    className="w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] text-gray-900 font-bold rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all"
+                                    className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.studentClass ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                 >
                                     <option value="">Select Class</option>
                                     <option value="ST-26">ST-26</option>
@@ -397,7 +417,7 @@ export default function ProfilingQuiz() {
                             </p>
                             <button
                                 onClick={nextStep}
-                                className="bg-[#4CAF50] text-white px-16 py-6 rounded-full font-extrabold text-3xl hover:bg-[#43a047] transition-all hover:scale-110 active:scale-95 shadow-xl shadow-green-100"
+                                className="bg-gradient-to-b from-[#2EBD40] to-[#115429] text-white px-16 py-5 rounded-full font-semibold text-3xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-green-900/20"
                             >
                                 Take Cognitive Quiz
                             </button>
@@ -407,17 +427,14 @@ export default function ProfilingQuiz() {
             case 6:
                 return (
                     <div className="flex flex-col items-center justify-center h-full text-white text-center p-8 transition-all duration-500">
-                        <div className="bg-[#B33A9D] rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center transition-all">
-                            <h1 className="text-7xl font-bold mb-8 leading-tight">Cognitive Quiz</h1>
-                            <div className="w-full h-1 bg-white opacity-40 mb-10 max-w-[80%]"></div>
-                            <p className="text-3xl font-semibold tracking-[0.3em] uppercase opacity-90">{cognitiveQuestions.length} QUESTION</p>
-                        </div>
-                        <button
+                        <div
                             onClick={nextStep}
-                            className="mt-16 bg-white text-[#B33A9D] px-20 py-6 rounded-full font-bold text-3xl shadow-xl hover:scale-110 active:scale-95 transition-all"
+                            className="bg-gradient-to-b from-[#4F1845] to-[#B5369E] hover:from-[#EEB3D2] hover:to-[#F9D6E5] rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 group border-2 border-transparent hover:border-[#B5369E]"
                         >
-                            START
-                        </button>
+                            <h1 className="text-7xl font-medium mb-8 leading-tight text-white group-hover:text-[#4F1845] transition-colors duration-300">Cognitive Quiz</h1>
+                            <div className="w-full h-[2px] bg-white group-hover:bg-[#4F1845] opacity-40 group-hover:opacity-100 mb-10 max-w-[80%] transition-all duration-300"></div>
+                            <p className="text-3xl font-normal tracking-[0.3em] uppercase text-white/90 group-hover:text-[#4F1845] transition-colors duration-300">{cognitiveQuestions.length} QUESTION</p>
+                        </div>
                     </div>
                 );
             case 7:
@@ -439,15 +456,17 @@ export default function ProfilingQuiz() {
                         onPrev={prevStep}
                         isNextDisabled={!cognitiveAnswers[qCogIndex]}
                         themeColor="#B33A9D"
+                        step={step}
+                        cogEndAt={cogEndAt}
                     >
                         <div className="flex justify-center items-center gap-3 sm:gap-4 mt-8">
                             {[1, 2, 3, 4, 5, 6].map((num) => (
                                 <button
                                     key={num}
                                     onClick={() => handleCognitiveAnswer(qCogIndex, num)}
-                                    className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-extrabold text-2xl sm:text-3xl transition-all duration-200 border-2 ${cognitiveAnswers[qCogIndex] === num
-                                        ? 'bg-[#B43FB3] text-white border-[#B43FB3] scale-110 shadow-lg'
-                                        : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F8BBD0] hover:bg-[#F8BBD0] hover:scale-105'
+                                    className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-bold text-2xl sm:text-3xl transition-all duration-200 border-2 ${cognitiveAnswers[qCogIndex] === num
+                                        ? 'bg-[#B43FB3] text-white border-[#B43FB3] shadow-lg scale-110'
+                                        : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F9D6E5] hover:border-[#F48FB1] hover:bg-[#F8BBD0]'
                                         }`}
                                 >
                                     {num}
@@ -468,7 +487,7 @@ export default function ProfilingQuiz() {
                             </p>
                             <button
                                 onClick={nextStep}
-                                className="bg-[#B33A9D] text-white px-16 py-6 rounded-full font-extrabold text-3xl hover:bg-[#8a2d79] transition-all hover:scale-110 active:scale-95 shadow-xl"
+                                className="bg-gradient-to-b from-[#B5369E] to-[#4F1845] text-white px-16 py-5 rounded-full font-semibold text-3xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-pink-900/20"
                             >
                                 Take Pedagogic Quiz
                             </button>
@@ -478,17 +497,14 @@ export default function ProfilingQuiz() {
             case (8 + cognitiveQuestions.length): // This replaces step 18
                 return (
                     <div className="flex flex-col items-center justify-center h-full text-white text-center p-8 transition-all duration-500">
-                        <div className="bg-[#419FB1] rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center transition-all">
-                            <h1 className="text-7xl font-bold mb-8 leading-tight">Pedagogic Quiz</h1>
-                            <div className="w-full h-1 bg-white opacity-40 mb-10 max-w-[80%]"></div>
-                            <p className="text-3xl font-semibold tracking-[0.3em] uppercase opacity-90">{pedagogicQuestions.length} QUESTION</p>
-                        </div>
-                        <button
+                        <div
                             onClick={nextStep}
-                            className="mt-16 bg-white text-[#419FB1] px-20 py-6 rounded-full font-bold text-3xl shadow-xl hover:scale-110 active:scale-95 transition-all"
+                            className="bg-gradient-to-b from-[#004D54] to-[#3A9AB1] hover:from-[#B2EBF2] hover:to-[#E0F7FA] rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95 group border-2 border-transparent hover:border-[#004D54]"
                         >
-                            START
-                        </button>
+                            <h1 className="text-7xl font-medium mb-8 leading-tight text-white group-hover:text-[#004D54] transition-colors duration-300">Pedagogic Quiz</h1>
+                            <div className="w-full h-[2px] bg-white group-hover:bg-[#004D54] opacity-40 group-hover:opacity-100 mb-10 max-w-[80%] transition-all duration-300"></div>
+                            <p className="text-3xl font-normal tracking-[0.3em] uppercase text-white/90 group-hover:text-[#004D54] transition-colors duration-300">{pedagogicQuestions.length} QUESTION</p>
+                        </div>
                     </div>
                 );
             default:
@@ -502,15 +518,17 @@ export default function ProfilingQuiz() {
                             onPrev={prevStep}
                             isNextDisabled={!cognitiveAnswers[idx]}
                             themeColor="#B33A9D"
+                            step={step}
+                            cogEndAt={cogEndAt}
                         >
                             <div className="flex justify-center items-center gap-3 sm:gap-4 mt-8">
                                 {[1, 2, 3, 4, 5, 6].map((num) => (
                                     <button
                                         key={num}
                                         onClick={() => handleCognitiveAnswer(idx, num)}
-                                        className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-extrabold text-2xl sm:text-3xl transition-all duration-200 border-2 ${cognitiveAnswers[idx] === num
-                                            ? 'bg-[#B43FB3] text-white border-[#B43FB3] scale-110 shadow-lg'
-                                            : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F8BBD0] hover:bg-[#F8BBD0] hover:scale-105'
+                                        className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-bold text-2xl sm:text-3xl transition-all duration-200 border-2 ${cognitiveAnswers[idx] === num
+                                            ? 'bg-[#B43FB3] text-white border-[#B43FB3] shadow-lg scale-110'
+                                            : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F9D6E5] hover:border-[#F48FB1] hover:bg-[#F8BBD0]'
                                             }`}
                                     >
                                         {num}
@@ -535,22 +553,24 @@ export default function ProfilingQuiz() {
                             nextLabel={isLast ? "FINISH" : "NEXT"}
                             isNextDisabled={!pedagogicAnswers[qPedIndex] && pedagogicAnswers[qPedIndex] !== 0}
                             themeColor="#419FB1"
+                            step={step}
+                            cogEndAt={cogEndAt}
                         >
                             <div className="space-y-4">
-                                <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-4">
+                                <div className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8 font-medium whitespace-pre-line">
                                     {pedagogicQ.challenge}
-                                </p>
+                                </div>
                                 {pedagogicQ.image && (
-                                    <div className="flex justify-center mb-6">
+                                    <div className="flex justify-center mb-8">
                                         <img
                                             src={pedagogicQ.image.startsWith('/media/') ? pedagogicQ.image : `/media/${pedagogicQ.image}`}
                                             alt="Question Diagram"
-                                            className="max-h-60 w-auto object-contain rounded-xl shadow-sm border border-gray-100"
+                                            className="max-h-[400px] sm:max-h-[500px] w-full object-contain rounded-2xl shadow-md border border-gray-50"
                                         />
                                     </div>
                                 )}
 
-                                {pedagogicQ.type === 'short_answer' ? (
+                                {pedagogicQ.type?.toLowerCase().includes('short') || pedagogicQ.type?.toLowerCase().includes('fill') ? (
                                     <div className="mt-4">
                                         <input
                                             type="text"
@@ -561,7 +581,7 @@ export default function ProfilingQuiz() {
                                         />
                                     </div>
                                 ) : (
-                                    <div className={`grid ${pedagogicQ.type.includes('_image') ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+                                    <div className={`grid ${pedagogicQ.type.includes('_image') ? 'grid-cols-2' : 'grid-cols-1'} gap-4 sm:gap-6`}>
                                         {(pedagogicQ.option || []).map((opt, idx) => {
                                             const isMulti = pedagogicQ.type.startsWith('multi_select');
                                             const currentAns = pedagogicAnswers[qPedIndex] || "";
@@ -573,18 +593,26 @@ export default function ProfilingQuiz() {
                                                 <button
                                                     key={idx}
                                                     onClick={() => handlePedagogicAnswer(qPedIndex, opt)}
-                                                    className={`p-3 rounded-xl border-2 transition-all font-bold ${isSelected
-                                                        ? 'border-[#419FB1] bg-[#E0F2F1] text-[#006064]'
-                                                        : 'border-[#B2EBF2] bg-[#E1F5FE] text-[#01579B] hover:border-[#81D4FA]'
+                                                    className={`p-3 sm:p-4 rounded-2xl border-2 transition-all font-bold text-left flex items-center gap-4 ${isSelected
+                                                        ? 'border-[#419FB1] bg-[#E0F2F1] text-[#006064] shadow-md ring-2 ring-[#419FB1]/20'
+                                                        : 'border-[#B2EBF2] bg-[#E1F5FE] text-[#01579B] hover:border-[#81D4FA] hover:bg-[#E1F5FE]/80'
                                                         }`}
                                                 >
-                                                    {pedagogicQ.type.includes('_image') ? (
+                                                    {((pedagogicQ.type || "").includes('_image') || (typeof opt === 'string' && /\.(png|jpe?g|gif|svg|webp)$/i.test(opt))) ? (
                                                         <img
-                                                            src={`/media/questions/${opt}`}
+                                                            src={typeof opt === 'string' && opt.startsWith('/media/') ? opt : (opt.includes('/') ? `/media/${opt}` : `/media/questions/${opt}`)}
                                                             alt={`Option ${idx}`}
-                                                            className="w-full h-auto rounded-lg"
+                                                            className="w-full h-auto rounded-lg max-h-40 object-contain mx-auto"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                                const nextSpan = e.target.parentElement.querySelector('span');
+                                                                if (nextSpan) nextSpan.style.display = 'block';
+                                                            }}
                                                         />
-                                                    ) : opt}
+                                                    ) : null}
+                                                    <span className={`text-sm sm:text-base ${((pedagogicQ.type || "").includes('_image') || (typeof opt === 'string' && /\.(png|jpe?g|gif|svg|webp)$/i.test(opt))) ? 'hidden' : 'block'}`}>
+                                                        {opt}
+                                                    </span>
                                                 </button>
                                             );
                                         })}
@@ -610,48 +638,133 @@ export default function ProfilingQuiz() {
     const isCognitiveQuiz = step >= 7 && step <= 16;
     const isPedagogicIntroStep = step === 17;
     const isPedagogicStart = step === 18;
-    const isPedagogicQuiz = step >= 19;
+    const getProgressInfo = () => {
+        if (step >= 1 && step <= 4) {
+            return { progress: ((step - 1) / 4) * 100, show: true };
+        }
+        if (step >= 7 && step < cogEndAt) {
+            const current = step - 7;
+            const total = cognitiveQuestions.length;
+            return { progress: (current / total) * 100, show: true };
+        }
+        if (step >= pedStartAt && step < pedStartAt + pedagogicQuestions.length) {
+            const current = step - pedStartAt;
+            const total = pedagogicQuestions.length;
+            return { progress: (current / total) * 100, show: true };
+        }
+        return { progress: 0, show: false };
+    };
 
-    const cogEndAt = 7 + cognitiveQuestions.length;
-    const pedStartAt = 9 + cognitiveQuestions.length;
-    const isPedBank = step >= pedStartAt;
+    const progressInfo = getProgressInfo();
 
-    let bgColor = 'bg-[#98E490]'; // Student Info Green
-    if (step >= 6 && step < cogEndAt + 1) bgColor = 'bg-[#F3A9D2]'; // Cognitive Pink
-    if (step >= cogEndAt + 1) bgColor = 'bg-[#A0E4F1]'; // Pedagogic Blue
+    let bgGradient = 'linear-gradient(to bottom, #E8F9E4 0%, #A8E9A1 100%)'; // Student Info Green (Light to Dark)
+    if (step >= 6 && step < cogEndAt + 1) {
+        bgGradient = 'linear-gradient(to bottom, #FEF2F6 0%, #F9D6E5 100%)'; // Cognitive Pink (Light to Dark)
+    }
+    if (step >= cogEndAt + 1) {
+        bgGradient = 'linear-gradient(to bottom, #EBFDFF 0%, #B2EBF2 100%)'; // Pedagogic Blue (Light to Dark)
+    }
 
     return (
-        <div className={`min-h-screen ${bgColor} flex items-center justify-center font-sans transition-colors duration-500`}>
-            <div className="w-full h-full max-w-4xl mx-auto flex flex-col justify-center">
-                {renderStep()}
+        <div
+            className="min-h-screen flex flex-col items-center font-sans transition-all duration-700 relative overflow-hidden"
+            style={{ background: bgGradient }}
+        >
+            {/* Clean Full-Width Blurred Header */}
+            {progressInfo.show && (
+                <div
+                    className="fixed top-0 left-0 w-full z-50 pt-10 pb-8 flex flex-col items-center transition-all duration-700 backdrop-blur-md"
+                    style={{
+                        background: `linear-gradient(to bottom, 
+                            ${step >= 1 && step <= 4 ? '#E8F9E4' : step >= 6 && step < cogEndAt + 1 ? '#FEF2F6' : '#EBFDFF'} 70%, 
+                            transparent 100%)`
+                    }}
+                >
+                    <div className="w-full max-w-2xl px-4 flex flex-col items-center">
+                        <div className="flex justify-center mb-3 opacity-60">
+                            <img
+                                src="/images/logo-logict-3.png"
+                                alt="LogiCT"
+                                className="h-12 w-auto object-contain drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+                            />
+                        </div>
+                        <div className="w-full h-3 bg-gray-900/10 rounded-full relative overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]">
+                            <div
+                                className="h-full bg-gradient-to-r from-[#FF8800] to-[#FFEE66] rounded-full transition-all duration-700 ease-out relative"
+                                style={{ width: `${progressInfo.progress}%` }}
+                            >
+                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full blur-[1px] shadow-[0_0_15px_rgba(255,255,255,1),0_0_5px_rgba(255,255,255,1)]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Content pushed below the fixed header */}
+            <div className={`flex-1 w-full max-w-4xl flex flex-col ${progressInfo.show ? 'pt-48 pb-12' : 'justify-center'} relative z-10 overflow-y-auto`}>
+                <div className="w-full">
+                    {renderStep()}
+                </div>
             </div>
+            <ProfilingResultModal
+                isOpen={showResultModal}
+                onClose={() => {
+                    setShowResultModal(false);
+                    navigate('/dashboard');
+                }}
+                onSeeDetails={() => {
+                    setShowResultModal(false);
+                    navigate('/dashboard/profile-display', { state: { resultData: profilingResult } });
+                }}
+                data={profilingResult}
+            />
         </div>
     );
 }
 
-function StepCard({ title, children, onNext, onPrev, nextLabel = "NEXT", isNextDisabled, themeColor = "#4CAF50" }) {
+function StepCard({ title, children, onNext, onPrev, nextLabel = "NEXT", isNextDisabled, themeColor = "#4CAF50", step, cogEndAt }) {
     return (
         <div className="w-full max-w-2xl mx-auto px-4">
-            <div className="bg-white rounded-t-[40px] p-10 pb-12 shadow-sm min-h-[220px] flex flex-col justify-center">
-                <h2 className="text-2xl font-extrabold text-[#333] mb-8">{title}</h2>
+            <div className="bg-white rounded-t-[40px] p-8 sm:p-12 pb-14 shadow-sm min-h-[250px] flex flex-col justify-center">
+                <h2 className="text-xl sm:text-2xl font-bold text-[#222] mb-10 leading-tight">{title}</h2>
                 {children}
             </div>
             <div
-                className="rounded-b-[40px] flex justify-between px-10 py-6 items-center shadow-lg transition-colors duration-500"
-                style={{ backgroundColor: themeColor }}
+                className="rounded-b-[40px] flex justify-between px-16 py-8 items-center relative overflow-hidden transition-all duration-500 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)]"
+                style={{
+                    background: step >= 6 && step < cogEndAt + 1
+                        ? 'linear-gradient(to bottom, #B5369E 0%, #4F1845 100%)' // Cognitive Purple Gradient
+                        : step >= cogEndAt + 1
+                            ? 'linear-gradient(to bottom, #3A9AB1 0%, #004D54 100%)' // Pedagogic Blue Gradient
+                            : 'linear-gradient(to bottom, #2EBD40 0%, #115429 100%)' // Student Info Green Gradient
+                }}
             >
                 <button
                     onClick={onPrev}
-                    className="text-white font-bold text-xl tracking-widest hover:opacity-80 transition-opacity"
+                    className="flex items-center gap-3 text-white font-bold text-2xl tracking-widest transition-colors duration-200 hover:text-[#FF8800] active:text-[#000000] group/btn"
                 >
+                    <span className="flex items-center">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-colors duration-200">
+                            <path d="M8 12L14 6V18L8 12Z" fill="currentColor" />
+                            <circle cx="17" cy="12" r="1.5" fill="currentColor" />
+                            <circle cx="21" cy="12" r="1" fill="currentColor" opacity="0.6" />
+                        </svg>
+                    </span>
                     PREV
                 </button>
                 <button
                     onClick={onNext}
                     disabled={isNextDisabled}
-                    className={`text-white font-bold text-xl tracking-widest hover:opacity-80 transition-opacity ${isNextDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`flex items-center gap-3 font-bold text-2xl tracking-widest transition-colors duration-200 ${isNextDisabled ? 'text-white/30 cursor-not-allowed' : 'text-white hover:text-[#FF8800] active:text-[#000000]'} group/btn`}
                 >
                     {nextLabel}
+                    <span className="flex items-center">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-colors duration-200">
+                            <path d="M16 12L10 18V6L16 12Z" fill="currentColor" />
+                            <circle cx="7" cy="12" r="1.5" fill="currentColor" />
+                            <circle cx="3" cy="12" r="1" fill="currentColor" opacity="0.6" />
+                        </svg>
+                    </span>
                 </button>
             </div>
         </div>

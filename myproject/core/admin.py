@@ -47,3 +47,10 @@ class PretestAdmin(admin.ModelAdmin):
 @admin.register(PretestResponse)
 class PretestResponseAdmin(admin.ModelAdmin):
     list_display = ("id", "user", "question", "answer", "response_value")
+
+from .models import ProfilingArchetype
+
+@admin.register(ProfilingArchetype)
+class ProfilingArchetypeAdmin(admin.ModelAdmin):
+    list_display = ("code", "archetype_name")
+    search_fields = ("code", "archetype_name")

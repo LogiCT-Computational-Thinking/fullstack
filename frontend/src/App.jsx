@@ -13,6 +13,7 @@ import Settings from './pages/Settings'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import LandingPage from './pages/LandingPage'
+import ProfilingResult from './pages/ProfilingResult'
 
 
 function DashboardLayout() {
@@ -24,9 +25,9 @@ function DashboardLayout() {
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard' },
-    { id: 'profiling', label: 'Profiling Quiz', icon: ClipboardList, path: '/profiling-quiz', title: 'Profiling Quiz' },
     { id: 'modules', label: 'Modules', icon: BookOpen, path: '/dashboard/modules', title: 'Modules' },
     { id: 'quiz-bank', label: 'Quiz Bank', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Quiz Bank' },
+    { id: 'profile-display', label: 'Profile Display', icon: User, path: '/dashboard/profile-display', title: 'My CT Profile' },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/dashboard/settings', title: 'Settings' }
   ];
 
@@ -157,6 +158,7 @@ function DashboardLayout() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/modules" element={<Modules />} />
             <Route path="/quiz-bank" element={<QuizBank />} />
+            <Route path="/profile-display" element={<ProfilingResult />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </main>

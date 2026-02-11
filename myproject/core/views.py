@@ -666,7 +666,8 @@ def submit_profiling_answers(request):
     return Response({
         'message': 'Profiling completed successfully',
         'result_code': result_code,
-        'is_profiled': user.is_profiled
+        'is_profiled': user.is_profiled,
+        'user': UserSerializer(user).data
     })
 
 
