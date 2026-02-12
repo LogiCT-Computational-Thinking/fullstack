@@ -18,7 +18,8 @@ export default function ProfilingQuiz() {
         birthMonth: '',
         birthYear: '',
         gender: '',
-        studentClass: '',
+        classType: '',
+        classNumber: '',
         studentId: ''
     });
     const [cognitiveQuestions, setCognitiveQuestions] = useState([]);
@@ -102,7 +103,7 @@ export default function ProfilingQuiz() {
                 last_name: formData.lastName,
                 birth_date: formattedDate,
                 gender: formData.gender,
-                student_class: formData.studentClass,
+                student_class: `${formData.classType}-${formData.classNumber}`,
                 student_id: formData.studentId
             };
 
@@ -262,9 +263,9 @@ export default function ProfilingQuiz() {
                                     onChange={handleChange}
                                     className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.birthDay ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                 >
-                                    <option value="">Day</option>
+                                    <option value="" className="text-gray-400">Day</option>
                                     {[...Array(31)].map((_, i) => (
-                                        <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                        <option key={i + 1} value={i + 1} className="text-gray-900">{i + 1}</option>
                                     ))}
                                 </select>
                             </div>
@@ -276,9 +277,9 @@ export default function ProfilingQuiz() {
                                     onChange={handleChange}
                                     className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.birthMonth ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                 >
-                                    <option value="">Month</option>
+                                    <option value="" className="text-gray-400">Month</option>
                                     {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => (
-                                        <option key={m} value={m}>{m}</option>
+                                        <option key={m} value={m} className="text-gray-900">{m}</option>
                                     ))}
                                 </select>
                             </div>
@@ -290,9 +291,9 @@ export default function ProfilingQuiz() {
                                     onChange={handleChange}
                                     className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.birthYear ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                 >
-                                    <option value="">Year</option>
+                                    <option value="" className="text-gray-400">Year</option>
                                     {[...Array(50)].map((_, i) => (
-                                        <option key={i} value={2026 - i}>{2026 - i}</option>
+                                        <option key={i} value={2026 - i} className="text-gray-900">{2026 - i}</option>
                                     ))}
                                 </select>
                             </div>
@@ -314,50 +315,80 @@ export default function ProfilingQuiz() {
                                 {
                                     id: 'Male',
                                     label: 'Male',
-                                    color: '#2563EB',
                                     bgColor: 'bg-[#EAF5FF]',
-                                    borderColor: '#B9E1FB',
+                                    selectedBg: 'from-[#4198BC] to-[#204A5C]',
+                                    hoverBg: 'hover:from-[#4198BC] hover:to-[#204A5C]',
+                                    borderColor: 'border-[#B9E1FB]',
                                     circleColor: 'bg-[#DEE9FA]',
+                                    selectedCircle: 'bg-[#0D222E]',
+                                    hoverCircle: 'group-hover:bg-[#0D222E]',
+                                    iconColor: '#2563EB',
                                     icon: maleIcon
                                 },
                                 {
                                     id: 'Female',
                                     label: 'Female',
-                                    color: '#DB2777',
                                     bgColor: 'bg-[#FFF0F9]',
-                                    borderColor: '#F9CDEA',
+                                    selectedBg: 'from-[#A92A67] to-[#5C163A]',
+                                    hoverBg: 'hover:from-[#A92A67] hover:to-[#5C163A]',
+                                    borderColor: 'border-[#F9CDEA]',
                                     circleColor: 'bg-[#FCE1F1]',
+                                    selectedCircle: 'bg-[#2D0B1B]',
+                                    hoverCircle: 'group-hover:bg-[#2D0B1B]',
+                                    iconColor: '#DB2777',
                                     icon: femaleIcon
                                 },
                                 {
                                     id: 'Other',
                                     label: 'Prefer not to say',
-                                    color: '#65A30D',
                                     bgColor: 'bg-[#F9FFF0]',
-                                    borderColor: '#D9F99D',
+                                    selectedBg: 'from-[#879E33] to-[#3B4516]',
+                                    hoverBg: 'hover:from-[#879E33] hover:to-[#3B4516]',
+                                    borderColor: 'border-[#D9F99D]',
                                     circleColor: 'bg-[#E3F8C5]',
+                                    selectedCircle: 'bg-[#1C200A]',
+                                    hoverCircle: 'group-hover:bg-[#1C200A]',
+                                    iconColor: '#417532',
                                     icon: genderIcon
                                 }
                             ].map((option) => (
                                 <button
                                     key={option.id}
                                     onClick={() => setFormData(prev => ({ ...prev, gender: option.id }))}
-                                    className={`flex-1 aspect-square flex flex-col items-center justify-center p-4 sm:p-6 rounded-[32px] border-2 transition-all duration-300 gap-3 sm:gap-4 ${option.bgColor} ${formData.gender === option.id
-                                        ? 'shadow-md scale-105 filter brightness-[0.98]'
-                                        : 'hover:scale-[1.02] hover:shadow-sm'
+                                    className={`flex-1 aspect-square flex flex-col items-center justify-center p-3 sm:p-4 rounded-[32px] border-2 transition-all duration-300 gap-2 sm:gap-3 group ${formData.gender === option.id
+                                        ? `bg-gradient-to-b ${option.selectedBg} border-transparent shadow-lg scale-105`
+                                        : `${option.bgColor} ${option.borderColor} hover:bg-gradient-to-b ${option.hoverBg} hover:border-transparent hover:scale-[1.02] hover:shadow-md`
                                         }`}
-                                    style={{
-                                        borderColor: option.borderColor,
-                                        borderWidth: formData.gender === option.id ? '2.5px' : '2px'
-                                    }}
                                 >
                                     <div
-                                        className={`w-14 h-14 sm:w-20 sm:h-20 rounded-full flex items-center justify-center transition-all duration-300 ${option.circleColor} ${formData.gender === option.id ? 'shadow-inner' : ''
+                                        className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center transition-all duration-300 ${formData.gender === option.id
+                                            ? option.selectedCircle
+                                            : `${option.circleColor} ${option.hoverCircle}`
                                             }`}
                                     >
-                                        <img src={option.icon} alt={option.label} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+                                        <div
+                                            style={{
+                                                backgroundColor: formData.gender === option.id ? 'white' : undefined,
+                                                '--icon-color': option.iconColor,
+                                                maskImage: `url(${option.icon})`,
+                                                WebkitMaskImage: `url(${option.icon})`,
+                                                maskMode: 'alpha',
+                                                maskRepeat: 'no-repeat',
+                                                maskPosition: 'center',
+                                                maskSize: 'contain',
+                                                WebkitMaskRepeat: 'no-repeat',
+                                                WebkitMaskPosition: 'center',
+                                                WebkitMaskSize: 'contain',
+                                            }}
+                                            className={`w-7 h-7 sm:w-8 sm:h-8 transition-all duration-300 ${formData.gender === option.id
+                                                ? 'bg-white'
+                                                : 'bg-[var(--icon-color)] group-hover:!bg-white'
+                                                }`}
+                                        />
                                     </div>
-                                    <span className={`text-sm sm:text-base font-bold text-center leading-tight tracking-tight px-2 ${formData.gender === option.id ? 'text-gray-900' : 'text-gray-600'
+                                    <span className={`text-[13px] sm:text-sm font-bold text-center leading-tight tracking-tight px-1 transition-all duration-300 ${formData.gender === option.id
+                                        ? 'text-white'
+                                        : 'text-black group-hover:text-white'
                                         }`}>
                                         {option.label}
                                     </span>
@@ -373,33 +404,75 @@ export default function ProfilingQuiz() {
                         onNext={nextStep}
                         onPrev={prevStep}
                         nextLabel="NEXT"
-                        isNextDisabled={!formData.studentClass || !formData.studentId}
+                        isNextDisabled={!formData.classType || !formData.classNumber || !formData.studentId}
                         step={step}
                         cogEndAt={cogEndAt}
                     >
-                        <div className="flex gap-4">
+                        <div className="flex gap-3 sm:gap-4 items-end mb-4">
                             <div className="flex-1">
-                                <label className="block text-gray-500 font-bold text-sm mb-1 ml-1">Student Class</label>
-                                <select
-                                    name="studentClass"
-                                    value={formData.studentClass}
-                                    onChange={handleChange}
-                                    className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.studentClass ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
-                                >
-                                    <option value="">Select Class</option>
-                                    <option value="ST-26">ST-26</option>
-                                    <option value="ST-27">ST-27</option>
-                                </select>
+                                <label className="block text-gray-400 font-bold text-[13px] mb-2 ml-1">Class Type</label>
+                                <div className="relative">
+                                    <select
+                                        name="classType"
+                                        value={formData.classType}
+                                        onChange={(e) => {
+                                            handleChange(e);
+                                            setFormData(prev => ({ ...prev, classNumber: '' }));
+                                        }}
+                                        className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-4 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.classType ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
+                                    >
+                                        <option value="" className="text-gray-400">Type</option>
+                                        <option value="INTSE" className="text-gray-900">INTSE</option>
+                                        <option value="INTSS" className="text-gray-900">INTSS</option>
+                                        <option value="INTST" className="text-gray-900">INTST</option>
+                                        <option value="SE" className="text-gray-900">SE</option>
+                                        <option value="SS" className="text-gray-900">SS</option>
+                                        <option value="ST" className="text-gray-900">ST</option>
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                                        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                             <div className="flex-1">
-                                <label className="block text-gray-500 font-bold text-sm mb-1 ml-1">Student ID (NIM)</label>
+                                <label className="block text-gray-400 font-bold text-[13px] mb-2 ml-1">Class Number</label>
+                                <div className="relative">
+                                    <select
+                                        name="classNumber"
+                                        value={formData.classNumber}
+                                        onChange={handleChange}
+                                        disabled={!formData.classType}
+                                        className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-4 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.classNumber ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'} ${!formData.classType ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <option value="" className="text-gray-400">Class</option>
+                                        {formData.classType && (
+                                            formData.classType.startsWith('INT') ? (
+                                                <option value="1" className="text-gray-900">1</option>
+                                            ) : (
+                                                [...Array(formData.classType === 'SE' ? 7 : 24)].map((_, i) => (
+                                                    <option key={i + 1} value={i + 1} className="text-gray-900">{i + 1}</option>
+                                                ))
+                                            )
+                                        )}
+                                    </select>
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                                        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex-[2]">
+                                <label className="block text-gray-400 font-bold text-[13px] mb-2 ml-1">Student ID (NIM)</label>
                                 <input
                                     type="text"
                                     name="studentId"
                                     value={formData.studentId}
                                     onChange={handleChange}
                                     placeholder="G6401221042"
-                                    className="w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] text-gray-900 font-bold rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] transition-all placeholder:text-gray-400 placeholder:font-normal"
+                                    className="w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] text-gray-900 font-bold rounded-2xl px-5 py-3.5 outline-none focus:border-[#4CAF50] transition-all placeholder:text-gray-300 placeholder:font-normal"
                                 />
                             </div>
                         </div>
@@ -459,19 +532,25 @@ export default function ProfilingQuiz() {
                         step={step}
                         cogEndAt={cogEndAt}
                     >
-                        <div className="flex justify-center items-center gap-3 sm:gap-4 mt-8">
-                            {[1, 2, 3, 4, 5, 6].map((num) => (
-                                <button
-                                    key={num}
-                                    onClick={() => handleCognitiveAnswer(qCogIndex, num)}
-                                    className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-bold text-2xl sm:text-3xl transition-all duration-200 border-2 ${cognitiveAnswers[qCogIndex] === num
-                                        ? 'bg-[#B43FB3] text-white border-[#B43FB3] shadow-lg scale-110'
-                                        : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F9D6E5] hover:border-[#F48FB1] hover:bg-[#F8BBD0]'
-                                        }`}
-                                >
-                                    {num}
-                                </button>
-                            ))}
+                        <div className="mt-4">
+                            <div className="flex justify-center items-center gap-3 sm:gap-4 mb-4">
+                                {[1, 2, 3, 4, 5, 6].map((num) => (
+                                    <button
+                                        key={num}
+                                        onClick={() => handleCognitiveAnswer(qCogIndex, num)}
+                                        className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-bold text-2xl sm:text-3xl transition-all duration-300 border-2 ${cognitiveAnswers[qCogIndex] === num
+                                            ? 'bg-gradient-to-b from-[#B5369E] to-[#4F1845] text-white border-transparent shadow-lg scale-110'
+                                            : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F9D6E5] hover:bg-gradient-to-b hover:from-[#B5369E] hover:to-[#4F1845] hover:text-white hover:border-transparent hover:scale-105'
+                                            }`}
+                                    >
+                                        {num}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex justify-between px-2 text-gray-400 font-medium text-[13px] sm:text-base">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
                         </div>
                     </StepCard>
                 );
@@ -521,19 +600,25 @@ export default function ProfilingQuiz() {
                             step={step}
                             cogEndAt={cogEndAt}
                         >
-                            <div className="flex justify-center items-center gap-3 sm:gap-4 mt-8">
-                                {[1, 2, 3, 4, 5, 6].map((num) => (
-                                    <button
-                                        key={num}
-                                        onClick={() => handleCognitiveAnswer(idx, num)}
-                                        className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-bold text-2xl sm:text-3xl transition-all duration-200 border-2 ${cognitiveAnswers[idx] === num
-                                            ? 'bg-[#B43FB3] text-white border-[#B43FB3] shadow-lg scale-110'
-                                            : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F9D6E5] hover:border-[#F48FB1] hover:bg-[#F8BBD0]'
-                                            }`}
-                                    >
-                                        {num}
-                                    </button>
-                                ))}
+                            <div className="mt-0">
+                                <div className="flex justify-center items-center gap-3 sm:gap-4 mb-4">
+                                    {[1, 2, 3, 4, 5, 6].map((num) => (
+                                        <button
+                                            key={num}
+                                            onClick={() => handleCognitiveAnswer(idx, num)}
+                                            className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl font-bold text-2xl sm:text-3xl transition-all duration-300 border-2 ${cognitiveAnswers[idx] === num
+                                                ? 'bg-gradient-to-b from-[#B5369E] to-[#4F1845] text-white border-transparent shadow-lg scale-110'
+                                                : 'bg-[#FCE4EC] text-[#B33A9D] border-[#F9D6E5] hover:bg-gradient-to-b hover:from-[#B5369E] hover:to-[#4F1845] hover:text-white hover:border-transparent hover:scale-105'
+                                                }`}
+                                        >
+                                            {num}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex justify-between px-2 text-gray-400 font-medium text-[13px] sm:text-base">
+                                    <span>Strongly Disagree</span>
+                                    <span>Strongly Agree</span>
+                                </div>
                             </div>
                         </StepCard>
                     );
@@ -572,50 +657,57 @@ export default function ProfilingQuiz() {
 
                                 {pedagogicQ.type?.toLowerCase().includes('short') || pedagogicQ.type?.toLowerCase().includes('fill') ? (
                                     <div className="mt-4">
+                                        <div className="text-gray-400 text-sm mb-2 ml-1">Type ur answer...</div>
                                         <input
                                             type="text"
                                             value={pedagogicAnswers[qPedIndex] || ""}
                                             onChange={(e) => handlePedagogicAnswer(qPedIndex, e.target.value)}
-                                            placeholder="Type your answer here..."
-                                            className="w-full bg-gray-50 border-2 border-gray-100 text-gray-900 font-bold rounded-2xl px-5 py-4 outline-none focus:border-[#419FB1] transition-all"
+                                            placeholder="Type your answer"
+                                            className="w-full bg-[#EBFDFF] border-2 border-[#B2EBF2] text-gray-900 font-bold rounded-2xl px-5 py-3.5 outline-none focus:border-[#419FB1] transition-all placeholder:text-gray-300 placeholder:font-normal"
                                         />
                                     </div>
                                 ) : (
-                                    <div className={`grid ${pedagogicQ.type.includes('_image') ? 'grid-cols-2' : 'grid-cols-1'} gap-4 sm:gap-6`}>
-                                        {(pedagogicQ.option || []).map((opt, idx) => {
-                                            const isMulti = pedagogicQ.type.startsWith('multi_select');
-                                            const currentAns = pedagogicAnswers[qPedIndex] || "";
-                                            const isSelected = isMulti
-                                                ? currentAns.split('|').includes(opt)
-                                                : currentAns === opt;
+                                    <div className="mt-4">
+                                        {pedagogicQ.type.startsWith('multi_select') && (
+                                            <div className="text-gray-400 text-sm mb-4 ml-1">Select two or more options..</div>
+                                        )}
+                                        <div className={`grid ${pedagogicQ.type.includes('_image') ? 'grid-cols-2' : 'grid-cols-1'} gap-4 sm:gap-6`}>
+                                            {(pedagogicQ.option || []).map((opt, idx) => {
+                                                const isMulti = pedagogicQ.type.startsWith('multi_select');
+                                                const currentAns = pedagogicAnswers[qPedIndex] || "";
+                                                const isSelected = isMulti
+                                                    ? currentAns.split('|').includes(opt)
+                                                    : currentAns === opt;
 
-                                            return (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => handlePedagogicAnswer(qPedIndex, opt)}
-                                                    className={`p-3 sm:p-4 rounded-2xl border-2 transition-all font-bold text-left flex items-center gap-4 ${isSelected
-                                                        ? 'border-[#419FB1] bg-[#E0F2F1] text-[#006064] shadow-md ring-2 ring-[#419FB1]/20'
-                                                        : 'border-[#B2EBF2] bg-[#E1F5FE] text-[#01579B] hover:border-[#81D4FA] hover:bg-[#E1F5FE]/80'
-                                                        }`}
-                                                >
-                                                    {((pedagogicQ.type || "").includes('_image') || (typeof opt === 'string' && /\.(png|jpe?g|gif|svg|webp)$/i.test(opt))) ? (
-                                                        <img
-                                                            src={typeof opt === 'string' && opt.startsWith('/media/') ? opt : (opt.includes('/') ? `/media/${opt}` : `/media/questions/${opt}`)}
-                                                            alt={`Option ${idx}`}
-                                                            className="w-full h-auto rounded-lg max-h-40 object-contain mx-auto"
-                                                            onError={(e) => {
-                                                                e.target.style.display = 'none';
-                                                                const nextSpan = e.target.parentElement.querySelector('span');
-                                                                if (nextSpan) nextSpan.style.display = 'block';
-                                                            }}
-                                                        />
-                                                    ) : null}
-                                                    <span className={`text-sm sm:text-base ${((pedagogicQ.type || "").includes('_image') || (typeof opt === 'string' && /\.(png|jpe?g|gif|svg|webp)$/i.test(opt))) ? 'hidden' : 'block'}`}>
-                                                        {opt}
-                                                    </span>
-                                                </button>
-                                            );
-                                        })}
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => handlePedagogicAnswer(qPedIndex, opt)}
+                                                        className={`p-3 sm:p-4 rounded-2xl border-2 transition-all font-bold text-left flex items-center gap-4 ${isSelected
+                                                            ? 'border-[#419FB1] bg-[#E0F2F1] text-[#006064] shadow-md'
+                                                            : 'border-[#B2EBF2] bg-[#EBFDFF] text-gray-900 hover:border-[#419FB1] hover:bg-[#E0F2F1]'
+                                                            }`}
+                                                    >
+                                                        <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all ${isSelected ? 'bg-[#419FB1] border-[#419FB1]' : 'border-[#B2EBF2] bg-white opacity-40'}`} />
+                                                        {((pedagogicQ.type || "").includes('_image') || (typeof opt === 'string' && /\.(png|jpe?g|gif|svg|webp)$/i.test(opt))) ? (
+                                                            <img
+                                                                src={typeof opt === 'string' && opt.startsWith('/media/') ? opt : (opt.includes('/') ? `/media/${opt}` : `/media/questions/${opt}`)}
+                                                                alt={`Option ${idx}`}
+                                                                className="w-full h-auto rounded-lg max-h-40 object-contain mx-auto"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    const nextSpan = e.target.parentElement.querySelector('span');
+                                                                    if (nextSpan) nextSpan.style.display = 'block';
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        <span className={`text-sm sm:text-base ${((pedagogicQ.type || "").includes('_image') || (typeof opt === 'string' && /\.(png|jpe?g|gif|svg|webp)$/i.test(opt))) ? 'hidden' : 'block'}`}>
+                                                            {opt}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -680,7 +772,7 @@ export default function ProfilingQuiz() {
                             transparent 100%)`
                     }}
                 >
-                    <div className="w-full max-w-2xl px-4 flex flex-col items-center">
+                    <div className="w-full max-w-5xl px-4 flex flex-col items-center">
                         <div className="flex justify-center mb-3 opacity-60">
                             <img
                                 src="/images/logo-logict-3.png"
@@ -700,9 +792,9 @@ export default function ProfilingQuiz() {
                 </div>
             )}
 
-            {/* Main Content pushed below the fixed header */}
-            <div className={`flex-1 w-full max-w-4xl flex flex-col ${progressInfo.show ? 'pt-48 pb-12' : 'justify-center'} relative z-10 overflow-y-auto`}>
-                <div className="w-full">
+            {/* Main Content: Adjusting padding based on quiz type to ensure long questions in Quiz 3 don't get cut off, while keeping Quiz 1 & 2 better positioned */}
+            <div className={`flex-1 w-full max-w-4xl flex flex-col relative z-10 overflow-y-auto ${progressInfo.show ? (step >= pedStartAt ? 'pt-56 pb-24' : 'pt-43 pb-24') : 'justify-center py-20'}`}>
+                <div className="w-full my-auto">
                     {renderStep()}
                 </div>
             </div>
@@ -724,13 +816,13 @@ export default function ProfilingQuiz() {
 
 function StepCard({ title, children, onNext, onPrev, nextLabel = "NEXT", isNextDisabled, themeColor = "#4CAF50", step, cogEndAt }) {
     return (
-        <div className="w-full max-w-2xl mx-auto px-4">
+        <div className="w-full max-w-3xl mx-auto px-4">
             <div className="bg-white rounded-t-[40px] p-8 sm:p-12 pb-14 shadow-sm min-h-[250px] flex flex-col justify-center">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#222] mb-10 leading-tight">{title}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#222] mb-6 leading-tight">{title}</h2>
                 {children}
             </div>
             <div
-                className="rounded-b-[40px] flex justify-between px-16 py-8 items-center relative overflow-hidden transition-all duration-500 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)]"
+                className="rounded-b-[40px] flex justify-between px-16 py-5 items-center relative overflow-hidden transition-all duration-500 shadow-[inset_0_2px_10px_rgba(0,0,0,0.1)]"
                 style={{
                     background: step >= 6 && step < cogEndAt + 1
                         ? 'linear-gradient(to bottom, #B5369E 0%, #4F1845 100%)' // Cognitive Purple Gradient
@@ -741,7 +833,7 @@ function StepCard({ title, children, onNext, onPrev, nextLabel = "NEXT", isNextD
             >
                 <button
                     onClick={onPrev}
-                    className="flex items-center gap-3 text-white font-bold text-2xl tracking-widest transition-colors duration-200 hover:text-[#FF8800] active:text-[#000000] group/btn"
+                    className="flex items-center gap-3 text-white font-bold text-xl tracking-widest transition-colors duration-200 hover:text-[#FF8800] active:text-[#000000] group/btn"
                 >
                     <span className="flex items-center">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="transition-colors duration-200">
@@ -755,7 +847,7 @@ function StepCard({ title, children, onNext, onPrev, nextLabel = "NEXT", isNextD
                 <button
                     onClick={onNext}
                     disabled={isNextDisabled}
-                    className={`flex items-center gap-3 font-bold text-2xl tracking-widest transition-colors duration-200 ${isNextDisabled ? 'text-white/30 cursor-not-allowed' : 'text-white hover:text-[#FF8800] active:text-[#000000]'} group/btn`}
+                    className={`flex items-center gap-3 font-bold text-xl tracking-widest transition-colors duration-200 ${isNextDisabled ? 'text-white/30 cursor-not-allowed' : 'text-white hover:text-[#FF8800] active:text-[#000000]'} group/btn`}
                 >
                     {nextLabel}
                     <span className="flex items-center">

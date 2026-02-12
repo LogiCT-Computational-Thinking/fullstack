@@ -257,3 +257,27 @@ class QuizResponse(models.Model):
 
     def __str__(self):
         return f"Response by {self.user.name} - {self.quiz.course.title}"
+# =========================================================
+# 7️⃣ STUDENT CLASS
+# =========================================================
+class StudentClass(models.Model):
+    TYPE_CHOICES = [
+        ('INTSE', 'INTSE'),
+        ('INTSS', 'INTSS'),
+        ('INTST', 'INTST'),
+        ('SE', 'SE'),
+        ('SS', 'SS'),
+        ('ST', 'ST'),
+    ]
+    
+    class_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    class_number = models.IntegerField()
+    
+    class Meta:
+        unique_together = ('class_type', 'class_number')
+        verbose_name = "Student Class"
+        verbose_name_plural = "Student Classes"
+        ordering = ['class_type', 'class_number']
+
+    def __str__(self):
+        return f"{self.class_type}-{self.class_number}"
