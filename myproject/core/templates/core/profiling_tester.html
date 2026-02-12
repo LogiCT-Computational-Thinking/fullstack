@@ -104,10 +104,19 @@
     <h1>LogiCT Profiling Tester 🧪</h1>
 
     <div class="upload-section">
-        <h3>1. Upload Soal (CSV)</h3>
+        <h3>1. Upload Soal Baru (CSV)</h3>
         <input type="file" id="csvFile" accept=".csv">
-        <button class="btn" onclick="uploadCSV()">Upload CSV</button>
+        <button class="btn" onclick="uploadCSV()">Upload Soal</button>
         <p id="uploadStatus"></p>
+    </div>
+
+    <div class="upload-section" style="border-color: #27ae60;">
+        <h3>1b. Update Bobot CT Framework (CSV)</h3>
+        <p style="font-size: 0.8em; color: #666;">Format: id, weight_decomposition, weight_abstraction, weight_pattern,
+            weight_algorithm</p>
+        <input type="file" id="weightFile" accept=".csv">
+        <button class="btn btn-success" onclick="updateWeights()">Update Bobot</button>
+        <p id="weightStatus"></p>
     </div>
 
     <div class="card" id="quizContainer">
@@ -142,6 +151,23 @@
 
             const result = await response.json();
             document.getElementById('uploadStatus').innerText = result.message || result.error;
+        }
+
+        async function updateWeights() {
+            const fileInput = document.getElementById('weightFile');
+            if (!fileInput.files[0]) return alert("Pilih file CSV dulu!");
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const response = await fetch('/api/profiling/update-weights/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData
+            });
+
+            const result = await response.json();
+            document.getElementById('weightStatus').innerText = result.message || result.error;
         }
 
         async function startQuiz() {

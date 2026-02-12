@@ -120,7 +120,8 @@ class PretestQuestionSerializer(serializers.ModelSerializer):
     """Serializer for PretestQuestion model"""
     class Meta:
         model = PretestQuestion
-        fields = ['id', 'question', 'type', 'category', 'level', 'image', 'option', 'scaleMin', 'scaleMax']
+        fields = ['id', 'question', 'type', 'category', 'level', 'image', 'option', 'scaleMin', 'scaleMax', 
+                  'weight_decomposition', 'weight_abstraction', 'weight_pattern', 'weight_algorithm']
 
 
 class QuizSerializer(serializers.ModelSerializer):

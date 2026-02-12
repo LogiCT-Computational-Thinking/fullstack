@@ -650,6 +650,63 @@ def submit_profiling_answers(request):
     label_ir = get_cognitive_label('PROFILING_COGNITIVE_IR', 'I', 'R')
     
     # -----------------------------------------------------
+    # 3. CT FRAMEWORK SCORING (Normalized Composition)
+    # -----------------------------------------------------
+    # Fetch all questions involved in this pretest
+    all_qs = PretestQuestion.objects.filter(pk__in=answers_map.keys())
+    
+    ct_scores = {
+        'decomposition': 0.0,
+        'abstraction': 0.0,
+        'pattern': 0.0,
+        'algorithm': 0.0
+    }
+    
+    total_earned_points = 0.0
+    
+    for q in all_qs:
+        user_ans = answers_map[q.id]
+        is_correct = False
+        
+        # Determine if correct (reusing logic from Pedagogy section or similar)
+        if q.type in ['multi_select', 'multi_select_image']:
+            user_ans_set = set([a.strip().lower() for a in user_ans.replace('[', '').replace(']', '').replace('"', '').split(',') if a.strip()])
+            correct_ans_set = set([a.strip().lower() for a in q.correctAns.replace('[', '').replace(']', '').replace('"', '').split(',') if a.strip()])
+            if len(user_ans_set) <= 1 and '|' in user_ans:
+                user_ans_set = set([a.strip().lower() for a in user_ans.split('|') if a.strip()])
+            if len(correct_ans_set) <= 1 and '|' in q.correctAns:
+                correct_ans_set = set([a.strip().lower() for a in q.correctAns.split('|') if a.strip()])
+            is_correct = user_ans_set == correct_ans_set
+        elif q.type in ['GENERAL', 'PROFILING_PEDAGOGY'] or q.category.startswith('PROFILING_COGNITIVE'):
+            # For cognitive questions, the 'answer' is usually a numeric value (1-6) from Scale
+            # However, the user asked for CT framework weights to be applied to "answered correct"
+            # Cognitive Profiling (Scale 1-6) questions don't really have a "correct" answer in the traditional sense.
+            # But the user's request "jika dijawab benar" implies we should treat them as correct if possible 
+            # OR perhaps CT framework weights mainly apply to Pedagogy and other "scored" questions?
+            # Actually, most profiling questions have correct answers.
+            is_correct = user_ans.strip().lower() == q.correctAns.strip().lower()
+        
+        if is_correct:
+            ct_scores['decomposition'] += q.weight_decomposition
+            ct_scores['abstraction'] += q.weight_abstraction
+            ct_scores['pattern'] += q.weight_pattern
+            ct_scores['algorithm'] += q.weight_algorithm
+            total_earned_points += (q.weight_decomposition + q.weight_abstraction + q.weight_pattern + q.weight_algorithm)
+
+    # Normalize to 100% total
+    if total_earned_points > 0:
+        user.ct_decomposition = (ct_scores['decomposition'] / total_earned_points) * 100
+        user.ct_abstraction = (ct_scores['abstraction'] / total_earned_points) * 100
+        user.ct_pattern = (ct_scores['pattern'] / total_earned_points) * 100
+        user.ct_algorithm = (ct_scores['algorithm'] / total_earned_points) * 100
+    else:
+        # Default if no questions answered correctly or weights are zero
+        user.ct_decomposition = 25.0
+        user.ct_abstraction = 25.0
+        user.ct_pattern = 25.0
+        user.ct_algorithm = 25.0
+    
+    # -----------------------------------------------------
     # 3. COMBINE & SAVE
     # -----------------------------------------------------
     result_code = f"{final_level}{label_tp}{label_ga}{label_ir}"
@@ -791,11 +848,58 @@ def bulk_upload_questions(request):
             level=level_val,
             option=options,
             correctAns=row.get('correctAns', ''),
-            image=image_path
+            image=image_path,
+            weight_decomposition=float(row.get('weight_decomposition', 0) or 0),
+            weight_abstraction=float(row.get('weight_abstraction', 0) or 0),
+            weight_pattern=float(row.get('weight_pattern', 0) or 0),
+            weight_algorithm=float(row.get('weight_algorithm', 0) or 0)
         )
         count += 1
         
     return Response({'message': f'Successfully uploaded {count} questions'})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny]) # Change to IsAuthenticated/isAdmin in production
+def bulk_update_weights(request):
+    """
+    Surgical update of question weights via CSV.
+    Expects CSV with columns: id (or question_id), weight_decomposition, weight_abstraction, weight_pattern, weight_algorithm
+    """
+    if 'file' not in request.FILES:
+        return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    csv_file = request.FILES['file']
+    decoded_file = csv_file.read().decode('utf-8')
+    io_string = io.StringIO(decoded_file)
+    reader = csv.DictReader(io_string)
+    
+    count = 0
+    errors = []
+    
+    for row_idx, row in enumerate(reader, start=2):
+        q_id = row.get('id') or row.get('question_id')
+        if not q_id:
+            errors.append(f"Row {row_idx}: Missing question ID")
+            continue
+            
+        try:
+            question = PretestQuestion.objects.get(id=q_id)
+            question.weight_decomposition = float(row.get('weight_decomposition', 0) or 0)
+            question.weight_abstraction = float(row.get('weight_abstraction', 0) or 0)
+            question.weight_pattern = float(row.get('weight_pattern', 0) or 0)
+            question.weight_algorithm = float(row.get('weight_algorithm', 0) or 0)
+            question.save()
+            count += 1
+        except PretestQuestion.DoesNotExist:
+            errors.append(f"Row {row_idx}: Question with ID {q_id} not found")
+        except Exception as e:
+            errors.append(f"Row {row_idx}: Error updating ID {q_id} - {str(e)}")
+            
+    return Response({
+        'message': f'Successfully updated weights for {count} questions',
+        'errors': errors if errors else None
+    })
 
 
 @permission_classes([IsAuthenticated])

@@ -24,6 +24,8 @@ urlpatterns = [
     path('profiling/cognitive-submit/', views.submit_cognitive_answers, name='cognitive-submit'),
     path('profiling/submit/', views.submit_profiling_answers, name='profiling-submit'),
     path('profiling/upload-csv/', views.bulk_upload_questions, name='profiling-upload-csv'),
+    path('profiling/update-weights/', views.bulk_update_weights, name='profiling-update-weights'),
+    path('profiling-tester/', views.profiling_tester_view, name='profiling-tester'),
     
     # Password reset endpoints
     path('auth/forgot-password/', views.forgot_password_view, name='forgot-password'),

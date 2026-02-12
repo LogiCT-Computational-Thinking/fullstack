@@ -66,6 +66,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
     is_profiled = models.BooleanField(default=False)
+    
+    # CT Framework Proficiency Percentages
+    ct_decomposition = models.FloatField(default=0.0)
+    ct_abstraction = models.FloatField(default=0.0)
+    ct_pattern = models.FloatField(default=0.0)
+    ct_algorithm = models.FloatField(default=0.0)
 
     objects = UserManager()
 
@@ -163,6 +169,12 @@ class PretestQuestion(models.Model):
     correctAns = models.TextField()
     scaleMin = models.IntegerField(default=0)
     scaleMax = models.IntegerField(default=10)
+
+    # CT Framework Weights (0-100, should total 100 across 4 fields)
+    weight_decomposition = models.FloatField(default=0.0)
+    weight_abstraction = models.FloatField(default=0.0)
+    weight_pattern = models.FloatField(default=0.0)
+    weight_algorithm = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"Q{self.id}: {self.question[:40]}"
