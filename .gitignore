@@ -35,3 +35,4 @@ profiling_questions_sample.csv
 PROFILING_GUIDE.md
 bulk - bulk.csv
 bulk_fixed_final.csv
+myproject/check_weights.py

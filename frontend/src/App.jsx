@@ -23,13 +23,15 @@ function DashboardLayout() {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard' },
-    { id: 'modules', label: 'Modules', icon: BookOpen, path: '/dashboard/modules', title: 'Modules' },
-    { id: 'quiz-bank', label: 'Quiz Bank', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Quiz Bank' },
-    { id: 'profile-display', label: 'Profile Display', icon: User, path: '/dashboard/profile-display', title: 'My CT Profile' },
-    { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/dashboard/settings', title: 'Settings' }
+  const allNavItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard', inSidebar: true },
+    { id: 'modules', label: 'Materials', icon: BookOpen, path: '/dashboard/modules', title: 'Materials', inSidebar: true },
+    { id: 'quiz-bank', label: 'Exercise', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Exercise', inSidebar: true },
+    { id: 'profile-display', label: 'Profile', icon: User, path: '/dashboard/profile-display', title: 'My CT Profile', inSidebar: false },
+    { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/dashboard/settings', title: 'Settings', inSidebar: false }
   ];
+
+  const sidebarItems = allNavItems.filter(item => item.inSidebar);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -53,12 +55,12 @@ function DashboardLayout() {
   };
 
   // Get current page title
-  const currentPage = menuItems.find(item => item.path === location.pathname) || menuItems[0];
+  const currentPage = allNavItems.find(item => item.path === location.pathname) || allNavItems[0];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-sm border-r border-gray-200">
+      <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-sm border-r border-gray-200 z-20">
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -75,7 +77,7 @@ function DashboardLayout() {
 
         {/* Navigation */}
         <nav className="p-4">
-          {menuItems.map((item) => {
+          {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
 
@@ -105,46 +107,72 @@ function DashboardLayout() {
 
             <div className="flex items-center gap-4">
               {/* Search Bar */}
-              <div className="relative">
+              {/* <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search"
-                  className="pl-10 pr-4 py-2 w-64 bg-gray-100 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="What do you want to learn?"
+                  className="pl-10 pr-4 py-2 w-80 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
                 />
-              </div>
+              </div> */}
 
               {/* Notification Icon */}
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150 active:scale-90">
+              {/* <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 active:scale-90 border border-gray-200">
                 <Bell className="w-5 h-5 text-gray-600" />
-              </button>
+              </button> */}
 
               {/* User Profile with Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors duration-150 active:scale-90"
+                  className="flex items-center gap-3 p-1 pl-3 pr-1 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
                 >
-                  <User className="w-5 h-5 text-gray-600" />
+                  <span className="text-sm font-bold text-gray-700">{user?.name || 'Rio Alvein Hasana'}</span>
+                  <div className="w-9 h-9 rounded-full border border-gray-200 bg-blue-50 flex items-center justify-center text-blue-600">
+                    <User className="w-5 h-5" />
+                  </div>
                 </button>
 
                 {/* Dropdown Menu */}
                 {showUserDropdown && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {/* User Info */}
-                    <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                    <div className="px-4 py-3 border-b border-gray-50 bg-gray-50/50">
+                      <p className="text-sm font-bold text-gray-900">{user?.name || 'User'}</p>
                       <p className="text-xs text-gray-500 truncate">{user?.email || 'user@example.com'}</p>
                     </div>
 
+                    <div className="p-2">
+                      <Link
+                        to="/dashboard/profile-display"
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all duration-150 flex items-center gap-3 mb-1"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <User className="w-4 h-4" />
+                        Profile Display
+                      </Link>
+                      <Link
+                        to="/dashboard/settings"
+                        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all duration-150 flex items-center gap-3"
+                        onClick={() => setShowUserDropdown(false)}
+                      >
+                        <SettingsIcon className="w-4 h-4" />
+                        Settings
+                      </Link>
+                    </div>
+
+                    <div className="h-px bg-gray-100 my-1 mx-2"></div>
+
                     {/* Logout Button */}
-                    <button
-                      onClick={handleLogout}
-                      className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 active:bg-red-100 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
+                    <div className="p-2 pt-1">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors duration-150 active:bg-red-100 flex items-center gap-3"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
