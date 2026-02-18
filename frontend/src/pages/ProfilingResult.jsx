@@ -1,14 +1,39 @@
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import architectImg from '../assets/architect_illustration.png';
+import api from '../services/api';
 
 export default function ProfilingResult({ data }) {
-    const { user } = useAuth();
+    const { user, setUser } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
     // Priority: prop data > navigation state data > user profile data
-    const archetypeInfo = data || location.state?.resultData || user?.archetype_info;
+    // resultData usually contains the full response: { user, result_code, ... }
+    const resultObj = data || location.state?.resultData;
+    const archetypeInfo = resultObj?.user?.archetype_info || resultObj?.archetype_info || user?.archetype_info;
+    const sourceUser = resultObj?.user || user;
+
+    // Fetch profile if scores are missing (to handle stale sessions)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useEffect(() => {
+        const fetchLatestProfile = async () => {
+            if (user && (user.ct_decomposition === undefined || user.ct_decomposition === null)) {
+                try {
+                    const response = await api.get('/auth/profile/');
+                    const updatedUser = response.data;
+                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                    setUser(updatedUser);
+                } catch (err) {
+                    console.error("Failed to refresh profile in Result page:", err);
+                }
+            }
+        };
+        fetchLatestProfile();
+    }, []);
+
+    const getScore = (val) => (val !== undefined && val !== null) ? val : 25;
 
     // Data for matching the image
     const dummyData = {
@@ -38,8 +63,22 @@ export default function ProfilingResult({ data }) {
         ...dummyData,
         archetype: archetypeInfo.archetype_name,
         code: archetypeInfo.code,
-        description: archetypeInfo.description
-    } : dummyData;
+        description: archetypeInfo.description,
+        ctFramework: [
+            { label: 'Decomposition', value: getScore(sourceUser?.ct_decomposition), color: '#7A2494' },
+            { label: 'Abstraction', value: getScore(sourceUser?.ct_abstraction), color: '#EF5DA8' },
+            { label: 'Pattern Recognition', value: getScore(sourceUser?.ct_pattern), color: '#3A9AB1' },
+            { label: 'Algorithm', value: getScore(sourceUser?.ct_algorithm), color: '#4CAF50' },
+        ]
+    } : {
+        ...dummyData,
+        ctFramework: [
+            { label: 'Decomposition', value: 25, color: '#7A2494' },
+            { label: 'Abstraction', value: 25, color: '#EF5DA8' },
+            { label: 'Pattern Recognition', value: 25, color: '#3A9AB1' },
+            { label: 'Algorithm', value: 25, color: '#4CAF50' },
+        ]
+    };
 
     return (
         <div
@@ -71,8 +110,47 @@ export default function ProfilingResult({ data }) {
                         {displayData.code}
                     </div>
 
-                    <div className="w-full bg-[#FBFBFF] border-2 border-[#7A2494] rounded-[32px] p-5 text-gray-600 text-[12px] leading-relaxed font-bold shadow-sm">
+                    <div className="w-full bg-[#FBFBFF] border-2 border-[#7A2494] rounded-[32px] p-5 text-gray-600 text-[12px] leading-relaxed font-bold shadow-sm mb-8">
                         {displayData.description}
+                    </div>
+
+                    {/* CT Framework Bars */}
+                    <div className="w-full space-y-7 px-2 mt-auto">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-[15px] font-black text-[#7A2494] tracking-tight">CT Framework</h3>
+                            <div className="h-px bg-[#7A2494]/20 flex-1 ml-4"></div>
+                        </div>
+
+                        {displayData.ctFramework.map((item, idx) => (
+                            <div key={idx} className="group relative">
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.1em]">{item.label}</span>
+                                    <span className="text-[12px] font-black" style={{ color: item.color }}>{item.value}%</span>
+                                </div>
+                                <div className="relative h-3 flex items-center">
+                                    {/* Background Track */}
+                                    <div className="absolute inset-x-0 h-3 rounded-full bg-gray-100/80 shadow-inner"></div>
+
+                                    {/* Filled Track */}
+                                    <div
+                                        className="absolute h-3 rounded-full transition-all duration-1000 ease-out shadow-sm"
+                                        style={{
+                                            width: `${item.value}%`,
+                                            backgroundColor: item.color,
+                                            boxShadow: `0 0 12px ${item.color}33`
+                                        }}
+                                    ></div>
+
+                                    {/* Slider Thumb */}
+                                    <div
+                                        className="absolute w-5 h-5 bg-white rounded-full transition-all duration-1000 ease-out flex items-center justify-center shadow-md border border-gray-100 z-10"
+                                        style={{ left: `calc(${item.value}% - 10px)` }}
+                                    >
+                                        <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
 

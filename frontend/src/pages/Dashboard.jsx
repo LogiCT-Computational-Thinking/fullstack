@@ -2,8 +2,10 @@ import { useState } from 'react';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip
-} from 'recharts';
+} from "recharts";
 import { Clock, Target, BarChart2, BookOpen, ChevronRight, Send } from 'lucide-react';
+// Re-bundled to resolve import analysis error
+
 import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {

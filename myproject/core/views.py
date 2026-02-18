@@ -677,7 +677,7 @@ def submit_profiling_answers(request):
             if len(correct_ans_set) <= 1 and '|' in q.correctAns:
                 correct_ans_set = set([a.strip().lower() for a in q.correctAns.split('|') if a.strip()])
             is_correct = user_ans_set == correct_ans_set
-        elif q.type in ['GENERAL', 'PROFILING_PEDAGOGY'] or q.category.startswith('PROFILING_COGNITIVE'):
+        elif q.category in ['GENERAL', 'PROFILING_PEDAGOGY'] or q.category.startswith('PROFILING_COGNITIVE'):
             # For cognitive questions, the 'answer' is usually a numeric value (1-6) from Scale
             # However, the user asked for CT framework weights to be applied to "answered correct"
             # Cognitive Profiling (Scale 1-6) questions don't really have a "correct" answer in the traditional sense.
@@ -695,10 +695,10 @@ def submit_profiling_answers(request):
 
     # Normalize to 100% total
     if total_earned_points > 0:
-        user.ct_decomposition = (ct_scores['decomposition'] / total_earned_points) * 100
-        user.ct_abstraction = (ct_scores['abstraction'] / total_earned_points) * 100
-        user.ct_pattern = (ct_scores['pattern'] / total_earned_points) * 100
-        user.ct_algorithm = (ct_scores['algorithm'] / total_earned_points) * 100
+        user.ct_decomposition = round((ct_scores['decomposition'] / total_earned_points) * 100, 2)
+        user.ct_abstraction = round((ct_scores['abstraction'] / total_earned_points) * 100, 2)
+        user.ct_pattern = round((ct_scores['pattern'] / total_earned_points) * 100, 2)
+        user.ct_algorithm = round((ct_scores['algorithm'] / total_earned_points) * 100, 2)
     else:
         # Default if no questions answered correctly or weights are zero
         user.ct_decomposition = 25.0

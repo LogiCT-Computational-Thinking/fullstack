@@ -6,11 +6,17 @@ import femaleIcon from '../assets/Female.png';
 import genderIcon from '../assets/Gender.png';
 import api from '../services/api';
 import ProfilingResultModal from '../components/ProfilingResultModal';
+import { useAuth } from '../context/AuthContext';
+
 
 export default function ProfilingQuiz() {
     const navigate = useNavigate();
+    const { user, setUser } = useAuth();
     const { playClick, playSuccess } = useSound();
     const [step, setStep] = useState(0);
+    // Use a stable timestamp for the session to prevent flickering but bypass cache on reload
+    const [cacheBuster] = useState(Date.now());
+
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -22,6 +28,18 @@ export default function ProfilingQuiz() {
         classNumber: '',
         studentId: ''
     });
+
+    // Helper to get name parts from user object
+    const getNameParts = (userData) => {
+        if (!userData || !userData.name) return { first: '', last: '' };
+        const nameParts = userData.name.trim().split(/\s+/);
+        return {
+            first: nameParts[0] || '',
+            last: nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
+        };
+    };
+
+
     const [cognitiveQuestions, setCognitiveQuestions] = useState([]);
     const [pedagogicQuestions, setPedagogicQuestions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -33,17 +51,103 @@ export default function ProfilingQuiz() {
     const cogEndAt = 7 + cognitiveQuestions.length;
     const pedStartAt = 9 + cognitiveQuestions.length;
 
-    useEffect(() => {
-        fetchQuestions();
-    }, []);
 
-    const fetchQuestions = async () => {
+
+    // Load saved state from localStorage once user is available
+    useEffect(() => {
+        if (user && user.email) {
+            const saved = localStorage.getItem(`profiling_quiz_state_${user.email}`);
+
+            // Initial names from user profile
+            const { first, last } = getNameParts(user);
+
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.step !== undefined) setStep(parsed.step);
+
+                    // Combine saved data with autofill if names are missing in saved data
+                    if (parsed.formData) {
+                        setFormData(prev => ({
+                            ...prev,
+                            ...parsed.formData,
+                            // If saved data has empty names, use the ones from user account
+                            firstName: parsed.formData.firstName || first || prev.firstName,
+                            lastName: parsed.formData.lastName || last || prev.lastName
+                        }));
+                    }
+                    if (parsed.cognitiveAnswers) setCognitiveAnswers(parsed.cognitiveAnswers);
+                    if (parsed.pedagogicAnswers) setPedagogicAnswers(parsed.pedagogicAnswers);
+
+                    // Also restore questions if they exist in storage
+                    if (parsed.cognitiveQuestions) setCognitiveQuestions(parsed.cognitiveQuestions);
+                    if (parsed.pedagogicQuestions) setPedagogicQuestions(parsed.pedagogicQuestions);
+                } catch (e) {
+
+                    console.error("Failed to parse saved quiz state", e);
+                }
+            } else {
+                // If no saved state, just do initial autofill
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: first,
+                    lastName: last
+                }));
+            }
+
+            // After attempting to load from storage, fetch questions if they aren't already set
+            fetchQuestions(user);
+        }
+    }, [user]);
+
+
+
+    // Save state to localStorage whenever it changes
+    useEffect(() => {
+        if (user && user.email) {
+            const stateToSave = {
+                step,
+                formData,
+                cognitiveAnswers,
+                pedagogicAnswers,
+                cognitiveQuestions,
+                pedagogicQuestions
+            };
+            localStorage.setItem(`profiling_quiz_state_${user.email}`, JSON.stringify(stateToSave));
+        }
+    }, [user, step, formData, cognitiveAnswers, pedagogicAnswers, cognitiveQuestions, pedagogicQuestions]);
+
+
+    const fetchQuestions = async (currentUser) => {
+        // If we already have questions (e.g. from a previous state restore), don't fetch again
+        if (cognitiveQuestions.length > 0 && pedagogicQuestions.length > 0) {
+            setIsLoading(false);
+            return;
+        }
+
+        setIsLoading(true);
         try {
-            setIsLoading(true);
+            // Use the passed user or fall back to context user
+            const activeUser = currentUser || user;
+
+            // Try to recover from localStorage
+            if (activeUser && activeUser.email) {
+                const saved = localStorage.getItem(`profiling_quiz_state_${activeUser.email}`);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.cognitiveQuestions?.length > 0 && parsed.pedagogicQuestions?.length > 0) {
+                        setCognitiveQuestions(parsed.cognitiveQuestions);
+                        setPedagogicQuestions(parsed.pedagogicQuestions);
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+            }
+
+            // Fetch from API if nothing found in storage
             const response = await api.get('/profiling/questions/');
             const allQuestions = response.data;
 
-            // Separate cognitive and pedagogic questions
             const cog = allQuestions.filter(q => q.category.startsWith('PROFILING_COGNITIVE'));
             const ped = allQuestions
                 .filter(q => q.category === 'PROFILING_PEDAGOGY')
@@ -57,6 +161,8 @@ export default function ProfilingQuiz() {
             setIsLoading(false);
         }
     };
+
+
 
     const nextStep = () => {
         playClick?.();
@@ -109,10 +215,14 @@ export default function ProfilingQuiz() {
 
             const response = await api.post('/auth/profiling/student-info/', payload);
 
-            // Update local user data
-            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-            const updatedUser = { ...currentUser, ...response.data.user };
-            localStorage.setItem('user', JSON.stringify(updatedUser));
+            // Update local user data in localStorage and let AuthContext handle state if needed
+            // The response usually contains the updated user object
+            const updatedUser = response.data.user || response.data;
+            if (updatedUser) {
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                setUser(updatedUser);
+            }
+
 
             setStep(step + 1);
         } catch (error) {
@@ -181,9 +291,16 @@ export default function ProfilingQuiz() {
             // Update local user data with the new profiling results
             if (response.data.user) {
                 localStorage.setItem('user', JSON.stringify(response.data.user));
+                setUser(response.data.user);
+            }
+
+            // Clear saved progress on successful submission
+            if (user && user.email) {
+                localStorage.removeItem(`profiling_quiz_state_${user.email}`);
             }
 
             setProfilingResult(response.data.user?.archetype_info);
+
             setShowResultModal(true);
             // We'll navigate when the modal is closed
             // navigate('/dashboard', { state: { profileCompleted: true, profilingResult: response.data } });
@@ -483,7 +600,7 @@ export default function ProfilingQuiz() {
                     <div className="flex flex-col items-center justify-center h-full p-8 transition-all duration-500">
                         <div className="bg-white rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center text-center">
                             <div className="text-9xl mb-10">🎉</div>
-                            <h2 className="text-6xl font-extrabold mb-8 text-gray-900 leading-tight">You're All Set!</h2>
+                            <h2 className="text-6xl font-bold mb-8 text-gray-900 leading-tight">You're All Set!</h2>
                             <div className="w-full h-1 bg-gray-100 opacity-50 mb-10 max-w-[60%]"></div>
                             <p className="text-3xl text-gray-400 mb-14">
                                 Let's Move On to the <span className="font-bold text-[#4CAF50]">Cognitive Quiz! 🚀</span>
@@ -548,8 +665,8 @@ export default function ProfilingQuiz() {
                                 ))}
                             </div>
                             <div className="flex justify-between px-2 text-gray-400 font-medium text-[13px] sm:text-base">
-                                <span>Strongly Disagree</span>
-                                <span>Strongly Agree</span>
+                                <span>Sangat Tidak Setuju</span>
+                                <span>Sangat Setuju</span>
                             </div>
                         </div>
                     </StepCard>
@@ -559,7 +676,7 @@ export default function ProfilingQuiz() {
                     <div className="flex flex-col items-center justify-center h-full p-8 transition-all duration-500">
                         <div className="bg-white rounded-[60px] p-20 shadow-2xl w-full max-w-3xl min-h-[450px] flex flex-col justify-center items-center text-center">
                             <div className="text-9xl mb-10">🚀</div>
-                            <h2 className="text-6xl font-extrabold mb-8 text-gray-900 leading-tight">You're Good to Go!</h2>
+                            <h2 className="text-6xl font-bold mb-8 text-gray-900 leading-tight">You're Good to Go!</h2>
                             <div className="w-full h-1 bg-gray-100 opacity-50 mb-10 max-w-[60%]"></div>
                             <p className="text-3xl text-gray-400 mb-14">
                                 Let's Move On to the <span className="font-bold text-[#B33A9D]">Pedagogic Quiz! ✨</span>
@@ -632,7 +749,7 @@ export default function ProfilingQuiz() {
 
                     return (
                         <StepCard
-                            title={pedagogicQ.question}
+                            title={(pedagogicQ.question || "").replace(/\\n/g, '\n')}
                             onNext={isLast ? handleFinish : nextStep}
                             onPrev={prevStep}
                             nextLabel={isLast ? "FINISH" : "NEXT"}
@@ -642,13 +759,13 @@ export default function ProfilingQuiz() {
                             cogEndAt={cogEndAt}
                         >
                             <div className="space-y-4">
-                                <div className="text-gray-700 text-base sm:text-lg leading-relaxed mb-8 font-medium whitespace-pre-line">
-                                    {pedagogicQ.challenge}
+                                <div className="text-gray-700 text-base sm:text-lg leading-tight mb-6 font-normal whitespace-pre-line">
+                                    {(pedagogicQ.challenge || "").replace(/\\n/g, '\n')}
                                 </div>
                                 {pedagogicQ.image && (
                                     <div className="flex justify-center mb-8">
                                         <img
-                                            src={pedagogicQ.image.startsWith('/media/') ? pedagogicQ.image : `/media/${pedagogicQ.image}`}
+                                            src={`${pedagogicQ.image.startsWith('/media/') ? pedagogicQ.image : `/media/${pedagogicQ.image}`}?t=${cacheBuster}`}
                                             alt="Question Diagram"
                                             className="max-h-[400px] sm:max-h-[500px] w-full object-contain rounded-2xl shadow-md border border-gray-50"
                                         />
@@ -671,7 +788,7 @@ export default function ProfilingQuiz() {
                                         {pedagogicQ.type.startsWith('multi_select') && (
                                             <div className="text-gray-400 text-sm mb-4 ml-1">Select two or more options..</div>
                                         )}
-                                        <div className={`grid ${pedagogicQ.type.includes('_image') ? 'grid-cols-2' : 'grid-cols-1'} gap-4 sm:gap-6`}>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                                             {(pedagogicQ.option || []).map((opt, idx) => {
                                                 const isMulti = pedagogicQ.type.startsWith('multi_select');
                                                 const currentAns = pedagogicAnswers[qPedIndex] || "";
@@ -683,7 +800,7 @@ export default function ProfilingQuiz() {
                                                     <button
                                                         key={idx}
                                                         onClick={() => handlePedagogicAnswer(qPedIndex, opt)}
-                                                        className={`p-3 sm:p-4 rounded-2xl border-2 transition-all font-bold text-left flex items-center gap-4 ${isSelected
+                                                        className={`p-3 sm:p-4 rounded-2xl border-2 transition-all font-semibold text-left flex items-center gap-4 ${isSelected
                                                             ? 'border-[#419FB1] bg-[#E0F2F1] text-[#006064] shadow-md'
                                                             : 'border-[#B2EBF2] bg-[#EBFDFF] text-gray-900 hover:border-[#419FB1] hover:bg-[#E0F2F1]'
                                                             }`}
@@ -691,7 +808,7 @@ export default function ProfilingQuiz() {
                                                         <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all ${isSelected ? 'bg-[#419FB1] border-[#419FB1]' : 'border-[#B2EBF2] bg-white opacity-40'}`} />
                                                         {((pedagogicQ.type || "").includes('_image') || (typeof opt === 'string' && /\.(png|jpe?g|gif|svg|webp)$/i.test(opt))) ? (
                                                             <img
-                                                                src={typeof opt === 'string' && opt.startsWith('/media/') ? opt : (opt.includes('/') ? `/media/${opt}` : `/media/questions/${opt}`)}
+                                                                src={`${typeof opt === 'string' && opt.startsWith('/media/') ? opt : (opt.includes('/') ? `/media/${opt}` : `/media/questions/${opt}`)}?t=${cacheBuster}`}
                                                                 alt={`Option ${idx}`}
                                                                 className="w-full h-auto rounded-lg max-h-40 object-contain mx-auto"
                                                                 onError={(e) => {
@@ -818,7 +935,7 @@ function StepCard({ title, children, onNext, onPrev, nextLabel = "NEXT", isNextD
     return (
         <div className="w-full max-w-3xl mx-auto px-4">
             <div className="bg-white rounded-t-[40px] p-8 sm:p-12 pb-14 shadow-sm min-h-[250px] flex flex-col justify-center">
-                <h2 className="text-xl sm:text-2xl font-bold text-[#222] mb-6 leading-tight">{title}</h2>
+                <h2 className="text-xl sm:text-2xl font-semibold text-[#222] mb-6 leading-tight whitespace-pre-line">{title}</h2>
                 {children}
             </div>
             <div

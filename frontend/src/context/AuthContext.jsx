@@ -109,6 +109,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     verifyOTP,
     resetPasswordOTP,
+    setUser, // Expose setUser for manual updates
     isAuthenticated: !!user,
   };
 
