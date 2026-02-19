@@ -1,24 +1,19 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import architectImg from '../assets/architect_illustration.png';
 
 export default function ProfilingResultModal({ isOpen, onClose, data, onSeeDetails }) {
     const navigate = useNavigate();
 
     if (!isOpen) return null;
 
-    // Dummy data for matching the image
     const dummyData = {
-        archetype: 'Architect',
-        code: 'CT-PAR',
-        description: 'Sees the tiny details in every picture and builds a plan with careful precision. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae risus justo. Sed nec ultricies ipsum. Praesent sit amet sapien at nibh dictum faucibus. Vivamus commodo nisi in tortor commodo, ac tincidunt lacus tincidunt.',
+        archetype_name: 'Explorer',
+        code: 'PGR',
+        description: 'Looks at the big picture through charts and maps, preferring to observe the whole landscape first. You have a natural ability to synthesize information and find patterns that others might miss.',
     };
 
-    const displayData = data ? {
-        archetype: data.archetype_name,
-        code: data.code,
-        description: data.description
-    } : dummyData;
+    const displayData = data ? data : dummyData;
+    const cleanCode = displayData.code ? (displayData.code.includes('-') ? displayData.code.split('-')[1] : displayData.code).slice(-3).toUpperCase() : 'PAR';
 
     const handleSeeDetails = () => {
         if (onSeeDetails) {
@@ -30,56 +25,67 @@ export default function ProfilingResultModal({ isOpen, onClose, data, onSeeDetai
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-fade-in">
-            <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl relative animate-zoom-in overflow-hidden flex flex-col max-h-[95vh]">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 animate-fade-in">
+            {/* Dark semi-transparent background - NO blur for maximum stability */}
+            <div className="absolute inset-0 bg-gray-900/80" onClick={onClose}></div>
+
+            <div className="bg-white w-full max-w-lg rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative animate-zoom-in overflow-hidden flex flex-col z-10">
 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-6 right-8 text-gray-400 hover:text-gray-600 z-20 text-2xl transition-colors"
+                    className="absolute top-6 right-8 text-gray-300 hover:text-gray-900 z-20 text-2xl transition-all hover:rotate-90"
                 >
                     ✕
                 </button>
 
-                <div className="overflow-y-auto custom-scrollbar">
-                    <div className="p-10 pt-12">
-                        {/* Header Section */}
-                        <div className="mb-4">
-                            <h3 className="text-[#3A9AB1] font-bold text-lg mb-1 tracking-tight">Your Computational Thinking Profile:</h3>
-                            <div className="w-48 h-0.5 bg-[#3A9AB1] opacity-20 mb-6"></div>
+                <div className="p-8 sm:p-12">
+                    {/* Header Section */}
+                    <div className="text-center mb-6">
+                        <div className="inline-block bg-teal-50 text-teal-600 px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase mb-4">
+                            Assessment Result
+                        </div>
+                        <h3 className="text-gray-400 font-bold text-sm tracking-tight mb-2 uppercase">Your Archetype is</h3>
+                        <h1 className="text-gray-900 text-5xl font-black mb-4 tracking-tighter italic">
+                            {displayData.archetype_name}
+                        </h1>
+                        <div className="h-1 w-20 bg-teal-500 mx-auto rounded-full"></div>
+                    </div>
 
-                            <h1 className="text-[#3A9AB1] text-4xl font-extrabold mb-5 tracking-tight">{displayData.archetype}</h1>
-
-                            <div className="inline-block bg-[#3A9AB1] text-white px-7 py-2 rounded-full font-extrabold text-sm tracking-widest mb-10 shadow-sm">
-                                {displayData.code}
-                            </div>
-
-                            {/* Main Illustration */}
-                            <div className="relative flex justify-center mb-8">
-                                <div className="absolute inset-x-0 -top-10 -bottom-10 bg-gradient-to-b from-[#E0F2F1] via-[#F1F8F9] to-transparent rounded-full blur-3xl opacity-40 -z-10"></div>
-                                <img
-                                    src={architectImg}
-                                    alt={displayData.archetype}
-                                    className="w-56 h-auto object-contain drop-shadow-2xl"
-                                />
-                            </div>
-
-                            {/* Main Description */}
-                            <p className="text-gray-700 text-[13px] leading-[1.6] text-center px-4 font-medium mb-10">
-                                {displayData.description}
-                            </p>
-
-                            {/* See Details Button */}
-                            <div className="flex justify-center mt-6">
-                                <button
-                                    onClick={handleSeeDetails}
-                                    className="bg-[#3A9AB1] hover:bg-[#2d7e91] text-white font-bold py-3 px-10 rounded-full transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg"
-                                >
-                                    See Details
-                                </button>
-                            </div>
+                    {/* Illustration Card */}
+                    <div className="bg-teal-50/50 rounded-[32px] p-6 mb-8 relative group">
+                        <div className="flex justify-center">
+                            <img
+                                src={`/images/profiles/${cleanCode}.png`}
+                                alt={displayData.archetype_name}
+                                className="w-48 h-48 object-contain drop-shadow-2xl transition-transform duration-500 group-hover:scale-110"
+                                onError={(e) => {
+                                    e.target.src = '/images/welkam_atas.png'; // Improved fallback
+                                }}
+                            />
+                        </div>
+                        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-teal-600 text-white px-6 py-2 rounded-full font-black text-sm shadow-lg border-2 border-white">
+                            {displayData.code}
                         </div>
                     </div>
+
+                    {/* Description */}
+                    <div className="text-center mb-10 px-2">
+                        <p className="text-gray-600 text-sm leading-relaxed font-bold">
+                            {displayData.description}
+                        </p>
+                    </div>
+
+                    {/* CTA Button */}
+                    <button
+                        onClick={handleSeeDetails}
+                        className="w-full bg-gray-900 hover:bg-black text-white font-black py-4 px-10 rounded-[20px] transition-all duration-300 transform hover:-translate-y-1 active:scale-95 shadow-xl flex items-center justify-center gap-3 group"
+                    >
+                        EXPLORE FULL DASHBOARD
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all group-hover:translate-x-2">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>

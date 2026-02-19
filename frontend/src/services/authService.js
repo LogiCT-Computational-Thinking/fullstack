@@ -153,6 +153,16 @@ const authService = {
       throw error.response?.data || error.message;
     }
   },
+
+  // Get student classes from API
+  getStudentClasses: async () => {
+    try {
+      const response = await api.get('/auth/student-classes/');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
 };
 
 export default authService;

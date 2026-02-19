@@ -18,6 +18,7 @@ urlpatterns = [
     path('auth/profile/', views.user_profile_view, name='user-profile'),
     path('auth/profile/update/', views.update_profile_view, name='update-profile'),
     path('auth/profiling/student-info/', views.update_student_info_view, name='update-student-info'),
+    path('auth/student-classes/', views.get_student_classes, name='student-classes'),
     
     # Profiling endpoints
     path('profiling/questions/', views.get_profiling_questions, name='profiling-questions'),

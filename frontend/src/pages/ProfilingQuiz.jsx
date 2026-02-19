@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSound } from '../hooks/useSound';
 import maleIcon from '../assets/Male.png';
@@ -7,6 +7,7 @@ import genderIcon from '../assets/Gender.png';
 import api from '../services/api';
 import ProfilingResultModal from '../components/ProfilingResultModal';
 import { useAuth } from '../context/AuthContext';
+import authService from '../services/authService';
 
 
 export default function ProfilingQuiz() {
@@ -16,6 +17,20 @@ export default function ProfilingQuiz() {
     const [step, setStep] = useState(0);
     // Use a stable timestamp for the session to prevent flickering but bypass cache on reload
     const [cacheBuster] = useState(Date.now());
+    const hasLoadedRef = useRef(false);
+    const [studentClasses, setStudentClasses] = useState([]);
+
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                const data = await authService.getStudentClasses();
+                setStudentClasses(data);
+            } catch (err) {
+                console.error("Failed to fetch student classes:", err);
+            }
+        };
+        fetchClasses();
+    }, []);
 
     const [formData, setFormData] = useState({
         firstName: '',
@@ -55,7 +70,8 @@ export default function ProfilingQuiz() {
 
     // Load saved state from localStorage once user is available
     useEffect(() => {
-        if (user && user.email) {
+        if (user && user.email && !hasLoadedRef.current) {
+            hasLoadedRef.current = true;
             const saved = localStorage.getItem(`profiling_quiz_state_${user.email}`);
 
             // Initial names from user profile
@@ -164,15 +180,17 @@ export default function ProfilingQuiz() {
 
 
 
-    const nextStep = () => {
+    const [isSaving, setIsSaving] = useState(false);
+
+    const nextStep = async () => {
         playClick?.();
         // If we are at the last step of Student Info (academic details), save to DB
         if (step === 4) {
-            handleSaveStudentInfo();
+            await handleSaveStudentInfo();
         }
         // If we are at the "You're Good to Go!" screen (after cognitive questions), save cognitive answers
         else if (step === 7 + cognitiveQuestions.length) {
-            handleSaveCognitiveAnswers();
+            await handleSaveCognitiveAnswers();
         }
         else {
             setStep(step + 1);
@@ -180,6 +198,8 @@ export default function ProfilingQuiz() {
     };
 
     const handleSaveCognitiveAnswers = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             const responses = Object.entries(cognitiveAnswers).map(([index, answer]) => ({
                 question_id: cognitiveQuestions[index].id,
@@ -192,17 +212,24 @@ export default function ProfilingQuiz() {
             console.error('Failed to save cognitive answers:', error);
             // Optionally show error but still let them continue, or stay on page
             setStep(step + 1);
+        } finally {
+            setIsSaving(false);
         }
     };
 
     const handleSaveStudentInfo = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
         try {
             // Convert birthday to YYYY-MM-DD
             const monthMap = {
                 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06',
                 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
             };
-            const formattedDate = `${formData.birthYear}-${monthMap[formData.birthMonth]}-${formData.birthDay.padStart(2, '0')}`;
+
+            // Ensure birthDay is treated as string to avoid padStart crash if it's a number
+            const dayStr = String(formData.birthDay || '1');
+            const formattedDate = `${formData.birthYear}-${monthMap[formData.birthMonth]}-${dayStr.padStart(2, '0')}`;
 
             const payload = {
                 first_name: formData.firstName,
@@ -215,19 +242,29 @@ export default function ProfilingQuiz() {
 
             const response = await api.post('/auth/profiling/student-info/', payload);
 
-            // Update local user data in localStorage and let AuthContext handle state if needed
-            // The response usually contains the updated user object
             const updatedUser = response.data.user || response.data;
             if (updatedUser) {
+                // Manually save the next state immediately before updating user to prevent race condition
+                const stateToSave = {
+                    step: step + 1,
+                    formData,
+                    cognitiveAnswers,
+                    pedagogicAnswers,
+                    cognitiveQuestions,
+                    pedagogicQuestions
+                };
+                localStorage.setItem(`profiling_quiz_state_${user.email}`, JSON.stringify(stateToSave));
+
                 localStorage.setItem('user', JSON.stringify(updatedUser));
                 setUser(updatedUser);
             }
-
 
             setStep(step + 1);
         } catch (error) {
             console.error('Failed to save student info:', error);
             alert('Failed to save information. Please try again.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -266,6 +303,8 @@ export default function ProfilingQuiz() {
     };
 
     const handleFinish = async () => {
+        if (isSaving) return;
+        setIsSaving(true);
         playSuccess?.();
         try {
             // Format responses for API
@@ -307,6 +346,8 @@ export default function ProfilingQuiz() {
         } catch (error) {
             console.error('Failed to submit profiling:', error);
             alert('Failed to submit survey. Please try again.');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -520,8 +561,8 @@ export default function ProfilingQuiz() {
                         title="What are your academic details?"
                         onNext={nextStep}
                         onPrev={prevStep}
-                        nextLabel="NEXT"
-                        isNextDisabled={!formData.classType || !formData.classNumber || !formData.studentId}
+                        nextLabel={isSaving ? "SAVING..." : "NEXT"}
+                        isNextDisabled={isSaving || !formData.classType || !formData.classNumber || !formData.studentId}
                         step={step}
                         cogEndAt={cogEndAt}
                     >
@@ -539,12 +580,9 @@ export default function ProfilingQuiz() {
                                         className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-4 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.classType ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'}`}
                                     >
                                         <option value="" className="text-gray-400">Type</option>
-                                        <option value="INTSE" className="text-gray-900">INTSE</option>
-                                        <option value="INTSS" className="text-gray-900">INTSS</option>
-                                        <option value="INTST" className="text-gray-900">INTST</option>
-                                        <option value="SE" className="text-gray-900">SE</option>
-                                        <option value="SS" className="text-gray-900">SS</option>
-                                        <option value="ST" className="text-gray-900">ST</option>
+                                        {[...new Set(studentClasses.map(c => c.class_type))].map(type => (
+                                            <option key={type} value={type} className="text-gray-900">{type}</option>
+                                        ))}
                                     </select>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
                                         <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -564,15 +602,15 @@ export default function ProfilingQuiz() {
                                         className={`w-full bg-[#E8F5E9] border-2 border-[#C8E6C9] rounded-2xl px-4 py-3.5 outline-none focus:border-[#4CAF50] appearance-none transition-all ${!formData.classNumber ? 'text-gray-400 font-normal' : 'text-gray-900 font-bold'} ${!formData.classType ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <option value="" className="text-gray-400">Class</option>
-                                        {formData.classType && (
-                                            formData.classType.startsWith('INT') ? (
-                                                <option value="1" className="text-gray-900">1</option>
-                                            ) : (
-                                                [...Array(formData.classType === 'SE' ? 7 : 24)].map((_, i) => (
-                                                    <option key={i + 1} value={i + 1} className="text-gray-900">{i + 1}</option>
-                                                ))
-                                            )
-                                        )}
+                                        {studentClasses
+                                            .filter(c => c.class_type === formData.classType)
+                                            .sort((a, b) => a.class_number - b.class_number)
+                                            .map(c => (
+                                                <option key={c.id} value={c.class_number} className="text-gray-900">
+                                                    {c.class_number}
+                                                </option>
+                                            ))
+                                        }
                                     </select>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
                                         <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -607,9 +645,10 @@ export default function ProfilingQuiz() {
                             </p>
                             <button
                                 onClick={nextStep}
-                                className="bg-gradient-to-b from-[#2EBD40] to-[#115429] text-white px-16 py-5 rounded-full font-semibold text-3xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-green-900/20"
+                                disabled={isSaving}
+                                className={`bg-gradient-to-b from-[#2EBD40] to-[#115429] text-white px-16 py-5 rounded-full font-semibold text-3xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-green-900/20 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                Take Cognitive Quiz
+                                {isSaving ? "Saving..." : "Take Cognitive Quiz"}
                             </button>
                         </div>
                     </div>
@@ -644,7 +683,8 @@ export default function ProfilingQuiz() {
                         title={cogQ.question}
                         onNext={nextStep}
                         onPrev={prevStep}
-                        isNextDisabled={!cognitiveAnswers[qCogIndex]}
+                        nextLabel={isSaving ? "SAVING..." : "NEXT"}
+                        isNextDisabled={isSaving || !cognitiveAnswers[qCogIndex]}
                         themeColor="#B33A9D"
                         step={step}
                         cogEndAt={cogEndAt}
@@ -683,9 +723,10 @@ export default function ProfilingQuiz() {
                             </p>
                             <button
                                 onClick={nextStep}
-                                className="bg-gradient-to-b from-[#B5369E] to-[#4F1845] text-white px-16 py-5 rounded-full font-semibold text-3xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-pink-900/20"
+                                disabled={isSaving}
+                                className={`bg-gradient-to-b from-[#B5369E] to-[#4F1845] text-white px-16 py-5 rounded-full font-semibold text-3xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-pink-900/20 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
-                                Take Pedagogic Quiz
+                                {isSaving ? "Saving..." : "Take Pedagogic Quiz"}
                             </button>
                         </div>
                     </div>
@@ -733,8 +774,8 @@ export default function ProfilingQuiz() {
                                     ))}
                                 </div>
                                 <div className="flex justify-between px-2 text-gray-400 font-medium text-[13px] sm:text-base">
-                                    <span>Strongly Disagree</span>
-                                    <span>Strongly Agree</span>
+                                    <span>Sangat Tidak Setuju</span>
+                                    <span>Sangat Setuju</span>
                                 </div>
                             </div>
                         </StepCard>
@@ -752,8 +793,8 @@ export default function ProfilingQuiz() {
                             title={(pedagogicQ.question || "").replace(/\\n/g, '\n')}
                             onNext={isLast ? handleFinish : nextStep}
                             onPrev={prevStep}
-                            nextLabel={isLast ? "FINISH" : "NEXT"}
-                            isNextDisabled={!pedagogicAnswers[qPedIndex] && pedagogicAnswers[qPedIndex] !== 0}
+                            nextLabel={isLast ? (isSaving ? "FINISHING..." : "FINISH") : (isSaving ? "SAVING..." : "NEXT")}
+                            isNextDisabled={isSaving || (!pedagogicAnswers[qPedIndex] && pedagogicAnswers[qPedIndex] !== 0)}
                             themeColor="#419FB1"
                             step={step}
                             cogEndAt={cogEndAt}
