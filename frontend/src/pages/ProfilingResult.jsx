@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import architectImg from '../assets/architect_illustration.png';
+// Static illustration removed - now dynamic
 import api from '../services/api';
 
 export default function ProfilingResult({ data }) {
@@ -98,9 +98,13 @@ export default function ProfilingResult({ data }) {
 
                     <div className="bg-[#F8F9FE] rounded-[32px] p-4 border border-gray-100 mb-6 w-full flex justify-center shadow-inner">
                         <img
-                            src={architectImg}
+                            src={`/images/profiles/${displayData.code.slice(-3).toUpperCase()}.png`}
                             alt="Profile"
                             className="w-48 h-auto drop-shadow-md"
+                            onError={(e) => {
+                                e.target.src = '/favicon.ico';
+                                e.target.style.opacity = '0.5';
+                            }}
                         />
                     </div>
 

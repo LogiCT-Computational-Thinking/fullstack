@@ -929,3 +929,15 @@ def profiling_tester_view(request):
     A simple view to test the profiling quiz flow
     """
     return render(request, 'core/profiling_tester.html')
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_student_classes(request):
+    """
+    Get all unique class types and their numbers
+    """
+    from .models import StudentClass
+    from .serializers import StudentClassSerializer
+    
+    classes = StudentClass.objects.all()
+    serializer = StudentClassSerializer(classes, many=True)
+    return Response(serializer.data)
