@@ -36,3 +36,8 @@ PROFILING_GUIDE.md
 bulk - bulk.csv
 bulk_fixed_final.csv
 myproject/check_weights.py
+
+# Trash .txt .md
+debug_mysql.txt
+FIX_MYSQL_ERROR.md
+shield_bars.png
