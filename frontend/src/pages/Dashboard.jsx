@@ -1,31 +1,40 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip
 } from "recharts";
-import { Clock, Target, BarChart2, BookOpen, ChevronRight, Send } from 'lucide-react';
+import { Clock, Target, BarChart2, BookOpen, ChevronRight, Send, Brain } from 'lucide-react';
 // Re-bundled to resolve import analysis error
 
 import { useAuth } from '../context/AuthContext';
+import studyIcon from '../assets/dashboard/study_duration.png';
+import attemptIcon from '../assets/dashboard/attempt.png';
+import accuracyIcon from '../assets/dashboard/accuracy_rate.png';
+import topicsIcon from '../assets/dashboard/topics_completed.png';
+import bubbleChat from '../assets/dashboard/bubble_chat.png';
+import shieldBars from '../assets/dashboard/shield_bars.png';
+import mascotIcon from '/images/chatbot.png';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user } = useAuth();
+  const [isMascotHovered, setIsMascotHovered] = useState(false);
+  const [hoveredTrait, setHoveredTrait] = useState(null);
 
   // Cognitive Style Traits (Bi-directional Bars)
   const profileTraits = [
-    { left: 'Visual Text', right: 'Visual Picture', value: 65, color: '#8B5CF6' },
-    { left: 'Global', right: 'Analytics', value: 75, color: '#EC4899' },
-    { left: 'Impulsive', right: 'Reflective', value: 60, color: '#10B981' },
+    { left: 'Visual Text', right: 'Visual Picture', value: user?.cog_tp_value ?? 50, color: '#D946EF', gradient: 'linear-gradient(to right, #D946EF, #C026D3)' },
+    { left: 'Global', right: 'Analytics', value: user?.cog_ga_value ?? 50, color: '#F97316', gradient: 'linear-gradient(to right, #FB923C, #F97316)' },
+    { left: 'Impulsive', right: 'Reflective', value: user?.cog_ir_value ?? 50, color: '#10B981', gradient: 'linear-gradient(to right, #34D399, #10B981)' },
   ];
 
-  // CT Framework Statistics (Radar - 6 Points)
+  // CT Framework Statistics (Radar - 4 Points ordered for vertical label optimization)
   const frameworkData = [
-    { subject: 'Abstraction', A: user?.ct_abstraction || 85 },
-    { subject: 'Decomposition', A: user?.ct_decomposition || 70 },
     { subject: 'Pattern Recognition', A: user?.ct_pattern || 65 },
-    { subject: 'Algorithmic Thinking', A: user?.ct_algorithm || 90 },
-    { subject: 'Logical Reasoning', A: 75 },
-    { subject: 'Debugging', A: 80 },
+    { subject: 'Algorithm', A: user?.ct_algorithm || 90 },
+    { subject: 'Decomposition', A: user?.ct_decomposition || 70 },
+    { subject: 'Abstraction', A: user?.ct_abstraction || 85 },
   ];
 
   // Weekly CT Score (Line Chart)
@@ -40,16 +49,29 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-[1400px] mx-auto animate-fade-in p-4 sm:p-0 lg:h-[calc(100vh-80px)] lg:flex lg:flex-col lg:overflow-hidden">
+    <div className="max-w-[1400px] mx-auto animate-fade-in p-4 sm:p-0 lg:min-h-[calc(100vh-80px)] lg:flex lg:flex-col pb-8">
       {/* Welcome Header */}
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-700 mb-4 font-['Outfit'] shrink-0">
-        Welcome, let's crack today's challenge!
-      </h1>
+      <div className="mb-6 shrink-0">
+        <h1 className="text-3xl font-bold text-gray-800 font-['Outfit'] mb-1">
+          Hello, {user?.name?.split(' ')[0] || 'User LogiCT'}
+        </h1>
+        <p
+          className="text-xl font-semibold w-fit"
+          style={{
+            background: 'linear-gradient(to right, #00DDB6, #6064CF)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}
+        >
+          Ready to tackle another courses?
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch lg:flex-1 lg:min-h-0">
 
         {/* TOP-LEFT SECTION: KOTAK 1 & KB 3 (Weekly + Chatbot Overlay) */}
-        <div className="lg:col-span-7 flex flex-col gap-4 h-full lg:min-h-0">
+        <div className="lg:col-span-6 flex flex-col gap-4 h-full lg:min-h-0">
           {/* Progress Card (Kotak 1) */}
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group shrink-0">
             <div className="flex justify-between items-center mb-3">
@@ -75,41 +97,72 @@ export default function Dashboard() {
           </div>
 
           {/* Weekly Performance Card (Kotak 3) WITH CHATBOT OVERLAY */}
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex-1 flex flex-col min-h-0 relative">
-            {/* Chatbot Overlay (Kotak 2) */}
-            {/* Chatbot Overlay (Kotak 2) */}
-            <div className="absolute -top-8 -right-6 z-20 animate-bounce-slow">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex-1 flex flex-col min-h-[480px] relative">
+            {/* mascot */}
+            <div
+              className="absolute -top-8 -right-4 z-20 animate-bounce-slow cursor-pointer group/mascot"
+              onMouseEnter={() => setIsMascotHovered(true)}
+              onMouseLeave={() => setIsMascotHovered(false)}
+            >
               <img
-                src="/images/chatbot.png"
-                alt="Chatbot"
-                className="w-28 drop-shadow-xl hover:scale-110 transition-transform cursor-pointer"
+                src={mascotIcon}
+                alt="Mascot"
+                className="w-24 h-24 object-contain drop-shadow-xl"
               />
+              {/* Sleeping/Thinking Bubble (Always visible when NOT hovered) */}
+              {!isMascotHovered && (
+                <img
+                  src={bubbleChat}
+                  alt="Bubble Chat"
+                  className="absolute -top-0 -left-6 w-12 object-contain z-30 select-none pointer-events-none drop-shadow-sm animate-pulse"
+                />
+              )}
+
+              {/* LogiAI Interactive Bubble (Visible on HOVER) */}
+              <div className={`absolute bottom-[70%] right-[70%] mb-0 w-72 bg-[#007AFF] rounded-[32px] p-4 shadow-2xl transition-all duration-300 origin-bottom-right ${isMascotHovered ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2 pointer-events-none'}`}>
+                <div className="flex gap-3 items-start">
+                  <div className="w-10 h-10 rounded-full bg-white/20 flex-shrink-0 flex items-center justify-center border border-white/30">
+                    <img src={mascotIcon} alt="Avatar" className="w-8 h-8 object-contain" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-bold text-sm mb-1 font-['Outfit']">LogiAI</h3>
+                    <p className="text-white/90 text-[11px] leading-relaxed mb-3">
+                      I noticed you found <b>Belajar Dasar Pseudocode</b> hard. Want a 3 minutes refresher?
+                    </p>
+                    <button
+                      onClick={() => navigate('/dashboard/modules')}
+                      className="bg-white text-[#007AFF] px-4 py-1.5 rounded-full text-[11px] font-bold hover:bg-gray-100 transition-colors shadow-sm cursor-pointer"
+                    >
+                      Let's go!
+                    </button>
+                  </div>
+                </div>
+                {/* Tail */}
+                <div className="absolute -bottom-2 right-8 w-6 h-6 bg-[#007AFF] rotate-45 rounded-sm -z-10"></div>
+              </div>
             </div>
 
-            <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight uppercase">WEEKLY PERFORMANCE</h2>
+            <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Weekly Performance</h2>
 
-            {/* CORRECT STATS RENDER */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 shrink-0">
-              <div className="bg-[#FECACA] p-3 rounded-2xl flex flex-col items-center justify-center text-[#991B1B]">
-                <Clock className="w-5 h-5 mb-1 opacity-80" />
-                <span className="text-[9px] font-bold uppercase opacity-70">Duration</span>
-                <span className="text-lg font-black">5h 30m</span>
-              </div>
-              <div className="bg-[#DCFCE7] p-3 rounded-2xl flex flex-col items-center justify-center text-[#166534]">
-                <div className="bg-white/50 p-1 rounded-full mb-1"><Target className="w-3.5 h-3.5" /></div>
-                <span className="text-[9px] font-bold uppercase opacity-70 leading-tight text-center">Attempted</span>
-                <span className="text-lg font-black">120</span>
-              </div>
-              <div className="bg-[#F3E8FF] p-3 rounded-2xl flex flex-col items-center justify-center text-[#6B21A8]">
-                <BarChart2 className="w-5 h-5 mb-1 opacity-80" />
-                <span className="text-[9px] font-bold uppercase opacity-70">Accuracy</span>
-                <span className="text-lg font-black">82%</span>
-              </div>
-              <div className="bg-[#CFFAFE] p-3 rounded-2xl flex flex-col items-center justify-center text-[#155E75]">
-                <BookOpen className="w-5 h-5 mb-1 opacity-80" />
-                <span className="text-[9px] font-bold uppercase opacity-70">Topics</span>
-                <span className="text-lg font-black">3</span>
-              </div>
+            {/* STATS WITH WATERMARKS */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 shrink-0">
+              {[
+                { label: 'Study Duration', value: '5h 30m', icon: studyIcon, rotate: 'rotate(-9deg)', color: 'text-gray-700', bottom: '-bottom-8', size: 'w-24' },
+                { label: 'Attempt', value: '120', icon: attemptIcon, rotate: 'rotate(-10deg)', color: 'text-gray-700', bottom: '-bottom-8', size: 'w-24' },
+                { label: 'Accuracy Rate', value: '82%', icon: accuracyIcon, rotate: 'rotate(19.7deg)', color: 'text-gray-700', bottom: '-bottom-5', size: 'w-26' },
+                { label: 'Topics Completed', value: '3', icon: topicsIcon, rotate: 'rotate(-10deg)', color: 'text-gray-700', bottom: '-bottom-5', size: 'w-24' },
+              ].map((stat, i) => (
+                <div key={i} className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden h-28 flex flex-col justify-between group">
+                  <span className="text-[10px] font-bold text-gray-400 z-10">{stat.label}</span>
+                  <span className="text-xl font-black text-gray-700 z-10">{stat.value}</span>
+                  <img
+                    src={stat.icon}
+                    alt=""
+                    className={`absolute ${stat.bottom} -right-4 ${stat.size} h-24 object-contain transition-transform duration-500 group-hover:scale-110 select-none pointer-events-none`}
+                    style={{ transform: stat.rotate }}
+                  />
+                </div>
+              ))}
             </div>
 
             <div className="flex-1 w-full bg-white border border-gray-100 p-3 rounded-2xl flex flex-col shadow-inner min-h-0 overflow-hidden">
@@ -145,56 +198,115 @@ export default function Dashboard() {
         </div>
 
         {/* TOP-RIGHT SECTION: KOTAK 4 & 5 */}
-        <div className="lg:col-span-5 h-full flex flex-col gap-4 lg:min-h-0">
+        <div className="lg:col-span-6 h-full flex flex-col gap-4 lg:min-h-0">
 
           {/* Cognitive Style Profile Card (Kotak 4) */}
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm shrink-0">
-            <h2 className="text-base font-bold text-gray-800 mb-3 tracking-tight uppercase">COGNITIVE STYLE PROFILE</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
+                <Brain className="w-4 h-4 text-blue-500" />
+              </div>
+              <h2 className="text-base font-bold text-gray-800 tracking-tight">Cognitive Style Profile</h2>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 h-[220px]"> {/* Increased height for better visibility */}
-              {/* Left: Character Card */}
-              <div className="bg-[#FEFCE8] border border-yellow-100 rounded-2xl p-3 pl-6 flex flex-col items-center justify-center text-center relative overflow-hidden h-full">
-                <div className="absolute top-0 left-0 h-full w-2 bg-yellow-300"></div>
-                <p className="text-[10px] text-yellow-700 font-bold uppercase tracking-widest mb-1">Your Profile</p>
-                <h3 className="text-yellow-900 font-black text-xl italic tracking-tight mb-2">
-                  {user?.archetype_info?.archetype_name || 'Architect'}
-                  <span className="opacity-50 not-italic text-xs block">({user?.archetype_info?.code || 'CT-PAR'})</span>
-                </h3>
-                <img
-                  src={user?.archetype_info?.code ? `/images/profiles/${user.archetype_info.code.includes('-') ? user.archetype_info.code.split('-')[1] : user.archetype_info.code}.png` : "/images/welkam_atas.png"}
-                  alt="Profile"
-                  className="w-20 drop-shadow-md z-10 hover:scale-110 transition-transform duration-300 mb-1"
-                  onError={(e) => { e.target.src = "/images/welkam_atas.png"; }}
-                />
-                <button className="mt-2 text-[10px] font-bold text-blue-500 flex items-center gap-1 hover:gap-2 transition-all">
-                  Learn More <ChevronRight className="w-3.5 h-3.5" />
+            <div className="grid grid-cols-1 sm:grid-cols-[35fr_65fr] gap-4 h-[250px]">
+              {/* Left: Character Card (35%) */}
+              <div className="bg-[#FEFCE8] border border-yellow-100 rounded-2xl p-4 flex flex-col items-center justify-between text-center relative overflow-hidden h-full shadow-sm">
+                <div className="absolute top-0 left-0 h-full w-1.5 bg-yellow-400 z-20"></div>
+
+                {/* White Hill (Curved Background) - Card Level */}
+                <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[180%] h-[140px] bg-white rounded-[100%] z-0 shadow-[0_-10px_20px_-5px_rgba(255,255,255,0.5)]"></div>
+
+                <div className="flex flex-col items-center">
+                  <p className="text-[11px] text-gray-500 font-medium mb-1">Your Profile</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-gray-900 font-black text-xl tracking-tight leading-none">
+                      {user?.archetype_info?.archetype_name || 'Architect'}
+                    </h3>
+                    <span className="bg-gradient-to-br from-[#D4AF37] via-[#C5A028] to-[#8B7320] text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md border border-yellow-600/30">
+                      {user?.archetype_info?.code || 'CT-PAR'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex-1 flex items-center justify-center py-2 relative">
+                  {/* Subtle Glow */}
+                  <div className="absolute inset-0 bg-white/40 blur-2xl rounded-full scale-75"></div>
+
+                  <img
+                    src={user?.archetype_info?.code ? `/images/profiles/${user.archetype_info.code.includes('-') ? user.archetype_info.code.split('-')[1] : user.archetype_info.code}.png` : "/images/welkam_atas.png"}
+                    alt="Profile"
+                    className="w-32 drop-shadow-xl z-20 hover:scale-110 transition-transform duration-500 ease-out"
+                    onError={(e) => { e.target.src = "/images/welkam_atas.png"; }}
+                  />
+                </div>
+
+                <button
+                  onClick={() => navigate('/dashboard/profile-display')}
+                  className="text-[11px] font-bold text-blue-600 flex items-center gap-1 hover:gap-2 transition-all group border-b border-transparent hover:border-blue-200 pb-0.5"
+                >
+                  Pelajari Selengkapnya <span className="text-[10px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">↗</span>
                 </button>
               </div>
 
-              {/* Right: Bi-directional Bar Chart */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-center gap-5 h-full relative">
+              {/* Right: Bi-directional Bar Chart (65%) */}
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col justify-start gap-6 h-full relative overflow-visible">
+                <h3 className="text-sm font-bold text-gray-800 mb-2">Cognitive Traits</h3>
                 {profileTraits.map((trait, i) => (
-                  <div key={i} className="flex items-center gap-2 w-full">
-                    {/* Left Label */}
-                    <span className="w-16 text-[9px] font-bold text-gray-500 text-right leading-tight">{trait.left}</span>
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 w-full relative group"
+                    onMouseEnter={() => setHoveredTrait(i)}
+                    onMouseLeave={() => setHoveredTrait(null)}
+                  >
+                    <span className="w-16 text-[9px] font-bold text-gray-400 text-right leading-tight uppercase truncate">{trait.left}</span>
 
-                    {/* Bar Container */}
-                    <div className="flex-1 relative h-2.5 bg-gray-100 rounded-full flex items-center">
-                      {/* Filled Bar */}
+                    <div className="flex-1 relative h-4 bg-gray-50 border border-gray-200 rounded-full flex items-center shadow-inner overflow-visible">
+
+                      {/* Floating Tooltip (On Hover) */}
+                      {hoveredTrait === i && (
+                        <div
+                          className="absolute -top-9 z-50 px-2 py-1 bg-gray-800 text-white text-[9px] font-black rounded-md shadow-xl pointer-events-none transition-all duration-200 flex items-center gap-1.5"
+                          style={{
+                            left: `${trait.value}%`,
+                            transform: 'translateX(-50%)'
+                          }}
+                        >
+                          <span className="whitespace-nowrap italic">{trait.value >= 50 ? trait.right : trait.left}</span>
+                          <span className="bg-white/20 px-1 rounded">
+                            {Math.round(Math.abs(trait.value - 50) * 2)}%
+                          </span>
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                        </div>
+                      )}
+
+                      {/* Bidirectional fill - START FROM CENTER (50%) */}
                       <div
-                        className="absolute h-full rounded-full transition-all duration-1000"
-                        style={{ width: `${trait.value}%`, backgroundColor: trait.color }}
+                        className="absolute h-full transition-all duration-1000 shadow-inner opacity-90"
+                        style={{
+                          left: trait.value >= 50 ? '50%' : `${trait.value}%`,
+                          width: `${Math.abs(trait.value - 50)}%`,
+                          background: trait.gradient
+                        }}
                       ></div>
 
-                      {/* Thumb */}
+                      {/* Moving Shield Thumb - POSITION AT VALUE */}
                       <div
-                        className="absolute w-3.5 h-3.5 bg-white border-2 rounded-full shadow-sm z-10"
-                        style={{ left: `calc(${trait.value}% - 6px)`, borderColor: trait.color }}
-                      ></div>
+                        className="absolute top-1/2 -translate-y-1/2 w-6 h-6 z-30 drop-shadow-md transition-all duration-1000 flex items-center justify-center"
+                        style={{ left: `calc(${trait.value}% - 12px)` }}
+                      >
+                        <img
+                          src={shieldBars}
+                          alt="shield"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+
+                      {/* Static Center Line (The Zero Point) */}
+                      <div className="absolute left-1/2 top-0 bottom-0 w-[2px] z-10 pointer-events-none"></div>
+
                     </div>
-
-                    {/* Right Label */}
-                    <span className="w-16 text-[9px] font-bold text-gray-500 text-left leading-tight">{trait.right}</span>
+                    <span className="w-16 text-[9px] font-bold text-gray-400 text-left leading-tight uppercase truncate">{trait.right}</span>
                   </div>
                 ))}
               </div>
@@ -202,40 +314,50 @@ export default function Dashboard() {
           </div>
 
           {/* Statistics Card (Kotak 5) */}
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col flex-1 min-h-[400px] overflow-hidden">
             <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight uppercase">STATISTICS</h2>
 
-            <div className="flex-1 flex flex-col items-center justify-between gap-4 min-h-0">
-              <div className="w-full h-full min-h-0 relative flex-1">
+            <div className="flex-1 flex items-center gap-4 min-h-0">
+              {/* Radar Column */}
+              <div className="flex-[1.2] h-full min-h-0 relative bg-white border border-gray-50 rounded-3xl p-2 shadow-sm">
+                <p className="absolute top-3 left-3 text-[10px] font-bold text-gray-400 uppercase">Distribution Skills</p>
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={frameworkData}>
+                  <RadarChart cx="50%" cy="50%" outerRadius="65%" data={frameworkData}>
                     <PolarGrid stroke="#F1F5F9" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 8, fill: '#94A3B8', fontWeight: 700 }} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 7, fill: '#94A3B8', fontWeight: 700 }} />
+                    <RechartsTooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '10px' }}
+                      formatter={(value) => [`${value}%`, 'Score']}
+                    />
                     <Radar
                       name="Framework"
                       dataKey="A"
                       stroke="#F87171"
                       fill="#F87171"
-                      fillOpacity={0.3}
+                      fillOpacity={0.2}
                       animationDuration={1500}
                     />
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
 
-              <div className="w-full bg-[#FFF1F2] p-4 rounded-3xl flex justify-around items-center gap-3 border border-red-50 shrink-0">
+              {/* Stats Column (Vertical List) */}
+              <div className="flex-1 flex flex-col justify-around h-full py-4">
                 {[
-                  { label: 'Overall Score', value: '78', color: 'border-[#F97316] text-[#C2410C]' },
-                  { label: 'Accuracy', value: '82%', color: 'border-[#EF4444] text-[#B91C1C]' },
-                  { label: 'Streak', value: '14', color: 'border-[#FB7185] text-[#BE123C]' },
+                  { label: 'Overall CT Score', value: '78', color: 'border-orange-500 text-orange-600' },
+                  { label: 'Accuracy Rate', value: '82%', color: 'border-red-500 text-red-600' },
+                  { label: 'Mastery Streak', value: '14', color: 'border-pink-500 text-pink-600' },
                 ].map((bubble, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1">
-                    <div className={`w-10 h-10 rounded-full border-[3px] ${bubble.color} bg-white flex items-center justify-center shadow-md transition-transform hover:scale-110`}>
-                      <span className="text-sm font-black">{bubble.value}</span>
+                  <div key={i} className="flex items-center gap-4 group">
+                    <div className={`w-14 h-14 rounded-full border-4 bg-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 flex-shrink-0 ${bubble.color}`}>
+                      <span className="text-base font-black">{bubble.value}</span>
                     </div>
-                    <p className={`text-[7px] font-black uppercase text-center w-12 leading-tight tracking-tighter opacity-80 ${bubble.color.split(' ')[1]}`}>
-                      {bubble.label}
-                    </p>
+                    <div className="flex flex-col">
+                      <p className="text-[10px] font-black uppercase leading-tight text-gray-400">
+                        {bubble.label}
+                      </p>
+                      <p className="text-[9px] font-bold text-gray-300">Level: Expert</p>
+                    </div>
                   </div>
                 ))}
               </div>

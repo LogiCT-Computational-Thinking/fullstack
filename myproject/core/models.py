@@ -73,6 +73,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     ct_pattern = models.FloatField(default=0.0)
     ct_algorithm = models.FloatField(default=0.0)
 
+    # Cognitive Traits (0-100, where 50 is center)
+    cog_tp_value = models.FloatField(default=50.0)
+    cog_ga_value = models.FloatField(default=50.0)
+    cog_ir_value = models.FloatField(default=50.0)
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
@@ -183,7 +188,7 @@ class PretestQuestion(models.Model):
 class PretestResponse(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pretest_responses')
     question = models.ForeignKey(PretestQuestion, on_delete=models.CASCADE, related_name='responses')
-    response_value = models.IntegerField(blank=True, null=True)
+    response_value = models.CharField(max_length=255, blank=True, null=True)
     answer = models.BooleanField(default=False)
 
     def __str__(self):

@@ -20,7 +20,8 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'name', 'first_name', 'last_name', 'email', 'password', 'role', 
             'profilePicture', 'preferences', 'is_profiled', 'birth_date', 
             'gender', 'student_class', 'student_id', 'archetype_info',
-            'ct_decomposition', 'ct_abstraction', 'ct_pattern', 'ct_algorithm'
+            'ct_decomposition', 'ct_abstraction', 'ct_pattern', 'ct_algorithm',
+            'cog_tp_value', 'cog_ga_value', 'cog_ir_value'
         ]
         extra_kwargs = {
             'password': {'write_only': True},

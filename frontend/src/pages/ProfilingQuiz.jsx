@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSound } from '../hooks/useSound';
 import maleIcon from '../assets/Male.png';
@@ -14,6 +14,7 @@ export default function ProfilingQuiz() {
     const { user, setUser } = useAuth();
     const { playClick, playSuccess } = useSound();
     const [step, setStep] = useState(0);
+    const hasLoadedState = useRef(false);
     // Use a stable timestamp for the session to prevent flickering but bypass cache on reload
     const [cacheBuster] = useState(Date.now());
 
@@ -55,7 +56,7 @@ export default function ProfilingQuiz() {
 
     // Load saved state from localStorage once user is available
     useEffect(() => {
-        if (user && user.email) {
+        if (user && user.email && !hasLoadedState.current) {
             const saved = localStorage.getItem(`profiling_quiz_state_${user.email}`);
 
             // Initial names from user profile
@@ -83,7 +84,6 @@ export default function ProfilingQuiz() {
                     if (parsed.cognitiveQuestions) setCognitiveQuestions(parsed.cognitiveQuestions);
                     if (parsed.pedagogicQuestions) setPedagogicQuestions(parsed.pedagogicQuestions);
                 } catch (e) {
-
                     console.error("Failed to parse saved quiz state", e);
                 }
             } else {
@@ -97,6 +97,7 @@ export default function ProfilingQuiz() {
 
             // After attempting to load from storage, fetch questions if they aren't already set
             fetchQuestions(user);
+            hasLoadedState.current = true;
         }
     }, [user]);
 
@@ -454,25 +455,12 @@ export default function ProfilingQuiz() {
                                     hoverCircle: 'group-hover:bg-[#2D0B1B]',
                                     iconColor: '#DB2777',
                                     icon: femaleIcon
-                                },
-                                {
-                                    id: 'Other',
-                                    label: 'Prefer not to say',
-                                    bgColor: 'bg-[#F9FFF0]',
-                                    selectedBg: 'from-[#879E33] to-[#3B4516]',
-                                    hoverBg: 'hover:from-[#879E33] hover:to-[#3B4516]',
-                                    borderColor: 'border-[#D9F99D]',
-                                    circleColor: 'bg-[#E3F8C5]',
-                                    selectedCircle: 'bg-[#1C200A]',
-                                    hoverCircle: 'group-hover:bg-[#1C200A]',
-                                    iconColor: '#417532',
-                                    icon: genderIcon
                                 }
                             ].map((option) => (
                                 <button
                                     key={option.id}
                                     onClick={() => setFormData(prev => ({ ...prev, gender: option.id }))}
-                                    className={`flex-1 aspect-square flex flex-col items-center justify-center p-3 sm:p-4 rounded-[32px] border-2 transition-all duration-300 gap-2 sm:gap-3 group ${formData.gender === option.id
+                                    className={`flex-1 flex flex-col items-center justify-center py-6 sm:py-8 px-3 rounded-[32px] border-2 transition-all duration-300 gap-2 group ${formData.gender === option.id
                                         ? `bg-gradient-to-b ${option.selectedBg} border-transparent shadow-lg scale-105`
                                         : `${option.bgColor} ${option.borderColor} hover:bg-gradient-to-b ${option.hoverBg} hover:border-transparent hover:scale-[1.02] hover:shadow-md`
                                         }`}

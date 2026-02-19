@@ -586,9 +586,10 @@ def submit_profiling_answers(request):
         ).first()
         
         if not level_q:
-            continue # Should not happen if frontend is correct
+            print(f"Pedagogy Loop: Level {level} question not found in answers. Stopping.")
+            break
             
-        user_ans = answers_map[level_q.id]
+        user_ans = str(answers_map[level_q.id])
         
         # Check if it's a multi-select type
         if level_q.type in ['multi_select', 'multi_select_image']:
@@ -606,18 +607,21 @@ def submit_profiling_answers(request):
         else:
             is_correct = user_ans.strip().lower() == level_q.correctAns.strip().lower()
         
-        # Save response
-        PretestResponse.objects.create(
+        # Save or update response
+        PretestResponse.objects.update_or_create(
             user=user,
             question=level_q,
-            response_value=None,
-            answer=is_correct
+            defaults={
+                'response_value': user_ans, # Save raw string for pedagogy too
+                'answer': is_correct
+            }
         )
         
         if is_correct:
+            print(f"Pedagogy Loop: Level {level} CORRECT. Setting final_level to {level}")
             final_level = level
         else:
-            # If wrong, we stop here. 
+            print(f"Pedagogy Loop: Level {level} WRONG (User: '{user_ans}', Correct: '{level_q.correctAns}'). Stopping.")
             # If wrong at Level 1, level remains 1. 
             # If wrong at level N, level is N-1.
             break
@@ -625,7 +629,7 @@ def submit_profiling_answers(request):
     # -----------------------------------------------------
     # 2. COGNITIVE SCORING (Sum-based, Threshold 18)
     # -----------------------------------------------------
-    def get_cognitive_label(category, label1, label2):
+    def get_cognitive_data(category, label1, label2):
         qs = PretestQuestion.objects.filter(pk__in=answers_map.keys(), category=category)
         total_score = 0
         for q in qs:
@@ -634,20 +638,37 @@ def submit_profiling_answers(request):
                 # Ensure we handle empty strings or non-numeric answers safely
                 val = int(ans) if ans and str(ans).strip() else 0
                 total_score += val
-                # Save response
-                PretestResponse.objects.create(
+                # Save or update response
+                PretestResponse.objects.update_or_create(
                     user=user,
                     question=q,
-                    response_value=val,
-                    answer=True # Cognitive scale is not correct/incorrect
+                    defaults={
+                        'response_value': val,
+                        'answer': True # Cognitive scale is not correct/incorrect
+                    }
                 )
             except (ValueError, TypeError):
                 pass
-        return label2 if total_score > 18 else label1
+        
+        # Mapping Score (5-30) to slider value (0-100) where 18 is 50
+        # 18 is 0% distance from center (UI value 50)
+        # 5 is 100% distance to left (UI value 0)
+        # 30 is 100% distance to right (UI value 100)
+        if total_score < 18:
+            # Range 5 to 18 (13 units) mapping to 0 to 50
+            normalized_value = 50 - ((18 - total_score) / (18 - 5) * 50)
+        elif total_score > 18:
+            # Range 18 to 30 (12 units) mapping to 50 to 100
+            normalized_value = 50 + ((total_score - 18) / (30 - 18) * 50)
+        else:
+            normalized_value = 50.0
 
-    label_tp = get_cognitive_label('PROFILING_COGNITIVE_TP', 'T', 'P')
-    label_ga = get_cognitive_label('PROFILING_COGNITIVE_GA', 'G', 'A')
-    label_ir = get_cognitive_label('PROFILING_COGNITIVE_IR', 'I', 'R')
+        label = label2 if total_score > 18 else label1
+        return label, round(normalized_value, 2)
+
+    label_tp, user.cog_tp_value = get_cognitive_data('PROFILING_COGNITIVE_TP', 'T', 'P')
+    label_ga, user.cog_ga_value = get_cognitive_data('PROFILING_COGNITIVE_GA', 'G', 'A')
+    label_ir, user.cog_ir_value = get_cognitive_data('PROFILING_COGNITIVE_IR', 'I', 'R')
     
     # -----------------------------------------------------
     # 3. CT FRAMEWORK SCORING (Normalized Composition)

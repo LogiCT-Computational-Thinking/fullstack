@@ -61,7 +61,25 @@ export default function Register() {
     } catch (err) {
       playError(); // Play error sound
       // Handle Django Rest Framework error format
-      const errorMessage = err.email ? "Email already registered" : (err.error || 'Registration failed. Please try again.');
+      let errorMessage = 'Registration failed. Please try again.';
+      if (typeof err === 'object' && err !== null) {
+        // extract the first error message
+        const firstKey = Object.keys(err)[0];
+        if (firstKey) {
+          const firstError = err[firstKey];
+          const rawMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+
+          if (firstKey === 'error' || firstKey === 'detail' || firstKey === 'non_field_errors') {
+            errorMessage = rawMessage;
+          } else {
+            // Field-specific error, e.g., "Email: Email already registered"
+            errorMessage = `${firstKey.charAt(0).toUpperCase() + firstKey.slice(1)}: ${rawMessage}`;
+          }
+        }
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+
       setError(errorMessage);
       console.error('Register error:', err);
     } finally {

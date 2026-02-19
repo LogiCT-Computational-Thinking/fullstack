@@ -25,7 +25,7 @@ function DashboardLayout() {
 
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard', inSidebar: true },
-    { id: 'modules', label: 'Materials', icon: BookOpen, path: '/dashboard/modules', title: 'Materials', inSidebar: true },
+    { id: 'modules', label: 'Material', icon: BookOpen, path: '/dashboard/modules', title: 'Material', inSidebar: true },
     { id: 'quiz-bank', label: 'Exercise', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Exercise', inSidebar: true },
     { id: 'profile-display', label: 'Profile', icon: User, path: '/dashboard/profile-display', title: 'My CT Profile', inSidebar: false },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/dashboard/settings', title: 'Settings', inSidebar: false }
@@ -69,9 +69,7 @@ function DashboardLayout() {
               alt="LogiCT"
               className="w-10 h-10 rounded-lg"
             />
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">LogiCT</h1>
-            </div>
+            <h1 className="text-xl font-bold text-gray-900 font-['Outfit']">LogiCT</h1>
           </div>
         </div>
 
@@ -107,29 +105,35 @@ function DashboardLayout() {
 
             <div className="flex items-center gap-4">
               {/* Search Bar */}
-              {/* <div className="relative">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="What do you want to learn?"
-                  className="pl-10 pr-4 py-2 w-80 bg-gray-50 border border-gray-200 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
+                  className="pl-10 pr-4 py-2 w-72 bg-gray-100/50 border-none rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all font-medium"
                 />
-              </div> */}
+              </div>
 
               {/* Notification Icon */}
-              {/* <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 active:scale-90 border border-gray-200">
+              <button className="p-2.5 bg-gray-100/50 hover:bg-gray-100 rounded-2xl transition-all duration-150 active:scale-90 relative">
                 <Bell className="w-5 h-5 text-gray-600" />
-              </button> */}
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              </button>
 
               {/* User Profile with Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setShowUserDropdown(!showUserDropdown)}
-                  className="flex items-center gap-3 p-1 pl-3 pr-1 rounded-full hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
+                  className="flex items-center gap-3 p-1 pl-3 pr-1 rounded-full hover:bg-gray-50 transition-all"
                 >
-                  <span className="text-sm font-bold text-gray-700">{user?.name || 'Rio Alvein Hasana'}</span>
-                  <div className="w-9 h-9 rounded-full border border-gray-200 bg-blue-50 flex items-center justify-center text-blue-600">
-                    <User className="w-5 h-5" />
+                  <span className="text-sm font-bold text-gray-700 font-['Outfit']">{user?.name || 'User LogiCT'}</span>
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 bg-blue-50 flex items-center justify-center">
+                    <img
+                      src="/images/chatbot.png"
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = "/images/welkam_atas.png"; }}
+                    />
                   </div>
                 </button>
 
