@@ -104,6 +104,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Course(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
+    thumbnail = models.URLField(blank=True, null=True)  # URL gambar cover course
     metadata = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -114,6 +115,8 @@ class Enrollment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollments')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollments')
     progress = models.FloatField(default=0.0)
+    enrolled_at = models.DateTimeField(auto_now_add=True)    # Kapan mulai enroll
+    quiz_completed = models.BooleanField(default=False)      # Apakah quiz sudah dikerjakan
 
     class Meta:
         unique_together = ('user', 'course')
@@ -227,9 +230,38 @@ class Quiz(models.Model):
 
 
 class QuizQuestion(models.Model):
+    TYPE_CHOICES = [
+        ('multiple_choice', 'Multiple Choice'),
+        ('multiple_choice_image', 'Multiple Choice (Images)'),
+        ('multi_select', 'Multi Select (Checkboxes)'),
+        ('multi_select_image', 'Multi Select (Images)'),
+        ('true_false', 'True/False'),
+        ('short_answer', 'Short Answer / Essay'),
+    ]
+    CATEGORY_CHOICES = [
+        ('GENERAL', 'General Quiz'),
+        ('PROFILING_PEDAGOGY', 'Profiling: Pedagogy'),
+        ('PROFILING_COGNITIVE_TP', 'Profiling: Cognitive TP'),
+        ('PROFILING_COGNITIVE_GA', 'Profiling: Cognitive GA'),
+        ('PROFILING_COGNITIVE_IR', 'Profiling: Cognitive IR'),
+    ]
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
     question = models.TextField()
+    type = models.CharField(max_length=30, choices=TYPE_CHOICES, default='multiple_choice')
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='GENERAL')
+    level = models.IntegerField(default=1, help_text="Level 1-6 for Pedagogy")
+    image = models.ImageField(upload_to='questions/', blank=True, null=True)
+    score = models.FloatField(default=1.0)
+    result = models.CharField(max_length=100, blank=True, null=True)
+    option = models.JSONField(default=list, blank=True)
+    correctAns = models.TextField(default='')
     solution = models.TextField(blank=True, null=True)
+
+    # CT Framework Weights (0-100, should total 100 across 4 fields)
+    weight_decomposition = models.FloatField(default=0.0)
+    weight_abstraction = models.FloatField(default=0.0)
+    weight_pattern = models.FloatField(default=0.0)
+    weight_algorithm = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"QuizQ{self.id} ({self.quiz.course.title})"
@@ -256,12 +288,33 @@ class QuizResponse(models.Model):
     question = models.ForeignKey(QuizQuestion, on_delete=models.CASCADE, related_name='responses')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_responses')
     userAns = models.TextField(blank=True, null=True)
+    is_correct = models.BooleanField(default=False)          # Apakah jawaban benar
     timestamp = models.DateTimeField(auto_now_add=True)
     feedback = models.ForeignKey(Feedback, on_delete=models.SET_NULL, null=True, blank=True)
     hint = models.ForeignKey(Hints, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"Response by {self.user.name} - {self.quiz.course.title}"
+
+
+class QuizResult(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_results')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='results')
+    score = models.FloatField(default=0.0)           # Nilai mentah, misal: 80.0
+    total_score = models.FloatField(default=0.0)     # Skor maksimum yang mungkin
+    percentage = models.FloatField(default=0.0)      # Persentase, misal: 85.5
+    passed = models.BooleanField(default=False)      # Lulus atau tidak
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'quiz')   # 1 user hanya punya 1 hasil per quiz
+        verbose_name = "Quiz Result"
+        verbose_name_plural = "Quiz Results"
+
+    def __str__(self):
+        return f"{self.user.name} - {self.quiz.course.title} ({self.percentage:.1f}%)"
+
+
 # =========================================================
 # 7️⃣ STUDENT CLASS
 # =========================================================
@@ -286,3 +339,28 @@ class StudentClass(models.Model):
 
     def __str__(self):
         return f"{self.class_type}-{self.class_number}"
+
+
+# =========================================================
+# 8️⃣ MATERIAL
+# =========================================================
+class Material(models.Model):
+    FILE_TYPE_CHOICES = [
+        ('pdf', 'PDF'),
+        ('ppt', 'PowerPoint'),
+        ('other', 'Other'),
+    ]
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='materials')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, null=True)    # Deskripsi singkat materi
+    week = models.IntegerField()
+    file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, default='pdf')  # Jenis file
+    file = models.FileField(upload_to='materials/')
+    order = models.IntegerField(default=1)                   # Urutan jika >1 materi per minggu
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['week', 'order']
+
+    def __str__(self):
+        return f"{self.course.title} - Week {self.week} - {self.title}"
