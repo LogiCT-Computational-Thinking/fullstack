@@ -16,17 +16,32 @@ import bubbleChat from '../assets/dashboard/bubble_chat.png';
 import shieldBars from '../assets/dashboard/shield_bars.png';
 import mascotIcon from '/images/chatbot.png';
 
+const ARCHETYPE_STYLES = {
+  PAR: { bgCard: 'bg-[#E5EAFF]', sideBar: 'bg-[#1F3A8A]', badge: 'bg-gradient-to-r from-[#3427C0] to-[#5A4F12]', border: 'border-blue-100', text: 'text-[#2653DF]' },
+  TAI: { bgCard: 'bg-[#E5FFEC]', sideBar: 'bg-[#059669]', badge: 'bg-gradient-to-r from-[#27C07B] to-[#5A4F12]', border: 'border-green-100', text: 'text-[#2653DF]' },
+  PGR: { bgCard: 'bg-[#E5FFF5]', sideBar: 'bg-[#0F766E]', badge: 'bg-gradient-to-r from-[#27C08F] to-[#5A4F12]', border: 'border-teal-100', text: 'text-[#2653DF]' },
+  PGI: { bgCard: 'bg-[#FFE5F2]', sideBar: 'bg-[#DB2777]', badge: 'bg-gradient-to-r from-[#C02778] to-[#5A4F12]', border: 'border-pink-100', text: 'text-[#2653DF]' },
+  TAR: { bgCard: 'bg-[#F2E5FF]', sideBar: 'bg-[#5B21B6]', badge: 'bg-gradient-to-r from-[#8827C0] to-[#5A4F12]', border: 'border-purple-100', text: 'text-[#2653DF]' },
+  TGI: { bgCard: 'bg-[#FFFBE5]', sideBar: 'bg-[#F59E0B]', badge: 'bg-gradient-to-r from-[#C0A927] to-[#5A4F12]', border: 'border-yellow-100', text: 'text-[#2653DF]' },
+  TGR: { bgCard: 'bg-[#EEEEEE]', sideBar: 'bg-[#374151]', badge: 'bg-gradient-to-r from-[#39372E] to-[#5A4F12]', border: 'border-gray-200', text: 'text-[#2653DF]' },
+  PAI: { bgCard: 'bg-[#FFEFE5]', sideBar: 'bg-[#F97316]', badge: 'bg-gradient-to-r from-[#C05C27] to-[#5A4F12]', border: 'border-orange-100', text: 'text-[#2653DF]' }
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isMascotHovered, setIsMascotHovered] = useState(false);
   const [hoveredTrait, setHoveredTrait] = useState(null);
 
+  // Dynamic Archetype Styles
+  const archetypeCode = (user?.archetype_info?.code || 'CT-PAR').split('-').pop();
+  const currentStyle = ARCHETYPE_STYLES[archetypeCode] || ARCHETYPE_STYLES.PAR;
+
   // Cognitive Style Traits (Bi-directional Bars)
   const profileTraits = [
-    { left: 'Visual Text', right: 'Visual Picture', value: user?.cog_tp_value ?? 50, color: '#D946EF', gradient: 'linear-gradient(to right, #D946EF, #C026D3)' },
-    { left: 'Global', right: 'Analytics', value: user?.cog_ga_value ?? 50, color: '#F97316', gradient: 'linear-gradient(to right, #FB923C, #F97316)' },
-    { left: 'Impulsive', right: 'Reflective', value: user?.cog_ir_value ?? 50, color: '#10B981', gradient: 'linear-gradient(to right, #34D399, #10B981)' },
+    { left: 'Visual Text', right: 'Visual Picture', shortLeft: 'T', shortRight: 'P', value: user?.cog_tp_value ?? 50, bright: '#FFD1FF', dark: '#E600E6' },
+    { left: 'Global', right: 'Analytics', shortLeft: 'G', shortRight: 'A', value: user?.cog_ga_value ?? 50, bright: '#FFE4BC', dark: '#FF8A00' },
+    { left: 'Impulsive', right: 'Reflective', shortLeft: 'I', shortRight: 'R', value: user?.cog_ir_value ?? 50, bright: '#C1FFEB', dark: '#00D06C' },
   ];
 
   // CT Framework Statistics (Radar - 4 Points ordered for vertical label optimization)
@@ -56,7 +71,7 @@ export default function Dashboard() {
           Hello, {user?.name?.split(' ')[0] || 'User LogiCT'}
         </h1>
         <p
-          className="text-xl font-semibold w-fit"
+          className="text-3xl font-semibold w-fit"
           style={{
             background: 'linear-gradient(to right, #00DDB6, #6064CF)',
             WebkitBackgroundClip: 'text',
@@ -211,8 +226,8 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 sm:grid-cols-[35fr_65fr] gap-4 h-[250px]">
               {/* Left: Character Card (35%) */}
-              <div className="bg-[#FEFCE8] border border-yellow-100 rounded-2xl p-4 flex flex-col items-center justify-between text-center relative overflow-hidden h-full shadow-sm">
-                <div className="absolute top-0 left-0 h-full w-1.5 bg-yellow-400 z-20"></div>
+              <div className={`${currentStyle.bgCard} border ${currentStyle.border} rounded-2xl p-4 flex flex-col items-center justify-between text-center relative overflow-hidden h-full shadow-sm`}>
+                <div className={`absolute top-0 left-0 h-full w-1.5 ${currentStyle.sideBar} z-20`}></div>
 
                 {/* White Hill (Curved Background) - Card Level */}
                 <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[180%] h-[140px] bg-white rounded-[100%] z-0 shadow-[0_-10px_20px_-5px_rgba(255,255,255,0.5)]"></div>
@@ -220,11 +235,11 @@ export default function Dashboard() {
                 <div className="flex flex-col items-center">
                   <p className="text-[11px] text-gray-500 font-medium mb-1">Your Profile</p>
                   <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-gray-900 font-black text-xl tracking-tight leading-none">
+                    <h3 className="text-gray-900 font-black text-md tracking-tight leading-none">
                       {user?.archetype_info?.archetype_name || 'Architect'}
                     </h3>
-                    <span className="bg-gradient-to-br from-[#D4AF37] via-[#C5A028] to-[#8B7320] text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md border border-yellow-600/30">
-                      {user?.archetype_info?.code || 'CT-PAR'}
+                    <span className={`${currentStyle.badge} text-white text-[9px] font-black px-2.5 py-0.5 rounded-full shadow-md border border-white/20 whitespace-nowrap`}>
+                      CT - {archetypeCode}
                     </span>
                   </div>
                 </div>
@@ -243,7 +258,7 @@ export default function Dashboard() {
 
                 <button
                   onClick={() => navigate('/dashboard/profile-display')}
-                  className="text-[11px] font-bold text-blue-600 flex items-center gap-1 hover:gap-2 transition-all group border-b border-transparent hover:border-blue-200 pb-0.5"
+                  className={`text-[11px] font-bold ${currentStyle.text || 'text-blue-600'} flex items-center gap-1 hover:gap-2 transition-all group border-b border-transparent hover:border-current pb-0.5`}
                 >
                   Pelajari Selengkapnya <span className="text-[10px] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">↗</span>
                 </button>
@@ -259,7 +274,9 @@ export default function Dashboard() {
                     onMouseEnter={() => setHoveredTrait(i)}
                     onMouseLeave={() => setHoveredTrait(null)}
                   >
-                    <span className="w-16 text-[9px] font-bold text-gray-400 text-right leading-tight uppercase truncate">{trait.left}</span>
+                    <span className="w-6 text-[10px] font-bold text-gray-400 text-center leading-tight uppercase transition-all">
+                      {trait.shortLeft}
+                    </span>
 
                     <div className="flex-1 relative h-4 bg-gray-50 border border-gray-200 rounded-full flex items-center shadow-inner overflow-visible">
 
@@ -282,19 +299,18 @@ export default function Dashboard() {
 
                       {/* Bidirectional fill - START FROM CENTER (50%) */}
                       <div
-                        className="absolute h-full transition-all duration-1000 shadow-inner opacity-90"
+                        className="absolute h-full transition-all duration-1000 shadow-inner opacity-90 rounded-full"
                         style={{
                           left: trait.value >= 50 ? '50%' : `${trait.value}%`,
                           width: `${Math.abs(trait.value - 50)}%`,
-                          background: trait.gradient
+                          background: trait.value >= 50
+                            ? `linear-gradient(to right, ${trait.bright}, ${trait.dark})`
+                            : `linear-gradient(to left, ${trait.bright}, ${trait.dark})`
                         }}
                       ></div>
 
-                      {/* Moving Shield Thumb - POSITION AT VALUE */}
-                      <div
-                        className="absolute top-1/2 -translate-y-1/2 w-6 h-6 z-30 drop-shadow-md transition-all duration-1000 flex items-center justify-center"
-                        style={{ left: `calc(${trait.value}% - 12px)` }}
-                      >
+                      {/* Static Shield at Center */}
+                      <div className="absolute left-1/2 -translate-x-1/2 w-6 h-6 z-40 drop-shadow-sm flex items-center justify-center pointer-events-none">
                         <img
                           src={shieldBars}
                           alt="shield"
@@ -302,11 +318,29 @@ export default function Dashboard() {
                         />
                       </div>
 
+                      {/* Glowing Doughnut Thumb at Value */}
+                      <div
+                        className="absolute top-1/2 -translate-y-1/2 w-5 h-5 z-50 transition-all duration-1000 flex items-center justify-center pointer-events-none"
+                        style={{
+                          // Offset by 8px (half of h-4) to center in the rounded-full cap
+                          left: trait.value >= 50
+                            ? `calc(${trait.value}% - 18px)`
+                            : `calc(${trait.value}% - 2px)`
+                        }}
+                      >
+                        <div
+                          className="w-4 h-4 rounded-full bg-transparent border-[3.5px] border-white shadow-xl flex-shrink-0"
+                          style={{ boxShadow: `0 0 12px ${trait.dark}, inset 0 0 4px ${trait.dark}` }}
+                        ></div>
+                      </div>
+
                       {/* Static Center Line (The Zero Point) */}
                       <div className="absolute left-1/2 top-0 bottom-0 w-[2px] z-10 pointer-events-none"></div>
 
                     </div>
-                    <span className="w-16 text-[9px] font-bold text-gray-400 text-left leading-tight uppercase truncate">{trait.right}</span>
+                    <span className="w-6 text-[10px] font-bold text-gray-400 text-center leading-tight uppercase transition-all">
+                      {trait.shortRight}
+                    </span>
                   </div>
                 ))}
               </div>

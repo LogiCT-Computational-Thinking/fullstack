@@ -99,7 +99,7 @@ function DashboardLayout() {
       {/* Main Content Area */}
       <div className="flex-1 ml-64">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-[100]">
           <div className="px-8 py-4 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">{currentPage.title}</h2>
 

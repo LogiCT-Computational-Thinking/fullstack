@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Course, Module, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass
+from .models import User, Course, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass
 from django.contrib.auth.hashers import make_password
 
 
@@ -111,11 +111,6 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ModuleSerializer(serializers.ModelSerializer):
-    """Serializer for Module model"""
-    class Meta:
-        model = Module
-        fields = '__all__'
 
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
