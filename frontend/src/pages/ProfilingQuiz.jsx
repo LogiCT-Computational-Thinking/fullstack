@@ -72,6 +72,19 @@ export default function ProfilingQuiz() {
     useEffect(() => {
         if (user && user.email && !hasLoadedRef.current) {
             hasLoadedRef.current = true;
+
+            // === GUARD: If user has already completed profiling ===
+            // Clear any stale localStorage progress and show the result modal directly
+            if (user.archetype_info) {
+                // Bersihkan state quiz lama yang mungkin tersisa
+                localStorage.removeItem(`profiling_quiz_state_${user.email}`);
+                // Tampilkan modal hasil profiling
+                setProfilingResult(user.archetype_info);
+                setShowResultModal(true);
+                fetchQuestions(user); // tetap fetch agar tidak error jika modal ditutup
+                return;
+            }
+
             const saved = localStorage.getItem(`profiling_quiz_state_${user.email}`);
 
             // Initial names from user profile
