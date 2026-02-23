@@ -314,8 +314,8 @@ export default function ProfilingResult({ data }) {
                         <div
                             className="mb-4 rounded-2xl p-6 px-10 flex flex-col justify-center gap-8 relative z-10"
                             style={{
-                                background: `${currentStyle.bgCard}33`,
-                                border: `1px solid ${currentStyle.sideBar}44`
+                                background: `linear-gradient(to right, white, ${currentStyle.bgCard})`,
+                                border: `1px solid ${currentStyle.sideBar}33`
                             }}
                         >
                             {displayData.cognitiveTraits.map((trait, i) => (

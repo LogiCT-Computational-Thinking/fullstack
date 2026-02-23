@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Course, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass
+from .models import User, Course, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass, Material
 from django.contrib.auth.hashers import make_password
 
 
@@ -106,6 +106,13 @@ class GoogleAuthSerializer(serializers.Serializer):
         allow_blank=True,
         default='student'
     )
+
+
+class MaterialSerializer(serializers.ModelSerializer):
+    """Serializer for Material model"""
+    class Meta:
+        model = Material
+        fields = '__all__'
 
 
 class CourseSerializer(serializers.ModelSerializer):

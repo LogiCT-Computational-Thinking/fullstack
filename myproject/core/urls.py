@@ -33,4 +33,7 @@ urlpatterns = [
     path('auth/verify-otp/', views.verify_otp_view, name='verify-otp'),
     path('auth/reset-password-otp/', views.reset_password_otp_view, name='reset-password-otp'),
     path('auth/reset-password/', views.reset_password_view, name='reset-password'),
+    
+    # Educational Materials
+    path('materials/', views.get_materials_view, name='get-materials'),
 ]

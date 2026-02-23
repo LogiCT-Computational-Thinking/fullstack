@@ -1,16 +1,17 @@
 import os, csv, json, io
 from django.shortcuts import render
 from rest_framework import status, generics
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from .authentication import CustomJWTAuthentication
 from django.contrib.auth.hashers import check_password, make_password
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
 
-from .models import User, PretestQuestion, Pretest, PretestResponse
+from .models import User, PretestQuestion, Pretest, PretestResponse, Material
 from .serializers import (
     UserSerializer,
     UserRegistrationSerializer,
@@ -22,7 +23,8 @@ from .serializers import (
     ResetPasswordOTPSerializer,
     PretestQuestionSerializer,
     ProfilingSubmissionSerializer,
-    UpdateStudentInfoSerializer
+    UpdateStudentInfoSerializer,
+    MaterialSerializer
 )
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -940,4 +942,14 @@ def get_student_classes(request):
     
     classes = StudentClass.objects.all()
     serializer = StudentClassSerializer(classes, many=True)
+    return Response(serializer.data)
+@api_view(['GET'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_materials_view(request):
+    """
+    Get all educational materials ordered by week
+    """
+    materials = Material.objects.all().order_by('week', 'order')
+    serializer = MaterialSerializer(materials, many=True)
     return Response(serializer.data)
