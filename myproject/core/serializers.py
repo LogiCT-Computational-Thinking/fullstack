@@ -49,7 +49,11 @@ class ProfilingArchetypeSerializer(serializers.ModelSerializer):
     """Serializer for ProfilingArchetype model"""
     class Meta:
         model = ProfilingArchetype
-        fields = ['code', 'archetype_name', 'description']
+        fields = [
+            'code', 'archetype_name', 'description',
+            'cognitive_description', 'tactics', 'tactics_image',
+            'tactics_description', 'strengths', 'weaknesses'
+        ]
 
 
 class StudentClassSerializer(serializers.ModelSerializer):

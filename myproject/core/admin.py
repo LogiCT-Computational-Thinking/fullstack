@@ -64,6 +64,18 @@ from .models import ProfilingArchetype
 class ProfilingArchetypeAdmin(admin.ModelAdmin):
     list_display = ("code", "archetype_name")
     search_fields = ("code", "archetype_name")
+    fieldsets = (
+        (None, {
+            'fields': ('code', 'archetype_name')
+        }),
+        ('Descriptions', {
+            'fields': ('description', 'cognitive_description', 'tactics_description'),
+        }),
+        ('Tactics & Traits (JSON list)', {
+            'fields': ('tactics', 'strengths', 'weaknesses'),
+            'description': 'Enter as JSON arrays, e.g. ["Step-by-Step", "Planner"]'
+        }),
+    )
 
 
 @admin.register(Material)

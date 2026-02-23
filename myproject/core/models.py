@@ -192,6 +192,12 @@ class ProfilingArchetype(models.Model):
     code = models.CharField(max_length=3, unique=True, help_text="Example: PAR, PAI, TAR, etc.")
     archetype_name = models.CharField(max_length=50)
     description = models.TextField()
+    cognitive_description = models.TextField(blank=True, null=True, help_text="Long description for Cognitive Description section")
+    tactics = models.JSONField(default=list, blank=True, help_text="List of tactic names, e.g. ['Step-by-Step', 'Planner']")
+    tactics_image = models.CharField(max_length=255, blank=True, null=True, help_text="Public path to tactics image, e.g. /images/traits/PAR 2.png")
+    tactics_description = models.TextField(blank=True, null=True, help_text="Short description for the Tactics panel")
+    strengths = models.JSONField(default=list, blank=True, help_text="List of strength strings")
+    weaknesses = models.JSONField(default=list, blank=True, help_text="List of weakness strings")
 
     def __str__(self):
         return f"{self.code} - {self.archetype_name}"
