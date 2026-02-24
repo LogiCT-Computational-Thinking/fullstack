@@ -176,15 +176,15 @@ export default function ProfilingResult({ data }) {
                     />
 
                     {/* Card content */}
-                    <div className="relative z-10 flex flex-col items-center px-6 pt-6 pb-0 flex-1">
+                    <div className="relative z-10 flex flex-col items-center px-10 pt-16 pb-0 flex-1 group">
                         {/* "Your Profile" label */}
-                        <p className="text-[13px] text-gray-500 font-medium mb-2">Your Profile</p>
+                        <p className="text-[16px] text-gray-500 font-medium mb-2">Your Profile</p>
 
                         {/* Archetype name + badge on same row */}
-                        <div className="flex items-center gap-2 mb-4 flex-wrap justify-center">
-                            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{displayData.archetype}</h2>
+                        <div className="flex items-center gap-4 mb-8 flex-wrap justify-center">
+                            <h2 className="text-4xl font-black text-gray-900 tracking-tight">{displayData.archetype}</h2>
                             <span
-                                className="text-white text-[11px] font-black px-3 py-1 rounded-full shadow-md whitespace-nowrap"
+                                className="text-white text-[13px] font-black px-4 py-1.5 rounded-full shadow-md whitespace-nowrap"
                                 style={{ background: `linear-gradient(to right, ${currentStyle.badgeFrom}, ${currentStyle.badgeTo})` }}
                             >
                                 {displayData.code}
@@ -192,28 +192,28 @@ export default function ProfilingResult({ data }) {
                         </div>
 
                         {/* Mascot Image */}
-                        <div className="flex items-center justify-center mb-4">
+                        <div className="flex items-center justify-center mb-10 relative">
                             <img
                                 src={`/images/profiles/${profileImageCode}.png`}
                                 alt={displayData.archetype}
-                                className="w-44 h-auto drop-shadow-xl"
+                                className="w-64 h-auto drop-shadow-2xl z-20 transition-transform duration-700 ease-out group-hover:scale-110 cursor-pointer"
                                 onError={(e) => { e.target.src = '/images/welkam_atas.png'; }}
                             />
                         </div>
 
                         {/* Description */}
-                        <p className="text-[12px] text-gray-700 leading-relaxed text-left w-full mb-6">
+                        <p className="text-[14px] text-gray-700 leading-relaxed text-left w-full mb-8">
                             {displayData.description}
                         </p>
                     </div>
 
                     {/* Bottom bar — archetype sideBar accent color */}
-                    <button
-                        onClick={() => navigate('/dashboard')}
-                        className="relative z-10 w-full py-4 text-white font-black text-[16px] text-center transition-opacity hover:opacity-90 overflow-hidden"
+                    {/* Bottom bar — archetype sideBar accent color */}
+                    <div
+                        className="relative z-10 w-full py-4 text-white font-black text-[16px] text-center overflow-hidden"
                         style={{ background: currentStyle.sideBar }}
                     >
-                        {/* Grid Overlay for button */}
+                        {/* Grid Overlay for bar */}
                         <div
                             className="absolute inset-0 opacity-20 pointer-events-none"
                             style={{
@@ -222,7 +222,7 @@ export default function ProfilingResult({ data }) {
                             }}
                         />
                         <span className="relative z-10">Cognitive Profile</span>
-                    </button>
+                    </div>
                 </div>
 
                 {/* RIGHT CARD: Cognitive Traits */}
@@ -262,7 +262,7 @@ export default function ProfilingResult({ data }) {
 
                         {/* TOP SECTION: Tactics enclosed in a card */}
                         <div
-                            className="relative z-10 flex flex-row gap-0 mb-5 rounded-2xl overflow-hidden"
+                            className="relative z-10 flex flex-row gap-0 mb-5 rounded-2xl overflow-hidden group"
                             style={{ border: `1px solid ${currentStyle.sideBar}33` }}
                         >
                             {/* LEFT: Tactics label + badge + image */}
@@ -288,7 +288,7 @@ export default function ProfilingResult({ data }) {
                                     <img
                                         src={displayData.tacticsImage || `/images/traits/${profileImageCode} 2.png`}
                                         alt="tactics"
-                                        className="w-28 h-auto drop-shadow-md"
+                                        className="w-28 h-auto drop-shadow-md transition-transform duration-700 ease-out group-hover:scale-110 cursor-pointer"
                                         onError={(e) => { e.target.src = `/images/profiles/${profileImageCode}.png`; }}
                                     />
                                 </div>
@@ -429,7 +429,7 @@ export default function ProfilingResult({ data }) {
                     </div>
 
                     {/* Description text */}
-                    <div className="px-6 py-5 relative overflow-hidden">
+                    <div className="px-6 py-5 relative overflow-hidden group">
                         {/* Specific background for this section */}
                         <img
                             src="/images/Group 7329.png"
@@ -449,13 +449,13 @@ export default function ProfilingResult({ data }) {
                                 src="/images/Ellipse 579.png"
                                 alt=""
                                 aria-hidden="true"
-                                className="absolute bottom-[-5px] w-48 h-auto object-contain pointer-events-none"
+                                className="absolute bottom-[-5px] w-64 h-auto object-contain pointer-events-none"
                                 style={{ zIndex: 5 }}
                             />
                             <img
                                 src={`/images/profiles/${profileImageCode}.png`}
                                 alt={displayData.archetype}
-                                className="w-36 h-auto drop-shadow-xl relative z-10"
+                                className="w-52 h-auto drop-shadow-2xl relative z-10 transition-all duration-700 ease-out group-hover:scale-110 group-hover:-rotate-2 cursor-pointer"
                                 onError={(e) => { e.target.src = '/images/welkam_atas.png'; }}
                             />
                         </div>
