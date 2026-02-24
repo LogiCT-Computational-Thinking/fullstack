@@ -418,14 +418,11 @@ export default function ProfilingResult({ data }) {
                     style={{ background: 'white', border: '1px solid #e5e7eb' }}
                 >
                     {/* Section header */}
-                    <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-100">
-                        <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-700 font-black text-sm flex-shrink-0"
-                            style={{ background: '#F3F4F6' }}
-                        >
-                            1
+                    <div className="px-6 pt-6">
+                        <div className="flex items-center gap-2 px-8 py-4 rounded-2xl border border-[#e5e7eb] bg-white shadow-sm w-full">
+                            <span className="text-[18px] font-black text-gray-800">1.</span>
+                            <h3 className="text-[18px] font-black text-gray-800">Cognitive Description</h3>
                         </div>
-                        <h3 className="text-xl font-black text-gray-800">Cognitive Description</h3>
                     </div>
 
                     {/* Description text */}
@@ -470,14 +467,11 @@ export default function ProfilingResult({ data }) {
                     style={{ background: 'white', border: '1px solid #e5e7eb' }}
                 >
                     {/* Section header */}
-                    <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-100">
-                        <div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-gray-700 font-black text-sm flex-shrink-0"
-                            style={{ background: '#F3F4F6' }}
-                        >
-                            2
+                    <div className="px-6 pt-6">
+                        <div className="flex items-center gap-2 px-8 py-4 rounded-2xl border border-[#e5e7eb] bg-white shadow-sm w-full">
+                            <span className="text-[18px] font-black text-gray-800">2.</span>
+                            <h3 className="text-[18px] font-black text-gray-800">Strength &amp; Weakness</h3>
                         </div>
-                        <h3 className="text-xl font-black text-gray-800">Strength &amp; Weakness</h3>
                     </div>
 
                     {/* Two columns */}
@@ -493,27 +487,30 @@ export default function ProfilingResult({ data }) {
 
                             {/* Strength column */}
                             <div>
-                                {/* Column header */}
-                                <div
-                                    className="mb-5 py-3 px-4 rounded-2xl text-center font-black text-[14px] text-gray-800 shadow-sm"
-                                    style={{ background: 'white', border: '1px solid #e5e7eb', boxShadow: '2px 4px 0px rgba(0,0,0,0.06)' }}
-                                >
-                                    Strength
+                                {/* Column header left-aligned and full-width with text content area */}
+                                <div className="flex mb-8">
+                                    <div className="w-[52px] flex-shrink-0"></div>
+                                    <div
+                                        className="flex-1 py-3 rounded-full text-center font-black text-[15px] text-gray-800 shadow-sm border border-[#e5e7eb]"
+                                        style={{ background: 'white' }}
+                                    >
+                                        Strength
+                                    </div>
                                 </div>
-                                <div className="flex flex-col gap-3">
+
+                                <div className="flex flex-col gap-4">
                                     {displayData.strengths.map((str, idx) => (
-                                        <div key={idx} className="flex items-center gap-3">
-                                            {/* Number badge */}
+                                        <div key={idx} className="flex items-center gap-4">
+                                            {/* Number badge (circle style restored) */}
                                             <div
-                                                className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
-                                                style={{ background: currentStyle.bgCard, color: '#4B5563' }}
+                                                className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 border border-gray-100"
+                                                style={{ background: currentStyle.bgCard, color: '#1F2937' }}
                                             >
                                                 {idx + 1}
                                             </div>
                                             {/* Text pill */}
                                             <div
-                                                className="flex-1 py-2.5 px-4 rounded-2xl text-[12px] text-gray-600 leading-snug"
-                                                style={{ background: 'white', border: '1px solid #e5e7eb', boxShadow: '1px 2px 0px rgba(0,0,0,0.04)' }}
+                                                className="flex-1 py-3 px-6 rounded-2xl text-[12.5px] text-gray-600 leading-snug border border-[#e5e7eb] bg-white shadow-sm"
                                             >
                                                 {str}
                                             </div>
@@ -524,27 +521,30 @@ export default function ProfilingResult({ data }) {
 
                             {/* Weakness column */}
                             <div>
-                                {/* Column header */}
-                                <div
-                                    className="mb-5 py-3 px-4 rounded-2xl text-center font-black text-[14px] text-gray-800 shadow-sm"
-                                    style={{ background: 'white', border: '1px solid #e5e7eb', boxShadow: '2px 4px 0px rgba(0,0,0,0.06)' }}
-                                >
-                                    Weakness
+                                {/* Column header left-aligned and full-width with text content area */}
+                                <div className="flex mb-8">
+                                    <div className="w-[52px] flex-shrink-0"></div>
+                                    <div
+                                        className="flex-1 py-3 rounded-full text-center font-black text-[15px] text-gray-800 shadow-sm border border-[#e5e7eb]"
+                                        style={{ background: 'white' }}
+                                    >
+                                        Weakness
+                                    </div>
                                 </div>
-                                <div className="flex flex-col gap-3">
+
+                                <div className="flex flex-col gap-4">
                                     {displayData.weaknesses.map((weak, idx) => (
-                                        <div key={idx} className="flex items-center gap-3">
-                                            {/* Number badge */}
+                                        <div key={idx} className="flex items-center gap-4">
+                                            {/* Number badge (circle style restored) */}
                                             <div
-                                                className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0"
-                                                style={{ background: currentStyle.bgCard, color: '#4B5563' }}
+                                                className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 border border-gray-100"
+                                                style={{ background: currentStyle.bgCard, color: '#1F2937' }}
                                             >
                                                 {idx + 1}
                                             </div>
                                             {/* Text pill */}
                                             <div
-                                                className="flex-1 py-2.5 px-4 rounded-2xl text-[12px] text-gray-600 leading-snug"
-                                                style={{ background: 'white', border: '1px solid #e5e7eb', boxShadow: '1px 2px 0px rgba(0,0,0,0.04)' }}
+                                                className="flex-1 py-3 px-6 rounded-2xl text-[12.5px] text-gray-600 leading-snug border border-[#e5e7eb] bg-white shadow-sm"
                                             >
                                                 {weak}
                                             </div>
