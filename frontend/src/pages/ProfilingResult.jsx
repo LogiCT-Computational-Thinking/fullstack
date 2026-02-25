@@ -128,7 +128,7 @@ export default function ProfilingResult({ data }) {
             }}
         >
             {/* Page Title */}
-            <h1 className="text-2xl font-black text-gray-900 mb-8 ml-2">
+            <h1 className="text-3xl font-black text-gray-900 mb-8 ml-2">
                 Your Cognitive Profile is..
             </h1>
 
@@ -240,7 +240,7 @@ export default function ProfilingResult({ data }) {
                                 backgroundSize: '18px 18px',
                             }}
                         />
-                        <h2 className="text-white font-black text-[18px] tracking-wide relative z-10">Cognitive Traits</h2>
+                        <h2 className="text-white font-black text-[20px] tracking-wide relative z-10">Cognitive Traits</h2>
                     </div>
 
                     {/* Main content area */}
@@ -268,12 +268,12 @@ export default function ProfilingResult({ data }) {
                             {/* LEFT: Tactics label + badge + image */}
                             <div className="flex flex-col items-center flex-shrink-0 py-5 px-6" style={{ minWidth: 230, maxWidth: 250 }}>
                                 {/* Tactics label */}
-                                <p className="text-[11px] text-gray-300 font-bold mb-1 uppercase tracking-wider">Tactics</p>
+                                <p className="text-[13px] text-gray-300 font-bold mb-1 uppercase tracking-wider">Tactics</p>
 
                                 {/* Tactic badge */}
                                 <div className="mb-4">
                                     <span
-                                        className="text-white text-[11px] font-black px-4 py-1.5 rounded-full w-fit block"
+                                        className="text-white text-[13px] font-black px-4 py-1.5 rounded-full w-fit block"
                                         style={{
                                             background: `linear-gradient(to right, ${currentStyle.badgeFrom}, ${currentStyle.badgeTo})`,
                                             boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
@@ -303,7 +303,7 @@ export default function ProfilingResult({ data }) {
                                     className="rounded-3xl p-6 flex items-center justify-center h-full w-full"
                                     style={{ background: currentStyle.sideBar }}
                                 >
-                                    <p className="text-[13px] text-white/90 leading-relaxed text-center font-medium">
+                                    <p className="text-[15px] text-white/90 leading-relaxed text-center font-medium">
                                         {displayData.tacticsDescription}
                                     </p>
                                 </div>
@@ -326,14 +326,14 @@ export default function ProfilingResult({ data }) {
                                     onMouseLeave={() => setHoveredTrait(null)}
                                 >
                                     {/* Left label */}
-                                    <span className="w-6 text-[12px] font-black text-gray-600 text-center uppercase flex-shrink-0 tracking-tighter">{trait.shortLeft}</span>
+                                    <span className="w-6 text-[14px] font-black text-gray-600 text-center uppercase flex-shrink-0 tracking-tighter">{trait.shortLeft}</span>
 
                                     {/* Bar track */}
                                     <div className="flex-1 relative h-6 bg-gray-50 border border-gray-200 rounded-full flex items-center shadow-inner overflow-visible">
 
                                         {/* % label above thumb */}
                                         <div
-                                            className="absolute -top-6 z-50 text-white text-[10px] font-black px-1.5 py-0.5 rounded pointer-events-none"
+                                            className="absolute -top-6 z-50 text-white text-[12px] font-black px-1.5 py-0.5 rounded pointer-events-none"
                                             style={{
                                                 left: `${trait.value}%`,
                                                 transform: 'translateX(-50%)',
@@ -346,7 +346,7 @@ export default function ProfilingResult({ data }) {
                                         {/* Floating Tooltip on Hover */}
                                         {hoveredTrait === i && (
                                             <div
-                                                className="absolute -top-10 z-50 px-2.5 py-1 bg-gray-800 text-white text-[10px] font-black rounded-md shadow-xl pointer-events-none flex items-center gap-1.5"
+                                                className="absolute -top-10 z-50 px-2.5 py-1 bg-gray-800 text-white text-[12px] font-black rounded-md shadow-xl pointer-events-none flex items-center gap-1.5"
                                                 style={{
                                                     left: `${trait.value}%`,
                                                     transform: 'translateX(-50%)'
@@ -396,14 +396,14 @@ export default function ProfilingResult({ data }) {
                                     </div>
 
                                     {/* Right label */}
-                                    <span className="w-6 text-[12px] font-black text-gray-600 text-center uppercase flex-shrink-0 tracking-tighter">{trait.shortRight}</span>
+                                    <span className="w-6 text-[14px] font-black text-gray-600 text-center uppercase flex-shrink-0 tracking-tighter">{trait.shortRight}</span>
                                 </div>
                             ))}
                         </div>
 
                         {/* Test Taken date */}
                         <div className="px-5 pb-4 relative z-10">
-                            <p className="text-[11px] text-gray-400">
+                            <p className="text-[13px] text-gray-400">
                                 Test Taken: {testTakenDate}
                             </p>
                         </div>
@@ -420,8 +420,8 @@ export default function ProfilingResult({ data }) {
                     {/* Section header */}
                     <div className="px-6 pt-6">
                         <div className="flex items-center gap-2 px-8 py-4 rounded-2xl border border-[#e5e7eb] bg-white shadow-sm w-full">
-                            <span className="text-[18px] font-black text-gray-800">1.</span>
-                            <h3 className="text-[18px] font-black text-gray-800">Cognitive Description</h3>
+                            <span className="text-[20px] font-black text-gray-800">1.</span>
+                            <h3 className="text-[20px] font-black text-gray-800">Cognitive Description</h3>
                         </div>
                     </div>
 
@@ -435,7 +435,7 @@ export default function ProfilingResult({ data }) {
                             className="absolute bottom-0 left-0 w-full object-contain pointer-events-none opacity-[0.45] z-0"
                         />
 
-                        <p className="text-[13px] text-gray-700 leading-relaxed relative z-10 mb-6">
+                        <p className="text-[15px] text-gray-700 leading-relaxed relative z-10 mb-6">
                             {displayData.cognitiveDescription}
                         </p>
 
@@ -469,8 +469,8 @@ export default function ProfilingResult({ data }) {
                     {/* Section header */}
                     <div className="px-6 pt-6">
                         <div className="flex items-center gap-2 px-8 py-4 rounded-2xl border border-[#e5e7eb] bg-white shadow-sm w-full">
-                            <span className="text-[18px] font-black text-gray-800">2.</span>
-                            <h3 className="text-[18px] font-black text-gray-800">Strength &amp; Weakness</h3>
+                            <span className="text-[20px] font-black text-gray-800">2.</span>
+                            <h3 className="text-[20px] font-black text-gray-800">Strength &amp; Weakness</h3>
                         </div>
                     </div>
 
@@ -491,7 +491,7 @@ export default function ProfilingResult({ data }) {
                                 <div className="flex mb-8">
                                     <div className="w-[52px] flex-shrink-0"></div>
                                     <div
-                                        className="flex-1 py-3 rounded-full text-center font-black text-[15px] text-gray-800 shadow-sm border border-[#e5e7eb]"
+                                        className="flex-1 py-3 rounded-full text-center font-black text-[17px] text-gray-800 shadow-sm border border-[#e5e7eb]"
                                         style={{ background: 'white' }}
                                     >
                                         Strength
@@ -503,14 +503,14 @@ export default function ProfilingResult({ data }) {
                                         <div key={idx} className="flex items-center gap-4">
                                             {/* Number badge (circle style restored) */}
                                             <div
-                                                className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 border border-gray-100"
+                                                className="w-10 h-10 rounded-full flex items-center justify-center font-black text-[16px] flex-shrink-0 border border-gray-100"
                                                 style={{ background: currentStyle.bgCard, color: '#1F2937' }}
                                             >
                                                 {idx + 1}
                                             </div>
                                             {/* Text pill */}
                                             <div
-                                                className="flex-1 py-3 px-6 rounded-2xl text-[12.5px] text-gray-600 leading-snug border border-[#e5e7eb] bg-white shadow-sm"
+                                                className="flex-1 py-3 px-6 rounded-2xl text-[14.5px] text-gray-600 leading-snug border border-[#e5e7eb] bg-white shadow-sm"
                                             >
                                                 {str}
                                             </div>
@@ -525,7 +525,7 @@ export default function ProfilingResult({ data }) {
                                 <div className="flex mb-8">
                                     <div className="w-[52px] flex-shrink-0"></div>
                                     <div
-                                        className="flex-1 py-3 rounded-full text-center font-black text-[15px] text-gray-800 shadow-sm border border-[#e5e7eb]"
+                                        className="flex-1 py-3 rounded-full text-center font-black text-[17px] text-gray-800 shadow-sm border border-[#e5e7eb]"
                                         style={{ background: 'white' }}
                                     >
                                         Weakness
@@ -537,14 +537,14 @@ export default function ProfilingResult({ data }) {
                                         <div key={idx} className="flex items-center gap-4">
                                             {/* Number badge (circle style restored) */}
                                             <div
-                                                className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm flex-shrink-0 border border-gray-100"
+                                                className="w-10 h-10 rounded-full flex items-center justify-center font-black text-[16px] flex-shrink-0 border border-gray-100"
                                                 style={{ background: currentStyle.bgCard, color: '#1F2937' }}
                                             >
                                                 {idx + 1}
                                             </div>
                                             {/* Text pill */}
                                             <div
-                                                className="flex-1 py-3 px-6 rounded-2xl text-[12.5px] text-gray-600 leading-snug border border-[#e5e7eb] bg-white shadow-sm"
+                                                className="flex-1 py-3 px-6 rounded-2xl text-[14.5px] text-gray-600 leading-snug border border-[#e5e7eb] bg-white shadow-sm"
                                             >
                                                 {weak}
                                             </div>
@@ -562,7 +562,7 @@ export default function ProfilingResult({ data }) {
             <div className="w-full max-w-[1400px] mx-auto flex justify-center mb-6">
                 <button
                     onClick={() => navigate('/dashboard')}
-                    className="text-white px-16 py-4 rounded-full font-black text-[15px] shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    className="text-white px-16 py-4 rounded-full font-black text-[17px] shadow-xl hover:scale-105 active:scale-95 transition-all"
                     style={{ background: currentStyle.sideBar }}
                 >
                     Back to Main Page
