@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import ProfilingQuiz from './pages/ProfilingQuiz'
 import QuizBank from './pages/QuizBank'
+import QuestionBank from './pages/QuestionBank'
 import Settings from './pages/Settings'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -27,6 +28,7 @@ function DashboardLayout() {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard', inSidebar: true },
     { id: 'modules', label: 'Material', icon: BookOpen, path: '/dashboard/modules', title: 'Material', inSidebar: true },
     { id: 'quiz-bank', label: 'Exercise', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Exercise', inSidebar: true },
+    { id: 'admin-qbank', label: 'Question Bank', icon: ClipboardList, path: '/dashboard/admin/qbank', title: 'Question Bank', inSidebar: true },
     { id: 'profile-display', label: 'Profile', icon: User, path: '/dashboard/profile-display', title: 'My CT Profile', inSidebar: false },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/dashboard/settings', title: 'Settings', inSidebar: false }
   ];
@@ -190,6 +192,7 @@ function DashboardLayout() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/modules" element={<Modules />} />
             <Route path="/quiz-bank" element={<QuizBank />} />
+            <Route path="/admin/qbank" element={<QuestionBank />} />
             <Route path="/profile-display" element={<ProfilingResult />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>

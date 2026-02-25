@@ -278,7 +278,7 @@ export default function Dashboard() {
                       {trait.shortLeft}
                     </span>
 
-                    <div className="flex-1 relative h-4 bg-gray-50 border border-gray-200 rounded-full flex items-center shadow-inner overflow-visible">
+                    <div className="flex-1 relative h-4 bg-gray-50 border border-gray-200 rounded-full flex items-center shadow-inner overflow-visible px-2">
 
                       {/* Floating Tooltip (On Hover) */}
                       {hoveredTrait === i && (
@@ -286,14 +286,20 @@ export default function Dashboard() {
                           className="absolute -top-9 z-50 px-2 py-1 bg-gray-800 text-white text-[9px] font-black rounded-md shadow-xl pointer-events-none transition-all duration-200 flex items-center gap-1.5"
                           style={{
                             left: `${trait.value}%`,
-                            transform: 'translateX(-50%)'
+                            transform: `translateX(-${trait.value}%)`
                           }}
                         >
                           <span className="whitespace-nowrap italic">{trait.value >= 50 ? trait.right : trait.left}</span>
                           <span className="bg-white/20 px-1 rounded">
                             {Math.round(Math.abs(trait.value - 50) * 2)}%
                           </span>
-                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-800 rotate-45"></div>
+                          <div
+                            className="absolute -bottom-1 w-2.5 h-2.5 bg-gray-800 rotate-45"
+                            style={{
+                              left: `${trait.value}%`,
+                              transform: 'translateX(-50%) rotate(45deg)'
+                            }}
+                          ></div>
                         </div>
                       )}
 
@@ -318,18 +324,16 @@ export default function Dashboard() {
                         />
                       </div>
 
-                      {/* Glowing Doughnut Thumb at Value */}
+                      {/* Glowing Doughnut Thumb at Value (Switch Style) */}
                       <div
                         className="absolute top-1/2 -translate-y-1/2 w-5 h-5 z-50 transition-all duration-1000 flex items-center justify-center pointer-events-none"
                         style={{
-                          // Offset by 8px (half of h-4) to center in the rounded-full cap
-                          left: trait.value >= 50
-                            ? `calc(${trait.value}% - 18px)`
-                            : `calc(${trait.value}% - 2px)`
+                          left: `${trait.value}%`,
+                          transform: `translateY(-50%) translateX(-${trait.value}%)`
                         }}
                       >
                         <div
-                          className="w-4 h-4 rounded-full bg-transparent border-[3.5px] border-white shadow-xl flex-shrink-0"
+                          className="w-3.5 h-3.5 rounded-full bg-transparent border-[3px] border-white shadow-xl flex-shrink-0"
                           style={{ boxShadow: `0 0 12px ${trait.dark}, inset 0 0 4px ${trait.dark}` }}
                         ></div>
                       </div>

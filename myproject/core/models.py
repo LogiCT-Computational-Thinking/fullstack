@@ -238,7 +238,13 @@ class QuizQuestion(models.Model):
         ('PROFILING_COGNITIVE_GA', 'Profiling: Cognitive GA'),
         ('PROFILING_COGNITIVE_IR', 'Profiling: Cognitive IR'),
     ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending Review'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ]
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
+    material = models.ForeignKey('Material', on_delete=models.SET_NULL, null=True, blank=True, related_name='questions')
     question = models.TextField()
     type = models.CharField(max_length=30, choices=TYPE_CHOICES, default='multiple_choice')
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='GENERAL')
@@ -249,6 +255,8 @@ class QuizQuestion(models.Model):
     option = models.JSONField(default=list, blank=True)
     correctAns = models.TextField(default='')
     solution = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    admin_feedback = models.TextField(blank=True, null=True)
 
     # CT Framework Weights (0-100, should total 100 across 4 fields)
     weight_decomposition = models.FloatField(default=0.0)

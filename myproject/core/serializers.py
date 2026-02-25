@@ -126,6 +126,9 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
     """Serializer for QuizQuestion model"""
+    material_title = serializers.ReadOnlyField(source='material.title')
+    week = serializers.ReadOnlyField(source='material.week')
+    
     class Meta:
         model = QuizQuestion
         fields = '__all__'

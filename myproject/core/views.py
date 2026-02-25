@@ -11,7 +11,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
 
-from .models import User, PretestQuestion, Pretest, PretestResponse, Material
+from .models import User, QuizQuestion, PretestQuestion, Pretest, PretestResponse, Material
 from .serializers import (
     UserSerializer,
     UserRegistrationSerializer,
@@ -22,6 +22,7 @@ from .serializers import (
     VerifyOTPSerializer,
     ResetPasswordOTPSerializer,
     PretestQuestionSerializer,
+    QuizQuestionSerializer,
     ProfilingSubmissionSerializer,
     UpdateStudentInfoSerializer,
     MaterialSerializer
@@ -953,3 +954,46 @@ def get_materials_view(request):
     materials = Material.objects.all().order_by('week', 'order')
     serializer = MaterialSerializer(materials, many=True)
     return Response(serializer.data)
+
+# =========================================================
+# 7️⃣ QUESTION BANK MANAGEMENT (ADMIN)
+# =========================================================
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_admin_qbank(request):
+    """
+    Get all questions for the question bank.
+    Filters by status: PENDING, APPROVED, REJECTED
+    """
+    if request.user.role != 'teacher':
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+    
+    status_filter = request.query_params.get('status', None)
+    if status_filter:
+        questions = QuizQuestion.objects.filter(status=status_filter).order_by('-id')
+    else:
+        questions = QuizQuestion.objects.all().order_by('-id')
+    
+    serializer = QuizQuestionSerializer(questions, many=True)
+    return Response(serializer.data)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_qbank_question(request, pk):
+    """
+    Update a question's status, feedback, or content.
+    """
+    if request.user.role != 'teacher':
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+        
+    try:
+        question = QuizQuestion.objects.get(pk=pk)
+    except QuizQuestion.DoesNotExist:
+        return Response({"error": "Question not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    # We use partial=True to allow updating only status/feedback
+    serializer = QuizQuestionSerializer(question, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
