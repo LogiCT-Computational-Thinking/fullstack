@@ -958,6 +958,49 @@ def get_materials_view(request):
 # =========================================================
 # 7️⃣ QUESTION BANK MANAGEMENT (ADMIN)
 # =========================================================
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def manage_admin_materials(request):
+    """
+    Get or Create new Material
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+    
+    if request.method == 'GET':
+        materials = Material.objects.all().order_by('week', 'order')
+        serializer = MaterialSerializer(materials, many=True)
+        return Response(serializer.data)
+        
+    elif request.method == 'POST':
+        try:
+            from .models import Course
+            
+            # Find an existing course or create a dummy one if no course provided
+            course_id = request.data.get('course')
+            
+            if course_id:
+                course = Course.objects.filter(id=course_id).first()
+            else:
+                course = Course.objects.first()
+                if not course:
+                    course = Course.objects.create(title="LogiCT Fundamentals", description="Default Course")
+            
+            # Pass original request.data (contains both fields and files) directly!
+            serializer = MaterialSerializer(data=request.data)
+            if serializer.is_valid():
+                # .save() handles injecting the missing course model instance
+                serializer.save(course=course)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            print("ERROR IN MATERIALS POST:", tb)
+            return Response({"error": str(e), "traceback": tb}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_admin_qbank(request):

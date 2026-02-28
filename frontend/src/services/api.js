@@ -60,11 +60,10 @@ api.interceptors.response.use(
       }
     }
 
-    // 2. Handle Invalid Token / Port Change / Forbidden (403 or token_not_valid)
+    // 2. Handle Invalid Token / Port Change 
     // Ini krusial jika pengguna pindah port atau ada sisa token rusak di browser
     const errorDetail = error.response?.data?.detail;
     if (
-      error.response?.status === 403 ||
       error.response?.data?.code === 'token_not_valid' ||
       (typeof errorDetail === 'string' && errorDetail.includes('token_not_valid'))
     ) {

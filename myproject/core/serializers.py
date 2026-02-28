@@ -113,6 +113,9 @@ class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Material
         fields = '__all__'
+        extra_kwargs = {
+            'course': {'required': False, 'allow_null': True}
+        }
 
 
 class CourseSerializer(serializers.ModelSerializer):

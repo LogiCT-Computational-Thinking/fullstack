@@ -121,7 +121,7 @@ export default function ProfilingResult({ data }) {
 
     return (
         <div
-            className="flex-1 flex flex-col font-sans -m-8 px-8 py-10"
+            className="flex-1 flex flex-col font-['Outfit'] -m-8 px-8 py-10"
             style={{
                 background: '#F5F7FF',
                 minHeight: 'calc(100vh - 73px)'

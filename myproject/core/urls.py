@@ -40,4 +40,5 @@ urlpatterns = [
     # Question Bank Management (Admin)
     path('admin/qbank/', views.get_admin_qbank, name='admin-qbank'),
     path('admin/qbank/<int:pk>/', views.update_qbank_question, name='admin-qbank-update'),
+    path('admin/materials/', views.manage_admin_materials, name='admin-materials'),
 ]
