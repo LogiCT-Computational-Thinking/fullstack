@@ -6,11 +6,16 @@ app_name = 'core'
 urlpatterns = [
     # API Root
     path('', views.api_root, name='api-root'),
-    
+
+    # ── Media file serving (iframe-friendly) ──────────────────────────────
+    # Endpoint khusus agar file bisa ditampilkan di iframe tanpa blokir
+    path('media/<path:file_path>', views.serve_media_file, name='serve-media-file'),
+
     # Authentication endpoints
     path('auth/register/', views.register_view, name='register'),
     path('auth/login/', views.login_view, name='login'),
     path('auth/google/', views.google_auth_view, name='google-auth'),
+    path('auth/google/admin/', views.google_admin_auth_view, name='google-admin-auth'),
     path('auth/logout/', views.logout_view, name='logout'),
     path('auth/refresh/', views.refresh_token_view, name='refresh-token'),
     
@@ -36,9 +41,18 @@ urlpatterns = [
     
     # Educational Materials
     path('materials/', views.get_materials_view, name='get-materials'),
+    path('courses/', views.get_courses_view, name='get-courses'),
 
     # Question Bank Management (Admin)
     path('admin/qbank/', views.get_admin_qbank, name='admin-qbank'),
     path('admin/qbank/<int:pk>/', views.update_qbank_question, name='admin-qbank-update'),
     path('admin/materials/', views.manage_admin_materials, name='admin-materials'),
+
+    # Course Management (Admin)
+    path('admin/courses/', views.admin_get_courses, name='admin-courses'),
+    path('admin/courses/<int:pk>/toggle/', views.admin_toggle_course, name='admin-toggle-course'),
+    path('admin/courses/<int:course_pk>/materials/', views.admin_upload_material_to_course, name='admin-upload-material'),
+
+    # Update file on existing material (inline upload)
+    path('admin/materials/<int:pk>/', views.admin_update_material, name='admin-update-material'),
 ]

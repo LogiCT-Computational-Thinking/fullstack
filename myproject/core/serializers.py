@@ -110,11 +110,22 @@ class GoogleAuthSerializer(serializers.Serializer):
 
 class MaterialSerializer(serializers.ModelSerializer):
     """Serializer for Material model"""
+    file_url = serializers.SerializerMethodField()
+
+    def get_file_url(self, obj):
+        if obj.file:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+
     class Meta:
         model = Material
-        fields = '__all__'
+        fields = ['id', 'title', 'description', 'week', 'file_type', 'order', 'file', 'file_url', 'created_at', 'course']
         extra_kwargs = {
-            'course': {'required': False, 'allow_null': True}
+            'course': {'required': False, 'allow_null': True},
+            'file': {'required': False, 'allow_null': True},
         }
 
 
@@ -122,7 +133,22 @@ class CourseSerializer(serializers.ModelSerializer):
     """Serializer for Course model"""
     class Meta:
         model = Course
-        fields = '__all__'
+        fields = ['id', 'title', 'description', 'thumbnail', 'metadata', 'is_active']
+
+
+
+class CourseWithMaterialsSerializer(serializers.ModelSerializer):
+    """Serializer for Course model with nested materials"""
+    materials = MaterialSerializer(many=True, read_only=True)
+    materials_count = serializers.SerializerMethodField()
+
+    def get_materials_count(self, obj):
+        return obj.materials.count()
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'description', 'thumbnail', 'metadata', 'is_active', 'materials', 'materials_count']
+
 
 
 

@@ -35,12 +35,33 @@ const authService = {
     }
   },
 
-  // Google OAuth login
+  // Google OAuth login (student/general)
   googleLogin: async (credential, role = 'student') => {
     try {
       const response = await api.post('/auth/google/', {
         token: credential,
         role: role,
+      });
+
+      if (response.data.tokens) {
+        localStorage.setItem('access_token', response.data.tokens.access);
+        localStorage.setItem('refresh_token', response.data.tokens.refresh);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  // Google OAuth login khusus Admin Portal
+  // — hanya terima akun yang sudah terdaftar sebagai admin/teacher
+  // — TIDAK membuat akun baru
+  googleAdminLogin: async (credential) => {
+    try {
+      const response = await api.post('/auth/google/admin/', {
+        token: credential,
       });
 
       if (response.data.tokens) {

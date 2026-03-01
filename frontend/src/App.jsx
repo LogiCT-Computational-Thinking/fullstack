@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { LayoutDashboard, ClipboardList, BookOpen, FileQuestion, Settings as SettingsIcon, Search, Bell, User, LogOut } from 'lucide-react'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
+import AdminLogin from './pages/AdminLogin'
 import Register from './pages/Register'
 import Quiz from './pages/Quiz'
 import Dashboard from './pages/Dashboard'
@@ -15,9 +16,19 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import LandingPage from './pages/LandingPage'
 import ProfilingResult from './pages/ProfilingResult'
-
+import MaterialViewer from './pages/MaterialViewer'
 
 import AdminLayout from './components/AdminLayout'
+
+// Guard: hanya teacher/admin yang bisa akses /admin/*
+function AdminGuard({ children }) {
+  const { user, loading } = useAuth();
+  if (loading) return null; // tunggu auth selesai load
+  if (!user) return <Navigate to="/admin/login" replace />;
+  if (user.role !== 'teacher' && user.role !== 'admin') return <Navigate to="/admin/login" replace />;
+  return children;
+}
+
 
 function DashboardLayout() {
   const location = useLocation();
@@ -219,8 +230,17 @@ function App() {
         {/* Dashboard Routes - With Layout */}
         <Route path="/dashboard/*" element={<DashboardLayout />} />
 
+        {/* Material Viewer - Full page, no sidebar */}
+        <Route path="/dashboard/material" element={<MaterialViewer />} />
+
         {/* Admin Routes - With Dedicated Layout */}
-        <Route path="/admin/*" element={<AdminLayout />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/*" element={
+          <AdminGuard>
+            <AdminLayout />
+          </AdminGuard>
+        } />
+
       </Routes>
     </Router>
   )

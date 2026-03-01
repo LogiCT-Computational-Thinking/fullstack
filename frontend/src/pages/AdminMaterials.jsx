@@ -1,57 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { UploadCloud, FileText, Loader2, Play } from 'lucide-react';
+import {
+    UploadCloud, FileText, Loader2, ExternalLink, ChevronDown,
+    ChevronUp, ToggleLeft, ToggleRight, Plus, X, CheckCircle2,
+    AlertCircle, BookOpen, Layers, Lock, Unlock
+} from 'lucide-react';
 import axios from 'axios';
 import api from '../services/api';
 
-export default function AdminMaterials() {
-    const [materials, setMaterials] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isUploading, setIsUploading] = useState(false);
+// ─── Toggle Switch Component ───────────────────────────────────────────────────
+function ActiveToggle({ courseId, isActive, onToggle, loading }) {
+    return (
+        <button
+            onClick={() => onToggle(courseId)}
+            disabled={loading}
+            title={isActive ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
+            className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 border
+                ${isActive
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
+        >
+            {loading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : isActive ? (
+                <ToggleRight className="w-4 h-4" />
+            ) : (
+                <ToggleLeft className="w-4 h-4" />
+            )}
+            {isActive ? 'Active' : 'Inactive'}
+        </button>
+    );
+}
 
-    // Form State
+// ─── Upload Modal ─────────────────────────────────────────────────────────────
+function UploadModal({ course, onClose, onSuccess }) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [week, setWeek] = useState(1);
+    const [week, setWeek] = useState(course?.materials?.[0]?.week || 1);
     const [fileType, setFileType] = useState('pdf');
-    const [order, setOrder] = useState(1);
+    const [order, setOrder] = useState((course?.materials?.length || 0) + 1);
     const [file, setFile] = useState(null);
-
-    // Error State
+    const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-
-    useEffect(() => {
-        fetchMaterials();
-    }, []);
-
-    const fetchMaterials = async () => {
-        try {
-            const response = await api.get('/admin/materials/');
-            setMaterials(response.data);
-        } catch (err) {
-            console.error('Failed to fetch materials:', err);
-            // It's okay if empty or error on first load
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!file) {
-            setError('Harap pilih file terlebih dahulu.');
-            return;
-        }
+        if (!file) { setError('Pilih file terlebih dahulu'); return; }
 
-        setIsUploading(true);
+        setUploading(true);
         setError('');
-        setSuccess('');
 
-        // Prepare FormData for file upload
         const formData = new FormData();
         formData.append('title', title);
         formData.append('description', description);
@@ -61,210 +59,423 @@ export default function AdminMaterials() {
         formData.append('file', file);
 
         try {
-            // Using a fresh axios call to ensure no default 'Content-Type': 'application/json' 
-            // interferes with the browser's automatic FormData boundary setting.
             const token = localStorage.getItem('access_token');
             const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
-
-            await axios.post(`${API_URL}/admin/materials/`, formData, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                    // Letting browser set Content-Type + boundary automatically
-                }
+            await axios.post(`${API_URL}/admin/courses/${course.id}/materials/`, formData, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            setSuccess('Material berhasil di-upload!');
-
-            // Reset form
-            setTitle('');
-            setDescription('');
-            setWeek(1);
-            setOrder(1);
-            setFile(null);
-            // reset file input
-            document.getElementById('file-upload').value = '';
-
-            // Refresh list
-            fetchMaterials();
+            onSuccess();
+            onClose();
         } catch (err) {
-            console.error('Upload error:', err.response?.data || err);
-            let errorMessage = 'Gagal meng-upload material.';
-            if (err.response?.data) {
-                const data = err.response.data;
-                if (typeof data === 'object') {
-                    // Flatten error object: { file: ["msg"], title: ["msg"] } -> "file: msg, title: msg"
-                    errorMessage = Object.entries(data)
-                        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`)
-                        .join(' | ');
-                } else {
-                    errorMessage = String(data);
-                }
+            const data = err.response?.data;
+            if (data && typeof data === 'object') {
+                setError(Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`).join(' | '));
+            } else {
+                setError('Gagal mengupload material.');
             }
-            setError(errorMessage);
         } finally {
-            setIsUploading(false);
+            setUploading(false);
         }
     };
 
     return (
-        <div className="max-w-7xl mx-auto font-['Outfit'] animate-fade-in">
-            <div className="flex flex-col xl:flex-row gap-6">
-
-                {/* L E F T  S I D E : Form Upload */}
-                <div className="flex-[4] bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                            <UploadCloud className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-gray-800 tracking-tight">Upload Material</h2>
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+            <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
+                style={{ animation: 'scaleIn 0.2s ease-out' }}>
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                    <div>
+                        <h3 className="font-bold text-gray-900">Upload Material</h3>
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{course?.title}</p>
                     </div>
-
-                    {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-bold">{error}</div>}
-                    {success && <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-xl text-sm font-bold">{success}</div>}
-
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-bold text-gray-600">Judul Material</label>
-                            <input
-                                type="text"
-                                required
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="Contoh: Pengenalan Pseudocode"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors text-sm"
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-bold text-gray-600">Deskripsi Singkat</label>
-                            <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Penjelasan singkat materi ini..."
-                                rows="3"
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors text-sm resize-none"
-                            ></textarea>
-                        </div>
-
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-sm font-bold text-gray-600">Minggu Ke-</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    required
-                                    value={week}
-                                    onChange={(e) => setWeek(parseInt(e.target.value))}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors text-sm"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-sm font-bold text-gray-600">Urutan (Order)</label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    required
-                                    value={order}
-                                    onChange={(e) => setOrder(parseInt(e.target.value))}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors text-sm"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-1.5 col-span-2 lg:col-span-1">
-                                <label className="text-sm font-bold text-gray-600">Tipe File</label>
-                                <select
-                                    value={fileType}
-                                    onChange={(e) => setFileType(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 transition-colors text-sm cursor-pointer"
-                                >
-                                    <option value="pdf">PDF</option>
-                                    <option value="ppt">PowerPoint</option>
-                                    <option value="other">Lainnya / Video</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-1.5 mt-2">
-                            <label className="text-sm font-bold text-gray-600">Pilih File (.pdf / .pptx)</label>
-                            <input
-                                id="file-upload"
-                                type="file"
-                                required
-                                onChange={handleFileChange}
-                                accept=".pdf,.ppt,.pptx,.mp4,.webm"
-                                className="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer bg-gray-50 border border-gray-200 rounded-xl"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isUploading}
-                            className="mt-4 w-full bg-[#1284FD] text-white py-3.5 rounded-xl font-bold shadow-md shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isUploading ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" /> Sedang Mengunggah...
-                                </>
-                            ) : (
-                                'Upload Material ke Server'
-                            )}
-                        </button>
-                    </form>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
-                {/* R I G H T  S I D E : List of Materials */}
-                <div className="flex-[6] bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col h-[700px]">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-gray-800 tracking-tight">Database Material</h2>
-                        <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">{materials.length} Total</span>
+                <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-3">
+                    {error && (
+                        <div className="flex items-start gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-gray-600">Judul Material *</label>
+                        <input required value={title} onChange={e => setTitle(e.target.value)}
+                            placeholder="Contoh: Apa itu Computational Thinking?"
+                            className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors" />
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                        {isLoading ? (
-                            <div className="flex items-center justify-center h-full">
-                                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                            </div>
-                        ) : materials.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                                <FileText className="w-12 h-12 mb-3 opacity-20" />
-                                <p className="font-medium text-sm">Belum ada material yang diupload.</p>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {materials.map((m) => (
-                                    <div key={m.id} className="border border-gray-100 bg-gray-50 hover:bg-white rounded-2xl p-4 transition-all shadow-sm hover:shadow-md group flex flex-col justify-between">
-                                        <div>
-                                            <div className="flex justify-between items-start mb-3">
-                                                <span className="text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                                                    Minggu {m.week}
-                                                </span>
-                                                <span className="text-[10px] bg-gray-200 text-gray-500 font-bold px-2 py-0.5 rounded uppercase">
-                                                    {m.file_type}
-                                                </span>
-                                            </div>
-                                            <h3 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">
-                                                {m.title}
-                                            </h3>
-                                            <p className="text-[11px] text-gray-500 line-clamp-2 mb-4">
-                                                {m.description || 'Tidak ada deskripsi'}
-                                            </p>
-                                        </div>
-
-                                        <a
-                                            href={m.file}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center w-fit gap-1.5 text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors mt-auto"
-                                        >
-                                            <Play className="w-3 h-3 fill-current" /> Buka File
-                                        </a>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-gray-600">Deskripsi</label>
+                        <textarea value={description} onChange={e => setDescription(e.target.value)}
+                            rows="2" placeholder="Deskripsi singkat material ini..."
+                            className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors resize-none" />
                     </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-gray-600">Minggu</label>
+                            <input type="number" min="1" required value={week} onChange={e => setWeek(parseInt(e.target.value))}
+                                className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-gray-600">Urutan</label>
+                            <input type="number" min="1" required value={order} onChange={e => setOrder(parseInt(e.target.value))}
+                                className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-xs font-bold text-gray-600">Tipe</label>
+                            <select value={fileType} onChange={e => setFileType(e.target.value)}
+                                className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors cursor-pointer">
+                                <option value="pdf">PDF</option>
+                                <option value="ppt">PPT</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-gray-600">File (.pdf / .pptx / .mp4) *</label>
+                        <input id="modal-file-upload" type="file" required
+                            onChange={e => setFile(e.target.files[0])}
+                            accept=".pdf,.ppt,.pptx,.mp4,.webm"
+                            className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer bg-gray-50 border border-gray-200 rounded-xl p-1" />
+                    </div>
+
+                    <button type="submit" disabled={uploading}
+                        className="mt-1 w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Mengupload...</> : <><UploadCloud className="w-4 h-4" /> Upload ke Course Ini</>}
+                    </button>
+                </form>
+
+                <style>{`@keyframes scaleIn { from{opacity:0;transform:scale(.95) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }`}</style>
+            </div>
+        </div>
+    );
+}
+
+// ─── Course Card ──────────────────────────────────────────────────────────────
+function CourseCard({ course, onToggle, onUpload, togglingId, onRefresh }) {
+    const [expanded, setExpanded] = useState(false);
+    const [inlineUpload, setInlineUpload] = useState(null); // mat.id yang sedang di-upload inline
+    const [inlineFile, setInlineFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [inlineError, setInlineError] = useState('');
+    const materials = course.materials || [];
+
+    const handleInlineUpload = async (mat) => {
+        if (!inlineFile) { setInlineError('Pilih file terlebih dahulu'); return; }
+        setUploading(true);
+        setInlineError('');
+        try {
+            const token = localStorage.getItem('access_token');
+            const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+            const formData = new FormData();
+            formData.append('file', inlineFile);
+            formData.append('title', mat.title);
+            formData.append('week', mat.week);
+            formData.append('file_type', mat.file_type || 'pdf');
+            formData.append('order', mat.order || 1);
+            // PATCH existing material by ID
+            await axios.patch(`${API_URL}/admin/materials/${mat.id}/`, formData, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setInlineUpload(null);
+            setInlineFile(null);
+            onRefresh(); // refresh course list
+        } catch (err) {
+            setInlineError('Gagal upload. Coba lagi.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    return (
+        <div className={`border rounded-2xl overflow-hidden transition-all duration-200 ${course.is_active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50/50'}`}>
+            {/* Card Header */}
+            <div className="flex items-center gap-3 p-4">
+                {/* Week badge */}
+                <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black
+                    ${course.is_active ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                    W{materials[0]?.week ?? '?'}
+                </div>
+
+                {/* Title + meta */}
+                <div className="flex-1 min-w-0">
+                    <h3 className={`font-bold text-sm leading-snug truncate ${course.is_active ? 'text-gray-800' : 'text-gray-400'}`}>
+                        {course.title}
+                    </h3>
+                    <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1.5">
+                        <BookOpen className="w-3 h-3" />
+                        {materials.length} material{materials.length !== 1 ? 's' : ''}
+                    </p>
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <ActiveToggle
+                        courseId={course.id}
+                        isActive={course.is_active}
+                        onToggle={onToggle}
+                        loading={togglingId === course.id}
+                    />
+                    <button
+                        onClick={() => onUpload(course)}
+                        title="Upload Material ke Course ini"
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold hover:bg-blue-700 active:scale-95 transition-all"
+                    >
+                        <Plus className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                        onClick={() => setExpanded(!expanded)}
+                        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 transition-colors"
+                    >
+                        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
                 </div>
             </div>
+
+            {/* Materials list (expanded) */}
+            {expanded && (
+                <div className="border-t border-gray-100 bg-gray-50/50 px-4 py-3 flex flex-col gap-2">
+                    {materials.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-3">Belum ada material — klik + untuk upload</p>
+                    ) : (
+                        materials.map((mat, idx) => (
+                            <div key={mat.id} className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-100">
+                                {/* Row utama */}
+                                <div className="flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                        {mat.file_type === 'ppt' ? <Layers className="w-3.5 h-3.5 text-orange-500" /> : <FileText className="w-3.5 h-3.5 text-blue-500" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-semibold text-gray-700 truncate">{idx + 1}. {mat.title}</p>
+                                        <p className="text-[10px] text-gray-400">
+                                            {mat.file_type?.toUpperCase()} · Minggu {mat.week}
+                                            {mat.file_url
+                                                ? <span className="text-emerald-500"> · ✅ Ada file</span>
+                                                : <span className="text-amber-500"> · ⚠️ Belum ada file</span>
+                                            }
+                                        </p>
+                                    </div>
+                                    {/* Action kanan */}
+                                    {mat.file_url ? (
+                                        <a href={mat.file_url} target="_blank" rel="noreferrer"
+                                            className="flex-shrink-0 p-1.5 text-blue-400 hover:text-blue-600 transition-colors">
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </a>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                setInlineUpload(inlineUpload === mat.id ? null : mat.id);
+                                                setInlineFile(null);
+                                                setInlineError('');
+                                            }}
+                                            className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 text-[10px] font-bold border border-amber-200 transition-all active:scale-95"
+                                        >
+                                            <UploadCloud className="w-3 h-3" />
+                                            Upload File
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Inline upload form — muncul jika file kosong dan di-klik */}
+                                {inlineUpload === mat.id && !mat.file_url && (
+                                    <div className="flex flex-col gap-2 pt-1 border-t border-gray-100 mt-1">
+                                        {inlineError && (
+                                            <p className="text-[10px] text-red-500 font-semibold">{inlineError}</p>
+                                        )}
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="file"
+                                                accept=".pdf,.ppt,.pptx"
+                                                onChange={e => setInlineFile(e.target.files[0])}
+                                                className="flex-1 text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer bg-gray-50 border border-gray-200 rounded-lg p-1"
+                                            />
+                                            <button
+                                                onClick={() => handleInlineUpload(mat)}
+                                                disabled={uploading || !inlineFile}
+                                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                            >
+                                                {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
+                                                {uploading ? 'Uploading...' : 'Upload'}
+                                            </button>
+                                            <button
+                                                onClick={() => { setInlineUpload(null); setInlineFile(null); setInlineError(''); }}
+                                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function AdminMaterials() {
+    const [courses, setCourses] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [togglingId, setTogglingId] = useState(null);
+    const [uploadTarget, setUploadTarget] = useState(null); // course to upload into
+    const [toast, setToast] = useState(null); // { type: 'success'|'error', msg }
+    const [filterStatus, setFilterStatus] = useState('all'); // 'all'|'active'|'inactive'
+    const [search, setSearch] = useState('');
+
+    useEffect(() => { fetchCourses(); }, []);
+
+    const fetchCourses = async () => {
+        setIsLoading(true);
+        try {
+            const res = await api.get('/admin/courses/');
+            setCourses(res.data);
+        } catch (err) {
+            showToast('error', 'Gagal memuat data course.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const showToast = (type, msg) => {
+        setToast({ type, msg });
+        setTimeout(() => setToast(null), 3500);
+    };
+
+    const handleToggle = async (courseId) => {
+        setTogglingId(courseId);
+        try {
+            const res = await api.patch(`/admin/courses/${courseId}/toggle/`);
+            setCourses(prev => prev.map(c => c.id === courseId ? { ...c, is_active: res.data.is_active } : c));
+            showToast('success', res.data.message);
+        } catch {
+            showToast('error', 'Gagal mengubah status course.');
+        } finally {
+            setTogglingId(null);
+        }
+    };
+
+    // Stats
+    const activeCount = courses.filter(c => c.is_active).length;
+    const inactiveCount = courses.filter(c => !c.is_active).length;
+    const totalMaterials = courses.reduce((sum, c) => sum + (c.materials?.length || 0), 0);
+    const missingFiles = courses.reduce((sum, c) => sum + (c.materials?.filter(m => !m.file_url).length || 0), 0);
+
+    // Filter + search
+    let filtered = courses;
+    if (filterStatus === 'active') filtered = filtered.filter(c => c.is_active);
+    if (filterStatus === 'inactive') filtered = filtered.filter(c => !c.is_active);
+    if (search) filtered = filtered.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
+
+    return (
+        <div className="max-w-6xl mx-auto font-['Outfit']">
+
+            {/* ── Toast ── */}
+            {toast && (
+                <div className={`fixed top-6 right-6 z-[500] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-sm font-semibold transition-all animate-in slide-in-from-top-4
+                    ${toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                    {toast.msg}
+                </div>
+            )}
+
+            {/* ── Header ── */}
+            <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Course Manager</h1>
+                    <p className="text-sm text-gray-500 mt-0.5">Kelola course, status aktif, dan upload material per course</p>
+                </div>
+                <button onClick={fetchCourses} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600">
+                    <Loader2 className="w-4 h-4" />
+                    Refresh
+                </button>
+            </div>
+
+            {/* ── Stats ── */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                {[
+                    { label: 'Total Course', value: courses.length, icon: BookOpen, color: 'text-blue-600 bg-blue-50' },
+                    { label: 'Active', value: activeCount, icon: Unlock, color: 'text-emerald-600 bg-emerald-50' },
+                    { label: 'Inactive', value: inactiveCount, icon: Lock, color: 'text-gray-500 bg-gray-100' },
+                    { label: 'File Belum Upload', value: missingFiles, icon: AlertCircle, color: 'text-orange-500 bg-orange-50' },
+                ].map((s, i) => {
+                    const Icon = s.icon;
+                    return (
+                        <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${s.color}`}>
+                                <Icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <p className="text-2xl font-black text-gray-800">{s.value}</p>
+                                <p className="text-[11px] text-gray-400 font-medium">{s.label}</p>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* ── Filter & Search ── */}
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+                <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
+                    {[['all', 'Semua'], ['active', 'Active'], ['inactive', 'Inactive']].map(([val, label]) => (
+                        <button key={val} onClick={() => setFilterStatus(val)}
+                            className={`px-4 py-2 text-xs font-bold transition-colors ${filterStatus === val ? 'bg-slate-800 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
+                            {label}
+                        </button>
+                    ))}
+                </div>
+                <input value={search} onChange={e => setSearch(e.target.value)}
+                    placeholder="Cari nama course..."
+                    className="flex-1 min-w-[180px] px-4 py-2 text-sm border border-gray-200 rounded-xl bg-white outline-none focus:border-blue-400 transition-colors" />
+                <span className="text-xs text-gray-400 font-medium">{filtered.length} course</span>
+            </div>
+
+            {/* ── Course List ── */}
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+                    <Loader2 className="w-10 h-10 animate-spin mb-3 text-blue-400" />
+                    <p className="text-sm font-semibold">Memuat data course...</p>
+                </div>
+            ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+                    <BookOpen className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="font-semibold text-sm">Tidak ada course ditemukan</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {filtered.map(course => (
+                        <CourseCard
+                            key={course.id}
+                            course={course}
+                            onToggle={handleToggle}
+                            onUpload={setUploadTarget}
+                            togglingId={togglingId}
+                            onRefresh={fetchCourses}
+                        />
+                    ))}
+                </div>
+            )}
+
+            {/* ── Upload Modal ── */}
+            {uploadTarget && (
+                <UploadModal
+                    course={uploadTarget}
+                    onClose={() => setUploadTarget(null)}
+                    onSuccess={() => {
+                        fetchCourses();
+                        showToast('success', 'Material berhasil diupload!');
+                    }}
+                />
+            )}
         </div>
     );
 }

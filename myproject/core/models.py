@@ -104,11 +104,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Course(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
-    thumbnail = models.URLField(blank=True, null=True)  # URL gambar cover course
+    thumbnail = models.URLField(blank=True, null=True)
     metadata = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True, help_text='Jika False, course tidak ditampilkan ke student')
 
     def __str__(self):
         return self.title
+
 
 
 class Enrollment(models.Model):

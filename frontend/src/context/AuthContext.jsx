@@ -46,6 +46,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleAdminLogin = async (credential) => {
+    try {
+      const data = await authService.googleAdminLogin(credential);
+      setUser(data.user);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const logout = async () => {
     try {
       await authService.logout();
@@ -103,15 +113,17 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     googleLogin,
+    googleAdminLogin,
     logout,
     updateProfile,
     forgotPassword,
     resetPassword,
     verifyOTP,
     resetPasswordOTP,
-    setUser, // Expose setUser for manual updates
+    setUser,
     isAuthenticated: !!user,
   };
+
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

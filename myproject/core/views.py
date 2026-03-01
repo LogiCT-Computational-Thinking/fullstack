@@ -34,6 +34,44 @@ from django.contrib.auth.tokens import default_token_generator
 import random
 from django.utils import timezone
 from datetime import timedelta
+from django.http import FileResponse, Http404
+from django.views.decorators.clickjacking import xframe_options_exempt
+import mimetypes
+
+
+# ─── Serve Media File (iframe-friendly) ──────────────────────────────────────
+# Endpoint khusus untuk menampilkan file di iframe di frontend.
+# @xframe_options_exempt  → hapus header X-Frame-Options: deny
+# Content-Disposition: inline → tampil di browser, bukan langsung download
+
+@xframe_options_exempt
+@permission_classes([AllowAny])
+def serve_media_file(request, file_path):
+    """
+    GET /api/media/<file_path>
+    Serve file dari MEDIA_ROOT dengan izin iframe (tanpa X-Frame-Options deny).
+    """
+    full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+
+    if not os.path.exists(full_path):
+        raise Http404('File tidak ditemukan.')
+
+    # Deteksi content type
+    content_type, _ = mimetypes.guess_type(full_path)
+    content_type = content_type or 'application/octet-stream'
+
+    response = FileResponse(
+        open(full_path, 'rb'),
+        content_type=content_type,
+    )
+    # 'inline' → tampil di browser / iframe
+    filename = os.path.basename(full_path)
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
+
+    # Izinkan embed dari frontend (localhost:5173)
+    response['X-Frame-Options'] = 'ALLOWALL'
+
+    return response
 
 
 @api_view(['GET'])
@@ -240,6 +278,73 @@ def google_auth_view(request):
             'error': 'Authentication failed',
             'detail': str(e)
         }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_admin_auth_view(request):
+    """
+    POST /api/auth/google/admin/
+    Google OAuth khusus Admin Portal.
+    - Hanya menerima akun yang SUDAH TERDAFTAR dengan role admin/teacher.
+    - TIDAK membuat akun baru (aman dari self-registration).
+    """
+    serializer = GoogleAuthSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    token = serializer.validated_data['token']
+
+    try:
+        # 1. Verifikasi token Google
+        idinfo = id_token.verify_oauth2_token(
+            token,
+            requests.Request(),
+            settings.GOOGLE_OAUTH_CLIENT_ID,
+            clock_skew_in_seconds=10
+        )
+
+        email = idinfo.get('email')
+        if not email:
+            return Response({'error': 'Email tidak ditemukan dari akun Google.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 2. Cari user yang SUDAH ada di database — TIDAK buat baru
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'Akun dengan email ini tidak terdaftar di sistem. Hubungi superadmin.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 3. Validasi role — hanya admin/teacher yang boleh masuk
+        if user.role not in ['admin', 'teacher']:
+            return Response(
+                {'error': 'Akses ditolak. Akun ini tidak memiliki hak akses Admin Portal.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # 4. Update foto profil jika berubah
+        picture = idinfo.get('picture')
+        if picture and user.profilePicture != picture:
+            user.profilePicture = picture
+            user.save()
+
+        tokens = get_tokens_for_user(user)
+
+        return Response({
+            'message': 'Google authentication successful',
+            'user': UserSerializer(user).data,
+            'tokens': tokens,
+            'is_new_user': False
+        }, status=status.HTTP_200_OK)
+
+    except ValueError as e:
+        return Response({'error': 'Token Google tidak valid.', 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'error': 'Autentikasi gagal.', 'detail': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
@@ -955,6 +1060,108 @@ def get_materials_view(request):
     serializer = MaterialSerializer(materials, many=True)
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_courses_view(request):
+    """
+    GET /api/courses/
+    Returns all ACTIVE courses with their nested materials (ordered by week).
+    """
+    from .models import Course
+    from .serializers import CourseWithMaterialsSerializer
+
+    courses = Course.objects.prefetch_related('materials').all()
+    courses = sorted(courses, key=lambda c: (
+        c.materials.order_by('week').first().week if c.materials.exists() else 9999,
+        c.id
+    ))
+    serializer = CourseWithMaterialsSerializer(courses, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+# =========================================================
+# 📚 ADMIN COURSE MANAGEMENT
+# =========================================================
+
+@api_view(['GET'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_get_courses(request):
+    """
+    GET /api/admin/courses/
+    Returns ALL courses (active + inactive) with nested materials for admin.
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import Course
+    from .serializers import CourseWithMaterialsSerializer
+
+    courses = Course.objects.prefetch_related('materials').all()
+    courses = sorted(courses, key=lambda c: (
+        c.materials.order_by('week').first().week if c.materials.exists() else 9999,
+        c.id
+    ))
+    serializer = CourseWithMaterialsSerializer(courses, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['PATCH'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_toggle_course(request, pk):
+    """
+    PATCH /api/admin/courses/<pk>/toggle/
+    Toggle is_active status of a course.
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import Course
+    try:
+        course = Course.objects.get(pk=pk)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    course.is_active = not course.is_active
+    course.save()
+    return Response({
+        "id": course.id,
+        "title": course.title,
+        "is_active": course.is_active,
+        "message": f"Course {'diaktifkan' if course.is_active else 'dinonaktifkan'}"
+    })
+
+
+@api_view(['POST'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_upload_material_to_course(request, course_pk):
+    """
+    POST /api/admin/courses/<course_pk>/materials/
+    Upload a material file to a specific course.
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import Course
+    from .serializers import MaterialSerializer
+
+    try:
+        course = Course.objects.get(pk=course_pk)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = MaterialSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(course=course)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # =========================================================
 # 7️⃣ QUESTION BANK MANAGEMENT (ADMIN)
 # =========================================================
@@ -1000,6 +1207,29 @@ def manage_admin_materials(request):
             tb = traceback.format_exc()
             print("ERROR IN MATERIALS POST:", tb)
             return Response({"error": str(e), "traceback": tb}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def admin_update_material(request, pk):
+    """
+    PATCH /api/admin/materials/<pk>/
+    Update file (atau field lain) dari material yang sudah ada.
+    Digunakan oleh inline upload di admin course card.
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    try:
+        material = Material.objects.get(pk=pk)
+    except Material.DoesNotExist:
+        raise Http404('Material tidak ditemukan.')
+
+    serializer = MaterialSerializer(material, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
