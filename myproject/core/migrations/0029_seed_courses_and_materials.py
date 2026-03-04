@@ -141,21 +141,21 @@ def seed_courses_and_materials(apps, schema_editor):
     Quiz     = apps.get_model('core', 'Quiz')
 
     for idx, course_data in enumerate(COURSES_DATA):
-        # Buat / update Course
+        # Buat / update Course — week sekarang milik Course
         course, _ = Course.objects.update_or_create(
             title=course_data['title'],
             defaults={
                 'description': course_data['description'],
+                'week':        course_data['week'],
             }
         )
 
-        # Buat / update setiap Material
+        # Buat / update setiap Material — tanpa week
         for mat_data in course_data['materials']:
             Material.objects.update_or_create(
                 course=course,
                 title=mat_data['title'],
                 defaults={
-                    'week':        course_data['week'],
                     'file_type':   mat_data['file_type'],
                     'order':       mat_data['order'],
                     'description': mat_data['description'],

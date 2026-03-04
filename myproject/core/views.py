@@ -1056,7 +1056,7 @@ def get_materials_view(request):
     """
     Get all educational materials ordered by week
     """
-    materials = Material.objects.all().order_by('week', 'order')
+    materials = Material.objects.all().order_by('course__week', 'order')
     serializer = MaterialSerializer(materials, many=True)
     return Response(serializer.data)
 
@@ -1067,45 +1067,168 @@ def get_materials_view(request):
 def get_courses_view(request):
     """
     GET /api/courses/
-    Returns all ACTIVE courses with their nested materials (ordered by week).
+    Returns all ACTIVE courses with nested materials + real progress.
+    Progress = (completed materials + completed quiz) / (total materials + 1).
     """
-    from .models import Course
+    from .models import Course, MaterialProgress, QuizResult
     from .serializers import CourseWithMaterialsSerializer
 
-    courses = Course.objects.prefetch_related('materials').all()
-    courses = sorted(courses, key=lambda c: (
-        c.materials.order_by('week').first().week if c.materials.exists() else 9999,
-        c.id
-    ))
+    # Optimize query: prefetch materials, select_related quiz
+    courses = list(
+        Course.objects.prefetch_related('materials')
+        .select_related('quiz')
+        .order_by('week', 'id')
+    )
+
+    completed_mats = set(
+        MaterialProgress.objects.filter(user=request.user).values_list('material_id', flat=True)
+    )
+    completed_quizzes = set(
+        QuizResult.objects.filter(user=request.user).values_list('quiz_id', flat=True)
+    )
+
     serializer = CourseWithMaterialsSerializer(courses, many=True, context={'request': request})
-    return Response(serializer.data)
+    data = serializer.data
+
+    for course_data, course_obj in zip(data, courses):
+        all_materials = course_obj.materials.all()
+        mats_count = len(all_materials)
+        
+        # Cek apakah quiz ada (OnetoOne reverse relation)
+        quiz_obj = getattr(course_obj, 'quiz', None)
+        has_quiz = quiz_obj is not None
+        
+        # Total item = jumlah materi + 1 (kuis asah otak)
+        total_items = mats_count + (1 if has_quiz else 0)
+        
+        if total_items == 0:
+            course_data['progress'] = 0
+            continue
+            
+        done_mats = sum(1 for m in all_materials if m.id in completed_mats)
+        done_quiz = 1 if (has_quiz and quiz_obj.id in completed_quizzes) else 0
+        
+        course_data['progress'] = round(((done_mats + done_quiz) / total_items) * 100)
+
+    return Response(data)
+
+
+@api_view(['POST'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def mark_quiz_complete(request, course_pk):
+    """
+    POST /api/courses/<course_pk>/quiz-complete/
+    Tandai quiz Asah Otak sebagai selesai.
+    """
+    from .models import Course, Quiz, QuizResult
+
+    try:
+        course = Course.objects.get(pk=course_pk)
+    except Course.DoesNotExist:
+        return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    quiz_obj = getattr(course, 'quiz', None)
+    if not quiz_obj:
+        # Buat quiz otomatis jika belum ada database-nya
+        quiz_obj = Quiz.objects.create(course=course)
+
+    qresult, created = QuizResult.objects.get_or_create(
+        user=request.user,
+        quiz=quiz_obj,
+        defaults={'percentage': 100, 'passed': True}
+    )
+
+    return Response({
+        'course_id': course.id,
+        'quiz_id': quiz_obj.id,
+        'completed_at': qresult.completed_at,
+        'already_done': not created
+    })
+
+
+@api_view(['POST'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def mark_material_complete(request, material_pk):
+    """
+    POST /api/materials/<material_pk>/complete/
+    Tandai material sebagai selesai.
+    """
+    from .models import Material, MaterialProgress
+
+    try:
+        material = Material.objects.get(pk=material_pk)
+    except Material.DoesNotExist:
+        return Response({'error': 'Material not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    progress_obj, created = MaterialProgress.objects.get_or_create(
+        user=request.user,
+        material=material,
+    )
+
+    return Response({
+        'material_id': material.pk,
+        'completed_at': progress_obj.completed_at,
+        'already_done': not created
+    })
 
 
 # =========================================================
 # 📚 ADMIN COURSE MANAGEMENT
 # =========================================================
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 @authentication_classes([CustomJWTAuthentication])
 @permission_classes([IsAuthenticated])
-def admin_get_courses(request):
+def admin_manage_courses(request):
     """
-    GET /api/admin/courses/
-    Returns ALL courses (active + inactive) with nested materials for admin.
+    GET  /api/admin/courses/  → Daftar semua courses (active + inactive) + nested materials
+    POST /api/admin/courses/  → Buat course baru {title, description, week}
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import Course, Quiz
+    from .serializers import CourseWithMaterialsSerializer, CourseSerializer
+
+    if request.method == 'GET':
+        courses = Course.objects.prefetch_related('materials').order_by('week', 'id')
+        serializer = CourseWithMaterialsSerializer(courses, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    # POST — buat course baru
+    serializer = CourseSerializer(data=request.data)
+    if serializer.is_valid():
+        course = serializer.save()
+        # Otomatis buatkan Quiz kosong untuk course baru
+        Quiz.objects.get_or_create(course=course)
+        return Response(
+            CourseWithMaterialsSerializer(course, context={'request': request}).data,
+            status=status.HTTP_201_CREATED
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_delete_course(request, pk):
+    """
+    DELETE /api/admin/courses/<pk>/
+    Hapus course beserta semua materialnya.
     """
     if request.user.role not in ['teacher', 'admin']:
         return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
 
     from .models import Course
-    from .serializers import CourseWithMaterialsSerializer
+    try:
+        course = Course.objects.get(pk=pk)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    courses = Course.objects.prefetch_related('materials').all()
-    courses = sorted(courses, key=lambda c: (
-        c.materials.order_by('week').first().week if c.materials.exists() else 9999,
-        c.id
-    ))
-    serializer = CourseWithMaterialsSerializer(courses, many=True, context={'request': request})
-    return Response(serializer.data)
+    course.delete()
+    return Response({"message": "Course berhasil dihapus"}, status=status.HTTP_200_OK)
 
 
 @api_view(['PATCH'])
@@ -1176,7 +1299,7 @@ def manage_admin_materials(request):
         return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
     
     if request.method == 'GET':
-        materials = Material.objects.all().order_by('week', 'order')
+        materials = Material.objects.all().order_by('course__week', 'order')
         serializer = MaterialSerializer(materials, many=True)
         return Response(serializer.data)
         

@@ -14,23 +14,23 @@ export default function QuestionBank() {
     const [showFilterMenu, setShowFilterMenu] = useState(false);
     const [filterWeek, setFilterWeek] = useState('ALL');
     const [filterLevel, setFilterLevel] = useState('ALL');
-    const [materials, setMaterials] = useState([]);
+    const [courses, setCourses] = useState([]);
 
     useEffect(() => {
         fetchQuestions();
     }, [activeTab]);
 
     useEffect(() => {
-        const fetchMaterialsList = async () => {
+        const fetchCoursesList = async () => {
             try {
-                // Assuming this endpoint exists to get unique weeks/materials
-                const response = await api.get('/materials/');
-                setMaterials(response.data);
+                // Ambil week dari courses karena week sudah pindah ke Course
+                const response = await api.get('/courses/');
+                setCourses(response.data);
             } catch (error) {
-                console.error('Error fetching materials:', error);
+                console.error('Error fetching courses:', error);
             }
         };
-        fetchMaterialsList();
+        fetchCoursesList();
     }, []);
 
     const fetchQuestions = async () => {
@@ -159,7 +159,7 @@ export default function QuestionBank() {
                                                     Week {q.week || '?'}
                                                 </span>
                                                 <span className="text-[11px] font-bold text-gray-500 max-w-[150px] truncate">
-                                                    {q.material_title || 'General / Unlinked'}
+                                                    {q.course_title || 'General'}
                                                 </span>
                                             </div>
                                         </td>
@@ -318,7 +318,7 @@ export default function QuestionBank() {
                                     className="w-full bg-gray-50 border border-transparent focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold text-gray-700 outline-none transition-all"
                                 >
                                     <option value="ALL">All Materials</option>
-                                    {[...new Set(materials.map(m => m.week))].sort((a, b) => a - b).map(week => (
+                                    {[...new Set(courses.map(c => c.week))].sort((a, b) => a - b).map(week => (
                                         <option key={week} value={week}>Week {week}</option>
                                     ))}
                                 </select>
@@ -352,8 +352,8 @@ export default function QuestionBank() {
                 <button
                     onClick={() => setShowFilterMenu(!showFilterMenu)}
                     className={`w-14 h-14 shadow-xl rounded-2xl flex items-center justify-center transition-all group active:scale-95 ${showFilterMenu || filterWeek !== 'ALL' || filterLevel !== 'ALL'
-                            ? 'bg-[#5B77B5] text-white'
-                            : 'bg-white border border-gray-100 text-gray-600 hover:text-blue-600'
+                        ? 'bg-[#5B77B5] text-white'
+                        : 'bg-white border border-gray-100 text-gray-600 hover:text-blue-600'
                         }`}
                 >
                     <Filter className={`w-6 h-6 group-hover:scale-110 transition-transform ${showFilterMenu ? 'rotate-180' : ''}`} />

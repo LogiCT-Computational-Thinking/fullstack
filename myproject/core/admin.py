@@ -36,7 +36,8 @@ class QuizInline(admin.StackedInline):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    list_display = ("id", "title")
+    list_display = ("id", "week", "title", "is_active")
+    list_filter = ("week", "is_active")
     search_fields = ("title",)
     inlines = [MaterialInline, QuizInline]
 
@@ -80,8 +81,8 @@ class ProfilingArchetypeAdmin(admin.ModelAdmin):
 
 @admin.register(Material)
 class MaterialAdmin(admin.ModelAdmin):
-    list_display = ("id", "course", "title", "week", "created_at")
-    list_filter = ("course", "week")
+    list_display = ("id", "course", "title", "file_type", "order", "created_at")
+    list_filter = ("course", "file_type")
     search_fields = ("title",)
 
 

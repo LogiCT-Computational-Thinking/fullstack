@@ -104,12 +104,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Course(models.Model):
     title = models.CharField(max_length=150)
     description = models.TextField()
+    week = models.IntegerField(default=1, help_text='Minggu ke berapa course ini dijalankan')
     thumbnail = models.URLField(blank=True, null=True)
     metadata = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True, help_text='Jika False, course tidak ditampilkan ke student')
 
+    class Meta:
+        ordering = ['week', 'id']
+
     def __str__(self):
-        return self.title
+        return f"Week {self.week} - {self.title}"
 
 
 
@@ -246,7 +250,6 @@ class QuizQuestion(models.Model):
         ('REJECTED', 'Rejected'),
     ]
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='questions')
-    material = models.ForeignKey('Material', on_delete=models.SET_NULL, null=True, blank=True, related_name='questions')
     question = models.TextField()
     type = models.CharField(max_length=30, choices=TYPE_CHOICES, default='multiple_choice')
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='GENERAL')
@@ -356,14 +359,33 @@ class Material(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='materials')
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)    # Deskripsi singkat materi
-    week = models.IntegerField()
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, default='pdf')  # Jenis file
     file = models.FileField(upload_to='materials/')
     order = models.IntegerField(default=1)                   # Urutan jika >1 materi per minggu
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['week', 'order']
+        ordering = ['order']
 
     def __str__(self):
-        return f"{self.course.title} - Week {self.week} - {self.title}"
+        return f"Week {self.course.week} - {self.course.title} - {self.title}"
+
+
+# =========================================================
+# 📊 MATERIAL PROGRESS TRACKING
+# =========================================================
+class MaterialProgress(models.Model):
+    """
+    Mencatat materi yang sudah dibuka/diselesaikan oleh seorang user.
+    Dibuat otomatis saat user pertama kali membuka materi tersebut.
+    """
+    user         = models.ForeignKey(User, on_delete=models.CASCADE, related_name='material_progress')
+    material     = models.ForeignKey(Material, on_delete=models.CASCADE, related_name='progress')
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'material']   # 1 record per user per material
+        ordering = ['-completed_at']
+
+    def __str__(self):
+        return f"{self.user.name} ✓ {self.material.title}"

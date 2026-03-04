@@ -122,7 +122,7 @@ class MaterialSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Material
-        fields = ['id', 'title', 'description', 'week', 'file_type', 'order', 'file', 'file_url', 'created_at', 'course']
+        fields = ['id', 'title', 'description', 'file_type', 'order', 'file', 'file_url', 'created_at', 'course']
         extra_kwargs = {
             'course': {'required': False, 'allow_null': True},
             'file': {'required': False, 'allow_null': True},
@@ -133,7 +133,7 @@ class CourseSerializer(serializers.ModelSerializer):
     """Serializer for Course model"""
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'thumbnail', 'metadata', 'is_active']
+        fields = ['id', 'title', 'description', 'week', 'thumbnail', 'metadata', 'is_active']
 
 
 
@@ -147,7 +147,7 @@ class CourseWithMaterialsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'thumbnail', 'metadata', 'is_active', 'materials', 'materials_count']
+        fields = ['id', 'title', 'description', 'week', 'thumbnail', 'metadata', 'is_active', 'materials', 'materials_count']
 
 
 
@@ -155,9 +155,29 @@ class CourseWithMaterialsSerializer(serializers.ModelSerializer):
 
 class QuizQuestionSerializer(serializers.ModelSerializer):
     """Serializer for QuizQuestion model"""
-    material_title = serializers.ReadOnlyField(source='material.title')
-    week = serializers.ReadOnlyField(source='material.week')
-    
+    # week dan course info diambil dari relasi quiz → course
+    week = serializers.SerializerMethodField()
+    course_id = serializers.SerializerMethodField()
+    course_title = serializers.SerializerMethodField()
+
+    def get_week(self, obj):
+        try:
+            return obj.quiz.course.week
+        except Exception:
+            return None
+
+    def get_course_id(self, obj):
+        try:
+            return obj.quiz.course.id
+        except Exception:
+            return None
+
+    def get_course_title(self, obj):
+        try:
+            return obj.quiz.course.title
+        except Exception:
+            return None
+
     class Meta:
         model = QuizQuestion
         fields = '__all__'

@@ -41,7 +41,9 @@ urlpatterns = [
     
     # Educational Materials
     path('materials/', views.get_materials_view, name='get-materials'),
+    path('materials/<int:material_pk>/complete/', views.mark_material_complete, name='mark-material-complete'),
     path('courses/', views.get_courses_view, name='get-courses'),
+    path('courses/<int:course_pk>/quiz-complete/', views.mark_quiz_complete, name='mark-quiz-complete'),
 
     # Question Bank Management (Admin)
     path('admin/qbank/', views.get_admin_qbank, name='admin-qbank'),
@@ -49,7 +51,8 @@ urlpatterns = [
     path('admin/materials/', views.manage_admin_materials, name='admin-materials'),
 
     # Course Management (Admin)
-    path('admin/courses/', views.admin_get_courses, name='admin-courses'),
+    path('admin/courses/', views.admin_manage_courses, name='admin-courses'),
+    path('admin/courses/<int:pk>/delete/', views.admin_delete_course, name='admin-delete-course'),
     path('admin/courses/<int:pk>/toggle/', views.admin_toggle_course, name='admin-toggle-course'),
     path('admin/courses/<int:course_pk>/materials/', views.admin_upload_material_to_course, name='admin-upload-material'),
 
