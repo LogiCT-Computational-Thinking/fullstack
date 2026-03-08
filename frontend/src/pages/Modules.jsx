@@ -204,6 +204,77 @@ function LockedCard({ course, onClick }) {
     );
 }
 
+// ─── Module Row (List View) ───────────────────────────────────────────────────
+
+function ModuleRow({ course, onClick }) {
+    const isLocked = course.status === 'locked';
+    const isFinished = course.status === 'finished';
+
+    return (
+        <button
+            onClick={onClick}
+            className="group flex items-center gap-6 p-4 bg-white border border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-md transition-all w-full text-left"
+        >
+            {/* Week Badge */}
+            <div className={`w-16 flex flex-col items-center justify-center p-2 rounded-xl flex-shrink-0 transition-colors
+                ${isLocked ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600'}`}>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Week</span>
+                <span className="text-lg font-black leading-none">{course.week}</span>
+            </div>
+
+            {/* Content Info */}
+            <div className="flex-1 min-w-0">
+                <h3 className={`text-base font-bold leading-tight truncate mb-1
+                    ${isLocked ? 'text-gray-400' : 'text-gray-900 group-hover:text-blue-700'}`}>
+                    {course.title}
+                </h3>
+                <div className="flex items-center gap-3 text-xs text-gray-400 font-medium">
+                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />60 mins</span>
+                    <span className="text-gray-200">|</span>
+                    <span className="flex items-center gap-1"><Layers className="w-3.5 h-3.5" />{course.modules} modules</span>
+                </div>
+            </div>
+
+            {/* Progress Bar (Only for active/finished) */}
+            {!isLocked && (
+                <div className="hidden md:block w-48 mx-4">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Progress</span>
+                        <span className="text-[10px] font-black text-gray-800">{course.progress}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full rounded-full transition-all duration-500 ${isFinished ? 'bg-green-500' : 'bg-blue-600'}`}
+                            style={{ width: `${course.progress}%` }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Status Badge */}
+            <div className="flex-shrink-0">
+                {isLocked ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 text-gray-400 text-[11px] font-bold border border-gray-100">
+                        <Lock className="w-3 h-3" /> Locked
+                    </div>
+                ) : isFinished ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-600 text-[11px] font-bold border border-green-100">
+                        <CheckSquare className="w-3 h-3" /> Completed
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-[11px] font-bold shadow-lg shadow-gray-200 group-hover:bg-blue-600 transition-colors">
+                        <Play className="w-3 h-3 fill-white" /> Continue
+                    </div>
+                )}
+            </div>
+
+            <ChevronRight className={`w-5 h-5 ml-2 transition-transform group-hover:translate-x-1
+                ${isLocked ? 'text-gray-200' : 'text-gray-300 group-hover:text-blue-400'}`}
+            />
+        </button>
+    );
+}
+
 
 // ─── Asah Otak Chat Modal ──────────────────────────────────────────────────────
 
@@ -627,6 +698,10 @@ export default function Modules() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Filter states
+    const [filterWeek, setFilterWeek] = useState('ALL');
+    const [showWeekDropdown, setShowWeekDropdown] = useState(false);
+
     useEffect(() => {
         fetchCourses();
     }, []);
@@ -667,11 +742,20 @@ export default function Modules() {
     };
 
     let displayed = activeTab === 'all' ? courses : courses.filter(c => c.status === activeTab);
+
+    // Applying filters
+    if (filterWeek !== 'ALL') {
+        displayed = displayed.filter(c => c.week === parseInt(filterWeek));
+    }
+
     if (searchQuery) {
         displayed = displayed.filter(c =>
             c.title.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }
+
+    // Unique weeks for dropdown
+    const availableWeeks = [...new Set(courses.map(c => c.week))].sort((a, b) => a - b);
 
     let activeCardIdx = 0;
 
@@ -693,11 +777,42 @@ export default function Modules() {
                             className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-full bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 w-48 text-gray-600 placeholder-gray-400"
                         />
                     </div>
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-full bg-white hover:bg-gray-50 transition-colors">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span>Weeks</span>
-                        <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                    </button>
+
+                    {/* Week Filter Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowWeekDropdown(!showWeekDropdown)}
+                            className={`flex items-center gap-1.5 px-3 py-2 text-sm border rounded-full transition-colors active:scale-95
+                                ${filterWeek !== 'ALL'
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                        >
+                            <Calendar className={`w-4 h-4 ${filterWeek !== 'ALL' ? 'text-white' : 'text-gray-400'}`} />
+                            <span>{filterWeek === 'ALL' ? 'Weeks' : `Week ${filterWeek}`}</span>
+                            <ChevronDown className={`w-3.5 h-3.5 ${filterWeek !== 'ALL' ? 'text-white' : 'text-gray-400'} transition-transform ${showWeekDropdown ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {showWeekDropdown && (
+                            <div className="absolute top-11 left-0 w-40 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <button
+                                    onClick={() => { setFilterWeek('ALL'); setShowWeekDropdown(false); }}
+                                    className={`w-full text-left px-4 py-2 text-xs font-bold hover:bg-gray-50 transition-colors ${filterWeek === 'ALL' ? 'text-blue-600' : 'text-gray-600'}`}
+                                >
+                                    All Weeks
+                                </button>
+                                {availableWeeks.map(week => (
+                                    <button
+                                        key={week}
+                                        onClick={() => { setFilterWeek(week.toString()); setShowWeekDropdown(false); }}
+                                        className={`w-full text-left px-4 py-2 text-xs font-bold hover:bg-gray-50 transition-colors ${filterWeek === week.toString() ? 'text-blue-600' : 'text-gray-600'}`}
+                                    >
+                                        Week {week}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-full bg-white hover:bg-gray-50 transition-colors">
                         <CheckSquare className="w-4 h-4 text-gray-400" />
                         <span>Status</span>
@@ -731,7 +846,7 @@ export default function Modules() {
                 })}
             </div>
 
-            {/* ── Grid ── */}
+            {/* ── Grid/List Display ── */}
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-24 text-gray-400">
                     <Loader2 className="w-10 h-10 animate-spin mb-3 text-blue-400" />
@@ -741,10 +856,23 @@ export default function Modules() {
                 <div className="flex flex-col items-center justify-center py-24 text-gray-400">
                     <Layers className="w-12 h-12 mb-3 opacity-30" />
                     <p className="font-semibold">Tidak ada course ditemukan</p>
+                    {filterWeek !== 'ALL' && (
+                        <button
+                            onClick={() => setFilterWeek('ALL')}
+                            className="text-xs text-blue-600 font-bold mt-2 hover:underline"
+                        >
+                            Reset Filter Week
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 w-full'}`}>
                     {displayed.map(course => {
+                        if (viewMode === 'list') {
+                            return <ModuleRow key={course.id} course={course} onClick={() => setSelectedCourse(course)} />;
+                        }
+
+                        // Grid Mode
                         if (course.status === 'active') {
                             const idx = activeCardIdx++;
                             return (

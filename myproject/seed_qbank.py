@@ -23,7 +23,7 @@ def seed_qbank():
     quiz, created = Quiz.objects.get_or_create(course=course)
     
     # Get some materials to link to
-    materials = {m.week: m for m in Material.objects.all()}
+    materials = {m.course.week: m for m in Material.objects.all()}
     
     dummy_questions = [
         {
@@ -33,6 +33,7 @@ def seed_qbank():
             "level": 1,
             "weight_abstraction": 100.0,
             "status": "PENDING",
+            "correctAns": "3 types (e.g. Robot, Apple, Sun)",
             "material": materials.get(1)
         },
         {
@@ -42,6 +43,7 @@ def seed_qbank():
             "level": 3,
             "weight_decomposition": 100.0,
             "status": "PENDING",
+            "correctAns": "Breaking down a recipe into individual steps.",
             "material": materials.get(2)
         },
         {
@@ -51,6 +53,7 @@ def seed_qbank():
             "level": 2,
             "weight_pattern": 100.0,
             "status": "PENDING",
+            "correctAns": "Hexagon (6 sides)",
             "material": materials.get(3)
         },
         {
@@ -60,6 +63,7 @@ def seed_qbank():
             "level": 1,
             "weight_algorithm": 100.0,
             "status": "PENDING",
+            "correctAns": "1. Boil water, 2. Put tea bag in cup, 3. Pour water, 4. Wait, 5. Enjoy.",
             "material": materials.get(5)
         },
         {
@@ -70,6 +74,7 @@ def seed_qbank():
             "weight_abstraction": 50.0,
             "weight_decomposition": 50.0,
             "status": "PENDING",
+            "correctAns": "Placeholder Answer",
             "material": materials.get(4)
         },
         {
@@ -79,6 +84,7 @@ def seed_qbank():
             "level": 2,
             "weight_algorithm": 100.0,
             "status": "APPROVED",
+            "correctAns": "10 minutes",
             "material": materials.get(5)
         },
         {
@@ -89,6 +95,7 @@ def seed_qbank():
             "weight_pattern": 100.0,
             "status": "REJECTED",
             "admin_feedback": "Terlalu mudah untuk level ini.",
+            "correctAns": "Next number is 64 (multiply by 2)",
             "material": materials.get(3)
         },
         {
@@ -98,6 +105,7 @@ def seed_qbank():
             "level": 5,
             "weight_abstraction": 100.0,
             "status": "PENDING",
+            "correctAns": "By focusing on important details and ignoring irrelevant ones.",
             "material": materials.get(4)
         },
         {
@@ -107,6 +115,7 @@ def seed_qbank():
             "level": 2,
             "weight_decomposition": 100.0,
             "status": "PENDING",
+            "correctAns": "The battery is dead/faulty.",
             "material": materials.get(2)
         },
         {
@@ -116,13 +125,21 @@ def seed_qbank():
             "level": 3,
             "weight_pattern": 100.0,
             "status": "PENDING",
+            "correctAns": "13 (Fibonacci sequence)",
             "material": materials.get(3)
         }
     ]
     
     for q_data in dummy_questions:
+        mat = q_data.pop('material', None)
+        target_quiz = quiz # Default to first course's quiz
+        
+        if mat:
+            # Get or create quiz for the specific course attached to the material
+            target_quiz, _ = Quiz.objects.get_or_create(course=mat.course)
+            
         QuizQuestion.objects.create(
-            quiz=quiz,
+            quiz=target_quiz,
             **q_data
         )
     

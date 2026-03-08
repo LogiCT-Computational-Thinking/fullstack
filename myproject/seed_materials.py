@@ -7,70 +7,52 @@ django.setup()
 
 from core.models import Course, Material
 
+from core.models import Course, Material
+from django.core.files.base import ContentFile
+
 def seed_materials():
-    print("Seeding Course and Materials...")
+    print("Seeding Materials for all courses...")
     
-    # 1. Create or get the default course
-    course, created = Course.objects.get_or_create(
-        title="Computational Thinking Fundamentals",
-        defaults={
-            "description": "Kursus dasar untuk memahami konsep Computational Thinking seperti dekomposisi, pengenalan pola, abstraksi, dan algoritma.",
-            "thumbnail": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070&auto=format&fit=crop"
-        }
-    )
-    
-    if created:
-        print(f"Created course: {course.title}")
-    else:
-        print(f"Using existing course: {course.title}")
-
-    # 2. Define Material titles for 14 weeks
-    week_titles = [
-        "Pengenalan Computational Thinking",
-        "Dekomposisi Dasar",
-        "Pengenalan Pola dalam Masalah",
-        "Abstraksi dan Generalisasi",
-        "Pemikiran Algoritmik",
-        "Evaluasi dan Debugging",
-        "Logika Matematika dalam CT",
-        "Review Tengah Semester", # Week 8
-        "Penerapan Animasi & Simulasi",
-        "Pemecahan Masalah Kompleks Part 1",
-        "Pemecahan Masalah Kompleks Part 2",
-        "Kecerdasan Buatan dan CT",
-        "Proyek Kolaborasi CT",
-        "Final Assessment & Review"
-    ]
-
-    # 3. Create Materials for 14 weeks
-    for i in range(1, 15):
-        title = week_titles[i-1]
-        # We don't need real files here, just the path in the database.
-        # The user will upload the actual files to media/materials/weekX.pdf
-        filename = f"week{i}.pdf"
-        
-        material, m_created = Material.objects.get_or_create(
-            course=course,
-            week=i,
-            defaults={
-                "title": title,
-                "description": f"Materi pembelajaran mandiri untuk {title} pada Minggu ke-{i}.",
-                "file_type": "pdf",
-                "file": f"materials/{filename}",
-                "order": 1
-            }
+    courses = Course.objects.all()
+    if not courses.exists():
+        print("No courses found. Creating a default one first.")
+        course, _ = Course.objects.get_or_create(
+            title="Computational Thinking Fundamentals",
+            defaults={"description": "Kursus dasar Computational Thinking."}
         )
-        
-        if m_created:
-            print(f"Created Material: Week {i} - {title}")
-        else:
-            # Update title and file path if already exists
-            material.title = title
-            material.file = f"materials/{filename}"
-            material.save()
-            print(f"Updated Material: Week {i} - {title}")
+        courses = Course.objects.filter(id=course.id)
 
-    print("Success! Dummy materials created. Please ensure files are placed in myproject/media/materials/")
+    dummy_content = b"This is dummy material content."
+
+    for course in courses:
+        print(f"Checking materials for Course: {course.title}")
+        
+        # We'll ensure at least 2 materials exist for each course
+        materials_data = [
+            {"order": 1, "title": f"Materi Dasar {course.title} - Bagian 1"},
+            {"order": 2, "title": f"Materi Dasar {course.title} - Bagian 2"},
+        ]
+        
+        for m_data in materials_data:
+            material, created = Material.objects.get_or_create(
+                course=course,
+                order=m_data["order"],
+                title=m_data["title"],
+                defaults={
+                    "description": f"Penjelasan dasar mengenai materi bagian ke-{m_data['order']}.",
+                    "file_type": "pdf"
+                }
+            )
+            
+            if created:
+                # Save dummy file to satisfy FileField
+                filename = f"course_{course.id}_material_{m_data['order']}.pdf"
+                material.file.save(filename, ContentFile(dummy_content))
+                print(f"  - Created Material: {m_data['title']}")
+            else:
+                print(f"  - Material '{m_data['title']}' already exists.")
+
+    print("Success! Materials seeding completed for all courses.")
 
 if __name__ == "__main__":
     # Ensure media directory exists
