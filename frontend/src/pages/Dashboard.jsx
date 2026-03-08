@@ -4,7 +4,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip
 } from "recharts";
-import { Clock, Target, BarChart2, BookOpen, ChevronRight, Send, Brain } from 'lucide-react';
+import { Clock, Target, BarChart2, BookOpen, ChevronRight, Send, Brain, X } from 'lucide-react';
 // Re-bundled to resolve import analysis error
 
 import { useAuth } from '../context/AuthContext';
@@ -30,28 +30,30 @@ const ARCHETYPE_STYLES = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isMascotHovered, setIsMascotHovered] = useState(false);
-  const [isAutoPopupVisible, setIsAutoPopupVisible] = useState(false);
+  const [isMessageVisible, setIsMessageVisible] = useState(false);
   const [hoveredTrait, setHoveredTrait] = useState(null);
 
-  // Auto-show bubble effect
+  // Auto-show bubble effect on first visit
   useEffect(() => {
-    const cyclePopup = () => {
-      setIsAutoPopupVisible(true);
-      setTimeout(() => setIsAutoPopupVisible(false), 5000); // Tampil selama 5 detik
-    };
+    // Check if the message was explicitly closed before
+    const hasClosed = localStorage.getItem('logiai_msg_closed');
 
-    // Muncul pertama kali hampir langsung (delay 500ms agar animasi transition terlihat mulus)
-    const initialTimer = setTimeout(cyclePopup, 500);
-
-    // Lalu muncul secara berkala setiap 15 detik
-    const interval = setInterval(cyclePopup, 15000);
-
-    return () => {
-      clearTimeout(initialTimer);
-      clearInterval(interval);
-    };
+    if (!hasClosed) {
+      // Show for the first time after a short delay
+      const initialTimer = setTimeout(() => setIsMessageVisible(true), 1500);
+      return () => clearTimeout(initialTimer);
+    }
   }, []);
+
+  const handleCloseMessage = (e) => {
+    e.stopPropagation();
+    setIsMessageVisible(false);
+    localStorage.setItem('logiai_msg_closed', 'true');
+  };
+
+  const toggleMessage = () => {
+    setIsMessageVisible(!isMessageVisible);
+  };
 
   // Dynamic Archetype Styles
   const archetypeCode = (user?.archetype_info?.code || 'CT-PAR').split('-').pop();
@@ -133,50 +135,6 @@ export default function Dashboard() {
 
           {/* Weekly Performance Card (Kotak 3) WITH CHATBOT OVERLAY */}
           <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex-1 flex flex-col min-h-[480px] relative">
-            {/* mascot */}
-            <div
-              className="absolute -top-8 -right-4 z-20 animate-bounce-slow cursor-pointer group/mascot"
-              onMouseEnter={() => setIsMascotHovered(true)}
-              onMouseLeave={() => setIsMascotHovered(false)}
-            >
-              <img
-                src={mascotIcon}
-                alt="Mascot"
-                className="w-24 h-24 object-contain drop-shadow-xl"
-              />
-              {/* Sleeping/Thinking Bubble (Always visible when NOT hovered & NOT auto-shown) */}
-              {!(isMascotHovered || isAutoPopupVisible) && (
-                <img
-                  src={bubbleChat}
-                  alt="Bubble Chat"
-                  className="absolute -top-0 -left-6 w-12 object-contain z-30 select-none pointer-events-none drop-shadow-sm animate-pulse"
-                />
-              )}
-
-              {/* LogiAI Interactive Bubble (Visible on HOVER or AUTO-SHOW) */}
-              <div className={`absolute bottom-[70%] right-[70%] mb-0 w-72 bg-[#007AFF] rounded-[32px] p-4 shadow-2xl transition-all duration-300 origin-bottom-right ${(isMascotHovered || isAutoPopupVisible) ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2 pointer-events-none'}`}>
-                <div className="flex gap-3 items-start">
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex-shrink-0 flex items-center justify-center border border-white/30">
-                    <img src={mascotIcon} alt="Avatar" className="w-8 h-8 object-contain" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-bold text-sm mb-1 font-['Outfit']">LogiAI</h3>
-                    <p className="text-white/90 text-[11px] leading-relaxed mb-3">
-                      I noticed you found <b>Belajar Dasar Pseudocode</b> hard. Want a 3 minutes refresher?
-                    </p>
-                    <button
-                      onClick={() => navigate('/dashboard/modules')}
-                      className="bg-white text-[#007AFF] px-4 py-1.5 rounded-full text-[11px] font-bold hover:bg-gray-100 transition-colors shadow-sm cursor-pointer"
-                    >
-                      Let's go!
-                    </button>
-                  </div>
-                </div>
-                {/* Tail */}
-                <div className="absolute -bottom-2 right-8 w-6 h-6 bg-[#007AFF] rotate-45 rounded-sm -z-10"></div>
-              </div>
-            </div>
-
             <h2 className="text-base font-bold text-gray-800 mb-4 tracking-tight">Weekly Performance</h2>
 
             {/* STATS WITH WATERMARKS */}
@@ -424,6 +382,74 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* Floating Chatbot Mascot - Pojok Kanan Bawah */}
+      <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end">
+        {/* Mascot & Bubble Container */}
+        <div
+          className="relative cursor-pointer group animate-bounce-slow"
+          onClick={toggleMessage}
+        >
+          {/* LogiAI Interactive Bubble */}
+          <div
+            className={`absolute bottom-full right-0 mb-4 w-72 bg-[#007AFF] rounded-[32px] p-5 shadow-2xl transition-all duration-300 origin-bottom-right 
+              ${isMessageVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={handleCloseMessage}
+              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex gap-3 items-start">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex-shrink-0 flex items-center justify-center border border-white/30">
+                <img src={mascotIcon} alt="Avatar" className="w-7 h-7 object-contain" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-bold text-sm mb-1 font-['Outfit']">LogiAI</h3>
+                <p className="text-white/90 text-[11px] leading-relaxed mb-3 pr-4">
+                  I noticed you found <b>Belajar Dasar Pseudocode</b> hard. Want a 3 minutes refresher?
+                </p>
+                <button
+                  onClick={() => navigate('/dashboard/modules')}
+                  className="bg-white text-[#007AFF] px-4 py-1.5 rounded-full text-[11px] font-bold hover:bg-gray-100 transition-colors shadow-sm cursor-pointer"
+                >
+                  Let's go!
+                </button>
+              </div>
+            </div>
+            {/* Tail */}
+            <div className="absolute -bottom-2 right-8 w-6 h-6 bg-[#007AFF] rotate-45 rounded-sm -z-10"></div>
+          </div>
+
+          {/* Mascot Image */}
+          <div className="transition-transform hover:scale-105 active:scale-95">
+            <img
+              src={mascotIcon}
+              alt="Mascot"
+              className="w-20 h-20 object-contain drop-shadow-2xl"
+            />
+            {/* Sleeping Bubble (Hanya tampil jika bubble utama tertutup) */}
+            {!isMessageVisible && (
+              <img
+                src={bubbleChat}
+                alt="Bubble Chat"
+                className="absolute -top-1 -left-2 w-10 object-contain z-30 select-none pointer-events-none drop-shadow-sm animate-pulse"
+              />
+            )}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+      `}</style>
 
     </div>
   );
