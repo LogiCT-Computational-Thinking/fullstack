@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -31,7 +31,27 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isMascotHovered, setIsMascotHovered] = useState(false);
+  const [isAutoPopupVisible, setIsAutoPopupVisible] = useState(false);
   const [hoveredTrait, setHoveredTrait] = useState(null);
+
+  // Auto-show bubble effect
+  useEffect(() => {
+    const cyclePopup = () => {
+      setIsAutoPopupVisible(true);
+      setTimeout(() => setIsAutoPopupVisible(false), 5000); // Tampil selama 5 detik
+    };
+
+    // Muncul pertama kali hampir langsung (delay 500ms agar animasi transition terlihat mulus)
+    const initialTimer = setTimeout(cyclePopup, 500);
+
+    // Lalu muncul secara berkala setiap 15 detik
+    const interval = setInterval(cyclePopup, 15000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Dynamic Archetype Styles
   const archetypeCode = (user?.archetype_info?.code || 'CT-PAR').split('-').pop();
@@ -124,8 +144,8 @@ export default function Dashboard() {
                 alt="Mascot"
                 className="w-24 h-24 object-contain drop-shadow-xl"
               />
-              {/* Sleeping/Thinking Bubble (Always visible when NOT hovered) */}
-              {!isMascotHovered && (
+              {/* Sleeping/Thinking Bubble (Always visible when NOT hovered & NOT auto-shown) */}
+              {!(isMascotHovered || isAutoPopupVisible) && (
                 <img
                   src={bubbleChat}
                   alt="Bubble Chat"
@@ -133,8 +153,8 @@ export default function Dashboard() {
                 />
               )}
 
-              {/* LogiAI Interactive Bubble (Visible on HOVER) */}
-              <div className={`absolute bottom-[70%] right-[70%] mb-0 w-72 bg-[#007AFF] rounded-[32px] p-4 shadow-2xl transition-all duration-300 origin-bottom-right ${isMascotHovered ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2 pointer-events-none'}`}>
+              {/* LogiAI Interactive Bubble (Visible on HOVER or AUTO-SHOW) */}
+              <div className={`absolute bottom-[70%] right-[70%] mb-0 w-72 bg-[#007AFF] rounded-[32px] p-4 shadow-2xl transition-all duration-300 origin-bottom-right ${(isMascotHovered || isAutoPopupVisible) ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-2 pointer-events-none'}`}>
                 <div className="flex gap-3 items-start">
                   <div className="w-10 h-10 rounded-full bg-white/20 flex-shrink-0 flex items-center justify-center border border-white/30">
                     <img src={mascotIcon} alt="Avatar" className="w-8 h-8 object-contain" />

@@ -22,9 +22,9 @@ const CARD_THEMES = [
 ];
 
 const TABS = [
+    { id: 'all', label: 'All', countKey: 'all' },
     { id: 'active', label: 'Active Materials', countKey: 'active' },
     { id: 'finished', label: 'Finished', countKey: 'finished' },
-    { id: 'locked', label: 'Locked', countKey: 'locked' },
 ];
 
 // ─── Active Card ──────────────────────────────────────────────────────────────
@@ -39,7 +39,7 @@ function ActiveCard({ course, themeIndex, onClick }) {
         >
             {/* ── Inner card berwarna ── */}
             <div
-                className="relative rounded-[14px] overflow-hidden p-4 flex flex-col gap-3"
+                className="relative rounded-[14px] overflow-hidden p-4 flex flex-col gap-3 flex-1"
                 style={{ background: t.cardBg }}
             >
                 {/* Donat ring pojok kanan atas */}
@@ -69,7 +69,7 @@ function ActiveCard({ course, themeIndex, onClick }) {
                 </div>
 
                 {/* Title */}
-                <h3 className="relative z-10 text-[15px] font-bold text-gray-900 leading-snug">
+                <h3 className="relative z-10 text-[15px] font-bold text-gray-900 leading-snug line-clamp-2 h-[40px]">
                     {course.title}
                 </h3>
 
@@ -81,12 +81,12 @@ function ActiveCard({ course, themeIndex, onClick }) {
                 </div>
 
                 {/* Description */}
-                <p className="relative z-10 text-xs text-gray-500 leading-relaxed line-clamp-2 text-justify">
+                <p className="relative z-10 text-xs text-gray-500 leading-relaxed line-clamp-2 h-[40px] text-justify">
                     {course.description || `Materi pembelajaran mandiri untuk ${course.title} pada Minggu ke-${course.week}.`}
                 </p>
 
                 {/* Progress bar */}
-                <div className="relative z-10 mt-1">
+                <div className="relative z-10 mt-auto">
                     <div className="flex justify-between items-center mb-1.5">
                         <span className="text-[11px] text-gray-500">Progress</span>
                         <span className="text-[11px] font-bold text-gray-800">{course.progress}%</span>
@@ -136,7 +136,7 @@ function LockedCard({ course, onClick }) {
         >
             {/* ── Inner card abu-abu ── */}
             <div
-                className="relative rounded-[14px] overflow-hidden p-4 flex flex-col gap-3"
+                className="relative rounded-[14px] overflow-hidden p-4 flex flex-col gap-3 flex-1"
                 style={{ background: '#efefef' }}
             >
                 {/* Donat ring abu */}
@@ -163,7 +163,7 @@ function LockedCard({ course, onClick }) {
                 </div>
 
                 {/* Title */}
-                <h3 className="relative z-10 text-[15px] font-bold text-gray-700 leading-snug">
+                <h3 className="relative z-10 text-[15px] font-bold text-gray-700 leading-snug line-clamp-2 h-[40px]">
                     {course.title}
                 </h3>
 
@@ -175,12 +175,12 @@ function LockedCard({ course, onClick }) {
                 </div>
 
                 {/* Description */}
-                <p className="relative z-10 text-xs text-gray-500 leading-relaxed line-clamp-2 text-justify">
+                <p className="relative z-10 text-xs text-gray-500 leading-relaxed line-clamp-2 h-[40px] text-justify">
                     {course.description || `Materi pembelajaran mandiri untuk ${course.title} pada Minggu ke-${course.week}.`}
                 </p>
 
                 {/* Prerequisite */}
-                <div className="relative z-10 mt-1">
+                <div className="relative z-10 mt-auto">
                     <p className="text-xs text-gray-500 leading-relaxed">
                         Selesaikan{' '}
                         <span className="font-bold text-gray-700">
@@ -620,7 +620,7 @@ function CourseModal({ course, onClose }) {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function Modules() {
-    const [activeTab, setActiveTab] = useState('active');
+    const [activeTab, setActiveTab] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState('grid');
     const [selectedCourse, setSelectedCourse] = useState(null);
@@ -661,12 +661,12 @@ export default function Modules() {
 
 
     const tabCounts = {
+        all: courses.length,
         active: courses.filter(c => c.status === 'active').length,
         finished: courses.filter(c => c.status === 'finished').length,
-        locked: courses.filter(c => c.status === 'locked').length,
     };
 
-    let displayed = courses.filter(c => c.status === activeTab);
+    let displayed = activeTab === 'all' ? courses : courses.filter(c => c.status === activeTab);
     if (searchQuery) {
         displayed = displayed.filter(c =>
             c.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -743,7 +743,7 @@ export default function Modules() {
                     <p className="font-semibold">Tidak ada course ditemukan</p>
                 </div>
             ) : (
-                <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 max-w-2xl'}`}>
+                <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 w-full'}`}>
                     {displayed.map(course => {
                         if (course.status === 'active') {
                             const idx = activeCardIdx++;
