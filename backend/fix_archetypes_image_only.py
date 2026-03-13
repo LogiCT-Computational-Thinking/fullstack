@@ -5,7 +5,7 @@ Hanya gunakan update_fields agar field lain (description, dll.) tidak tersentuh.
 Run: python fix_archetypes_image_only.py
 """
 import django, os
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
 from core.models import ProfilingArchetype

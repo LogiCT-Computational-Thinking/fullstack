@@ -3,7 +3,7 @@ import django
 import json
 
 # Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
 from core.models import Quiz, QuizQuestion, Course, Material
