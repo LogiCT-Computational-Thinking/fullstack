@@ -129,8 +129,8 @@ export default function ProfilingResult({ data }) {
         >
             {/* Page Title */}
             <h1 className="text-3xl font-black text-gray-900 mb-8 ml-2">
-                Your Cognitive Profile is..
-            </h1>
+                    Your Cognitive Profile is..
+                </h1>
 
             {/* TOP SECTION: Profile Card + Cognitive Traits Card */}
             <div className="w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 mb-8">

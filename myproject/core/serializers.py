@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Course, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass, Material
+from .models import User, Course, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass, Material, QuizResult, QuizResponse
 from django.contrib.auth.hashers import make_password
 
 
@@ -263,3 +263,23 @@ class UpdateStudentInfoSerializer(serializers.ModelSerializer):
         model = User
         fields = ['first_name', 'last_name', 'birth_date', 'gender', 'student_class', 'student_id']
 
+class QuizResultSerializer(serializers.ModelSerializer):
+    user_name = serializers.ReadOnlyField(source='user.name')
+    user_avatar = serializers.ReadOnlyField(source='user.profilePicture')
+    
+    class Meta:
+        model = QuizResult
+        fields = [
+            'id', 'user', 'user_name', 'user_avatar', 'quiz', 
+            'score', 'total_score', 'percentage', 'passed', 
+            'time_taken', 'points', 'completed_at'
+        ]
+
+class QuizSubmitResponseSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField()
+    answer = serializers.CharField()
+    time_taken = serializers.IntegerField(default=0)
+
+class QuizSubmissionSerializer(serializers.Serializer):
+    time_taken = serializers.IntegerField() # in seconds
+    responses = QuizSubmitResponseSerializer(many=True)

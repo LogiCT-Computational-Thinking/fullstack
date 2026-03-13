@@ -125,6 +125,25 @@ const authService = {
     }
   },
 
+  // Upload profile photo
+  uploadProfilePhoto: async (formData) => {
+    try {
+      const response = await api.post('/auth/profile/upload-photo/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
   // Check if user is authenticated
   isAuthenticated: () => {
     return !!localStorage.getItem('access_token');

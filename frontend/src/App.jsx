@@ -6,6 +6,8 @@ import Login from './pages/Login'
 import AdminLogin from './pages/AdminLogin'
 import Register from './pages/Register'
 import Quiz from './pages/Quiz'
+import QuizIntro from './pages/QuizIntro'
+import QuizResult from './pages/QuizResult'
 import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import ProfilingQuiz from './pages/ProfilingQuiz'
@@ -41,6 +43,8 @@ function DashboardLayout() {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard', inSidebar: true },
     { id: 'modules', label: 'Material', icon: BookOpen, path: '/dashboard/modules', title: 'Material', inSidebar: true },
     { id: 'quiz-bank', label: 'Exercise', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Exercise', inSidebar: true },
+    { id: 'quiz-intro', label: 'Material', icon: BookOpen, path: '/dashboard/quiz', title: 'Weekly Challenge', inSidebar: false },
+    { id: 'quiz-result', label: 'Material', icon: BookOpen, path: '/dashboard/quiz-result', title: 'Quiz Result', inSidebar: false },
     { id: 'profile-display', label: 'Profile', icon: User, path: '/dashboard/profile-display', title: 'My CT Profile', inSidebar: false },
     { id: 'settings', label: 'Settings', icon: SettingsIcon, path: '/dashboard/settings', title: 'Settings', inSidebar: false }
   ];
@@ -69,7 +73,10 @@ function DashboardLayout() {
   };
 
   // Get current page title
-  const currentPage = allNavItems.find(item => item.path === location.pathname) || allNavItems[0];
+  const currentPage = allNavItems.find(item =>
+    location.pathname === item.path ||
+    (item.path !== '/dashboard' && location.pathname.startsWith(item.path + '/'))
+  ) || allNavItems[0];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -91,7 +98,11 @@ function DashboardLayout() {
         <nav className="p-4">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive =
+              location.pathname === item.path ||
+              (item.id === 'modules' && (
+                location.pathname.startsWith('/dashboard/quiz/')
+              ));
 
             return (
               <Link
@@ -141,9 +152,9 @@ function DashboardLayout() {
                   className="flex items-center gap-3 p-1 pl-3 pr-1 rounded-full hover:bg-gray-50 transition-all"
                 >
                   <span className="text-sm font-bold text-gray-700 font-['Outfit']">{user?.name || 'User LogiCT'}</span>
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 bg-blue-50 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100 bg-blue-50 flex items-center justify-center shadow-inner">
                     <img
-                      src="/images/chatbot.png"
+                      src={user?.profilePicture || "/images/chatbot.png"}
                       alt="Avatar"
                       className="w-full h-full object-cover"
                       onError={(e) => { e.target.src = "/images/welkam_atas.png"; }}
@@ -203,6 +214,8 @@ function DashboardLayout() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/modules" element={<Modules />} />
+            <Route path="/quiz/:courseId" element={<QuizIntro />} />
+            <Route path="/quiz/:courseId/result" element={<QuizResult />} />
             <Route path="/quiz-bank" element={<QuizBank />} />
             <Route path="/profile-display" element={<ProfilingResult />} />
             <Route path="/settings" element={<Settings />} />
@@ -224,7 +237,7 @@ function App() {
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
-        <Route path="/quiz" element={<Quiz />} />
+        <Route path="/quiz/:courseId" element={<Quiz />} />
         <Route path="/profiling-quiz" element={<ProfilingQuiz />} />
 
         {/* Dashboard Routes - With Layout */}

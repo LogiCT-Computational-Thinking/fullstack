@@ -222,6 +222,8 @@ class PedagogyLevel(models.Model):
 # =========================================================
 class Quiz(models.Model):
     course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name='quiz')
+    deadline = models.DateTimeField(null=True, blank=True, help_text="Batas waktu pengerjaan quiz")
+    time_limit = models.IntegerField(default=1800, help_text="Batas waktu dalam detik (default 30 menit)")
     createdDate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -274,11 +276,13 @@ class QuizQuestion(models.Model):
 
 
 class Feedback(models.Model):
-    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='feedbacks')
-    feedback = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks', null=True, blank=True)
+    question = models.ForeignKey(QuizQuestion, on_delete=models.CASCADE, related_name='feedbacks', null=True, blank=True)
+    feedback_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Feedback {self.id} for {self.quiz.course.title}"
+        return f"Feedback for {self.user.name if self.user else 'Unknown'} on Q{self.question.id if self.question else 'Unknown'}"
 
 
 class Hints(models.Model):
@@ -295,6 +299,7 @@ class QuizResponse(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_responses')
     userAns = models.TextField(blank=True, null=True)
     is_correct = models.BooleanField(default=False)          # Apakah jawaban benar
+    time_taken = models.IntegerField(default=0, help_text="Waktu pengerjaan soal dalam detik")
     timestamp = models.DateTimeField(auto_now_add=True)
     feedback = models.ForeignKey(Feedback, on_delete=models.SET_NULL, null=True, blank=True)
     hint = models.ForeignKey(Hints, on_delete=models.SET_NULL, null=True, blank=True)
@@ -306,11 +311,39 @@ class QuizResponse(models.Model):
 class QuizResult(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_results')
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='results')
-    score = models.FloatField(default=0.0)           # Nilai mentah, misal: 80.0
-    total_score = models.FloatField(default=0.0)     # Skor maksimum yang mungkin
-    percentage = models.FloatField(default=0.0)      # Persentase, misal: 85.5
+    score = models.FloatField(default=0.0)           # Nilai mentah
+    total_score = models.FloatField(default=0.0)     # Skor maksimum
+    percentage = models.FloatField(default=0.0)      # Persentase
     passed = models.BooleanField(default=False)      # Lulus atau tidak
+    time_taken = models.IntegerField(default=0, help_text="Waktu pengerjaan dalam detik")
+    points = models.FloatField(default=0.0, help_text="Skor gamifikasi (untuk leaderboard)")
     completed_at = models.DateTimeField(auto_now_add=True)
+
+    def calculate_points(self):
+        """
+        Hitung poin leaderboard:
+        1. Skor Dasar: persentase * 10 (Max 1000)
+        2. Bonus Kecepatan: (time_limit - time_taken) * 0.5 (Jika cepat)
+        3. Bonus Deadline: (deadline - completed_at) * 0.001 (Jika dikerjakan jauh sebelum deadline)
+        """
+        base_points = self.percentage * 10
+        
+        # Bonus Kecepatan (Max 500 poin)
+        speed_bonus = 0
+        if self.time_taken < self.quiz.time_limit:
+            speed_bonus = (self.quiz.time_limit - self.time_taken) * 0.5
+            speed_bonus = min(speed_bonus, 500)
+
+        # Bonus Deadline (Semakin awal dari deadline, semakin tinggi)
+        deadline_bonus = 0
+        if self.quiz.deadline:
+            time_diff = (self.quiz.deadline - self.completed_at).total_seconds()
+            if time_diff > 0:
+                deadline_bonus = time_diff * 0.0001 # 1 poin per jam kira-kira
+                deadline_bonus = min(deadline_bonus, 500) # Cap bonus deadline
+
+        self.points = round(max(0, base_points + speed_bonus + deadline_bonus), 2)
+        return self.points
 
     class Meta:
         unique_together = ('user', 'quiz')   # 1 user hanya punya 1 hasil per quiz
@@ -389,3 +422,64 @@ class MaterialProgress(models.Model):
 
     def __str__(self):
         return f"{self.user.name} ✓ {self.material.title}"
+
+
+# =========================================================
+# 9️⃣ AI EXERCISE & CHATBOT HISTORY
+# =========================================================
+
+class ExerciseSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercise_sessions')
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True)
+    started_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Session {self.id} for {self.user.name}"
+
+
+class ChatMessage(models.Model):
+    ROLE_CHOICES = [
+        ('user', 'User'),
+        ('assistant', 'Assistant'),
+    ]
+    session = models.ForeignKey(ExerciseSession, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.role} in Session {self.session.id}"
+
+
+class ExerciseQuestion(models.Model):
+    session = models.ForeignKey(ExerciseSession, on_delete=models.CASCADE, related_name='questions')
+    question_text = models.TextField()
+    options = models.JSONField(default=list, blank=True)
+    correctAns = models.TextField()
+    explanation = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"AI Question for Session {self.session.id}"
+
+
+class ExerciseHint(models.Model):
+    question = models.ForeignKey(ExerciseQuestion, on_delete=models.CASCADE, related_name='hints')
+    hint_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Hint for Question {self.question.id}"
+
+
+class ExerciseResponse(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercise_responses')
+    question = models.ForeignKey(ExerciseQuestion, on_delete=models.CASCADE, related_name='responses')
+    userAns = models.TextField()
+    is_correct = models.BooleanField(default=False)
+    feedback_from_llm = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Response by {self.user.name} to Q{self.question.id}"

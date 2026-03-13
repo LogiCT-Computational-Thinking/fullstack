@@ -25,7 +25,9 @@ from .serializers import (
     QuizQuestionSerializer,
     ProfilingSubmissionSerializer,
     UpdateStudentInfoSerializer,
-    MaterialSerializer
+    MaterialSerializer,
+    QuizResultSerializer,
+    QuizSubmissionSerializer
 )
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -246,8 +248,8 @@ def google_auth_view(request):
         
         print(f"User {'created' if created else 'found'}: {user.email}")
         
-        # Update profile picture if changed
-        if not created and picture and user.profilePicture != picture:
+        # Update profile picture if not set
+        if not created and picture and not user.profilePicture:
             user.profilePicture = picture
             user.save()
         
@@ -326,9 +328,9 @@ def google_admin_auth_view(request):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # 4. Update foto profil jika berubah
+        # 4. Update foto profil jika belum ada
         picture = idinfo.get('picture')
-        if picture and user.profilePicture != picture:
+        if picture and not user.profilePicture:
             user.profilePicture = picture
             user.save()
 
@@ -400,6 +402,45 @@ def update_profile_view(request):
         }, status=status.HTTP_200_OK)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_profile_picture_view(request):
+    """
+    Upload profile picture file
+    POST /api/auth/profile/upload-photo/
+    """
+    if 'photo' not in request.FILES:
+        return Response({'error': 'No photo provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    photo = request.FILES['photo']
+    user = request.user
+    
+    # Create path: media/avatars/avatar_user_id.ext
+    ext = os.path.splitext(photo.name)[1]
+    filename = f"avatar_{user.id}{ext}"
+    relative_path = os.path.join('avatars', filename)
+    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+    
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    
+    # Save file
+    with open(full_path, 'wb+') as destination:
+        for chunk in photo.chunks():
+            destination.write(chunk)
+            
+    # Update user model with URL
+    photo_url = request.build_absolute_uri(settings.MEDIA_URL + relative_path)
+    user.profilePicture = photo_url
+    user.save()
+    
+    return Response({
+        'message': 'Profile picture uploaded successfully',
+        'url': photo_url,
+        'user': UserSerializer(user).data
+    }, status=status.HTTP_200_OK)
+
 
 
 @api_view(['POST'])
@@ -1138,12 +1179,161 @@ def mark_quiz_complete(request, course_pk):
         quiz=quiz_obj,
         defaults={'percentage': 100, 'passed': True}
     )
+    
+    if created or qresult.points == 0:
+        qresult.calculate_points()
+        qresult.save()
 
     return Response({
         'course_id': course.id,
         'quiz_id': quiz_obj.id,
         'completed_at': qresult.completed_at,
         'already_done': not created
+    })
+
+
+@api_view(['GET'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_course_quiz(request, course_pk):
+    """
+    GET /api/courses/<course_pk>/quiz/
+    Returns all questions for the quiz associated with this course.
+    """
+    from .models import Course, Quiz, QuizQuestion
+    from .serializers import QuizQuestionSerializer
+
+    try:
+        course = Course.objects.get(pk=course_pk)
+        quiz = Quiz.objects.get(course=course)
+        questions = QuizQuestion.objects.filter(quiz=quiz, status='APPROVED').order_by('id')
+        
+        # Jika tidak ada yang approved, coba ambil semua if admin/teacher, 
+        # tapi untuk student hanya yang APPROVED.
+        if not questions.exists() and request.user.role in ['admin', 'teacher']:
+             questions = QuizQuestion.objects.filter(quiz=quiz).order_by('id')
+
+        serializer = QuizQuestionSerializer(questions, many=True)
+        return Response({
+            "course": course.title,
+            "questions": serializer.data
+        })
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Quiz.DoesNotExist:
+        return Response({"error": "Quiz not found for this course"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def submit_quiz_answers(request, course_pk):
+    """
+    POST /api/courses/<course_pk>/quiz-submit/
+    Submit answers for a quiz, calculate score, and update leaderboard points.
+    """
+    from .models import Course, Quiz, QuizQuestion, QuizResult, QuizResponse
+    
+    try:
+        course = Course.objects.get(pk=course_pk)
+        quiz = Quiz.objects.get(course=course)
+    except (Course.DoesNotExist, Quiz.DoesNotExist):
+        return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = QuizSubmissionSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    time_taken = serializer.validated_data.get('time_taken', 0)
+    user_responses = serializer.validated_data.get('responses', [])
+    
+    # Calculate score
+    questions = QuizQuestion.objects.filter(quiz=quiz)
+    total_questions = questions.count()
+    if total_questions == 0:
+        return Response({"error": "Quiz has no questions"}, status=status.HTTP_400_BAD_REQUEST)
+
+    correct_count = 0
+    responses_to_save = []
+
+    for resp in user_responses:
+        q_id = resp.get('question_id')
+        user_ans = resp.get('answer', '')
+        
+        try:
+            question = questions.get(id=q_id)
+            is_correct = str(user_ans).strip().lower() == str(question.correctAns).strip().lower()
+            if is_correct:
+                correct_count += 1
+            
+            responses_to_save.append(QuizResponse(
+                quiz=quiz,
+                question=question,
+                user=request.user,
+                userAns=user_ans,
+                is_correct=is_correct,
+                time_taken=resp.get('time_taken', 0)
+            ))
+        except QuizQuestion.DoesNotExist:
+            continue
+
+    # Bulk create responses
+    QuizResponse.objects.filter(user=request.user, quiz=quiz).delete() # Cleanup old attempts
+    QuizResponse.objects.bulk_create(responses_to_save)
+
+    percentage = (correct_count / total_questions) * 100
+    passed = percentage >= 60 # Default passing grade
+
+    # Update or create result
+    qresult, created = QuizResult.objects.update_or_create(
+        user=request.user,
+        quiz=quiz,
+        defaults={
+            'score': correct_count,
+            'total_score': total_questions,
+            'percentage': percentage,
+            'passed': passed,
+            'time_taken': time_taken,
+        }
+    )
+    
+    # Calculate gamification points
+    qresult.calculate_points()
+    qresult.save()
+
+    return Response({
+        'id': qresult.id,
+        'score': correct_count,
+        'total_questions': total_questions,
+        'percentage': percentage,
+        'points': qresult.points,
+        'passed': passed,
+        'completed_at': qresult.completed_at
+    })
+
+
+@api_view(['GET'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_quiz_leaderboard(request, course_pk):
+    """
+    GET /api/courses/<course_pk>/leaderboard/
+    Returns top students for a specific quiz.
+    """
+    from .models import Quiz, QuizResult
+    
+    try:
+        quiz = Quiz.objects.get(course_id=course_pk)
+    except Quiz.DoesNotExist:
+        return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Get top 10 results by points
+    results = QuizResult.objects.filter(quiz=quiz).order_by('-points', 'time_taken')[:10]
+    serializer = QuizResultSerializer(results, many=True)
+    
+    return Response({
+        "quiz_title": quiz.course.title,
+        "leaderboard": serializer.data
     })
 
 

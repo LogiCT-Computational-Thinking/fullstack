@@ -75,6 +75,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const data = await authService.getProfile();
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+      return data;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+    }
+  };
+
   const forgotPassword = async (email) => {
     try {
       return await authService.forgotPassword(email);
@@ -116,6 +127,7 @@ export const AuthProvider = ({ children }) => {
     googleAdminLogin,
     logout,
     updateProfile,
+    refreshUser,
     forgotPassword,
     resetPassword,
     verifyOTP,

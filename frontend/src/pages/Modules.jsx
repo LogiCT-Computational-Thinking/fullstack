@@ -637,7 +637,7 @@ function CourseModal({ course, onClose }) {
                     {/* Quiz button */}
                     <button
                         disabled={isLocked}
-                        onClick={() => !isLocked && setShowAsahOtak(true)}
+                        onClick={() => !isLocked && navigate(`/dashboard/quiz/${course.id}`, { state: { courseTitle: course.title, courseWeek: course.week } })}
                         className={`group flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full
                             ${isLocked
                                 ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
@@ -707,25 +707,47 @@ export default function Modules() {
     }, []);
 
     const fetchCourses = async () => {
-        try {
-            // Ambil SEMUA course (active + inactive) karena frontend perlu keduanya untuk tabs
-            // Endpoint /courses/ hanya return active, jadi kita pakai /admin/courses/
-            // Tapi untuk student, kita tetap pakai /courses/ dan tampilkan is_active dari response
-            const res = await api.get('/courses/');
-            const enriched = res.data.map((course) => ({
-                ...course,
-                // Status: locked jika is_active false, finished jika progress 100, else active
-                status: !course.is_active ? 'locked' : (course.progress === 100 ? 'finished' : 'active'),
-                // progress sekarang real dari backend
-                progress: course.progress || 0,
-                modules: course.materials_count ?? course.materials?.length ?? 0,
-            }));
-            setCourses(enriched);
-        } catch (err) {
-            console.error('Failed to fetch courses:', err);
-        } finally {
-            setLoading(false);
-        }
+        // ── MOCK DATA (untuk preview frontend, hapus/comment blok ini saat connect BE) ──
+        const MOCK_COURSES = [
+            { id: 1,  week: 1,  title: 'Pengantar Computational Thinking', description: 'Memahami dasar-dasar berpikir komputasional dan penerapannya dalam kehidupan sehari-hari.', is_active: true,  progress: 100, materials: [{ id: 101, title: 'Slide Pengantar CT', file_type: 'pptx', file: null }, { id: 102, title: 'Modul Pengantar CT', file_type: 'pdf', file: null }] },
+            { id: 2,  week: 2,  title: 'Dekomposisi Masalah', description: 'Teknik memecah masalah kompleks menjadi bagian-bagian yang lebih kecil dan mudah diselesaikan.', is_active: true,  progress: 75,  materials: [{ id: 201, title: 'Slide Dekomposisi', file_type: 'pptx', file: null }, { id: 202, title: 'Worksheet Dekomposisi', file_type: 'pdf', file: null }] },
+            { id: 3,  week: 3,  title: 'Pengenalan Pola (Pattern Recognition)', description: 'Mengidentifikasi pola dan kesamaan antar masalah untuk menemukan solusi yang efisien.', is_active: true,  progress: 40,  materials: [{ id: 301, title: 'Slide Pattern Recognition', file_type: 'pptx', file: null }, { id: 302, title: 'Latihan Soal', file_type: 'pdf', file: null }] },
+            { id: 4,  week: 4,  title: 'Abstraksi', description: 'Menyederhanakan masalah dengan fokus pada informasi yang relevan dan mengabaikan detail yang tidak penting.', is_active: true,  progress: 0,   materials: [{ id: 401, title: 'Slide Abstraksi', file_type: 'pptx', file: null }] },
+            { id: 5,  week: 5,  title: 'Algoritma & Flowchart', description: 'Menyusun langkah-langkah solusi secara terurut dan memvisualisasikannya dalam bentuk diagram alur.', is_active: false, progress: 0,   materials: [{ id: 501, title: 'Slide Algoritma', file_type: 'pptx', file: null }, { id: 502, title: 'Template Flowchart', file_type: 'pdf', file: null }] },
+            { id: 6,  week: 6,  title: 'Pseudocode & Coding Dasar', description: 'Menulis pseudocode sebagai jembatan antara algoritma dan kode program yang sesungguhnya.', is_active: false, progress: 0,   materials: [{ id: 601, title: 'Slide Pseudocode', file_type: 'pptx', file: null }] },
+            { id: 7,  week: 7,  title: 'Struktur Data Dasar', description: 'Mengenal array, list, dan struktur data sederhana untuk menyimpan dan mengolah kumpulan data.', is_active: false, progress: 0,   materials: [{ id: 701, title: 'Slide Struktur Data', file_type: 'pptx', file: null }, { id: 702, title: 'Modul Latihan', file_type: 'pdf', file: null }] },
+            { id: 8,  week: 8,  title: 'Perulangan & Kondisi', description: 'Memahami konsep loop dan percabangan sebagai kontrol alur program yang fundamental.', is_active: false, progress: 0,   materials: [{ id: 801, title: 'Slide Perulangan', file_type: 'pptx', file: null }] },
+            { id: 9,  week: 9,  title: 'Fungsi & Modularisasi', description: 'Memecah program menjadi fungsi-fungsi kecil yang reusable dan mudah dipelihara.', is_active: false, progress: 0,   materials: [{ id: 901, title: 'Slide Fungsi', file_type: 'pptx', file: null }, { id: 902, title: 'Latihan Fungsi', file_type: 'pdf', file: null }] },
+            { id: 10, week: 10, title: 'Debugging & Problem Solving', description: 'Teknik menemukan dan memperbaiki kesalahan dalam program secara sistematis dan efektif.', is_active: false, progress: 0,   materials: [{ id: 1001, title: 'Slide Debugging', file_type: 'pptx', file: null }] },
+            { id: 11, week: 11, title: 'Kompleksitas Algoritma', description: 'Mengevaluasi efisiensi algoritma menggunakan notasi Big-O dan analisis waktu eksekusi.', is_active: false, progress: 0,   materials: [{ id: 1101, title: 'Slide Kompleksitas', file_type: 'pptx', file: null }, { id: 1102, title: 'Worksheet Analisis', file_type: 'pdf', file: null }] },
+            { id: 12, week: 12, title: 'Rekursi', description: 'Memahami konsep fungsi yang memanggil dirinya sendiri dan penerapannya dalam pemecahan masalah.', is_active: false, progress: 0,   materials: [{ id: 1201, title: 'Slide Rekursi', file_type: 'pptx', file: null }] },
+            { id: 13, week: 13, title: 'CT dalam Kehidupan Nyata', description: 'Penerapan computational thinking dalam berbagai bidang seperti sains, bisnis, dan seni.', is_active: false, progress: 0,   materials: [{ id: 1301, title: 'Slide CT Nyata', file_type: 'pptx', file: null }, { id: 1302, title: 'Case Study', file_type: 'pdf', file: null }] },
+            { id: 14, week: 14, title: 'Proyek Akhir & Presentasi', description: 'Mengintegrasikan seluruh konsep CT dalam proyek nyata dan mempresentasikan hasilnya.', is_active: false, progress: 0,   materials: [{ id: 1401, title: 'Slide Proyek Akhir', file_type: 'pptx', file: null }, { id: 1402, title: 'Template Laporan', file_type: 'pdf', file: null }] },
+        ];
+        const enriched = MOCK_COURSES.map((course) => ({
+            ...course,
+            status: !course.is_active ? 'locked' : (course.progress === 100 ? 'finished' : 'active'),
+            modules: course.materials?.length ?? 0,
+            duration: 60,
+        }));
+        setCourses(enriched);
+        setLoading(false);
+
+        // ── AKTIFKAN INI saat connect ke backend (hapus mock data di atas) ──
+        // try {
+        //     const res = await api.get('/courses/');
+        //     const enriched = res.data.map((course) => ({
+        //         ...course,
+        //         status: !course.is_active ? 'locked' : (course.progress === 100 ? 'finished' : 'active'),
+        //         progress: course.progress || 0,
+        //         modules: course.materials_count ?? course.materials?.length ?? 0,
+        //     }));
+        //     setCourses(enriched);
+        // } catch (err) {
+        //     console.error('Failed to fetch courses:', err);
+        // } finally {
+        //     setLoading(false);
+        // }
     };
 
     // Ekspos fetchCourses ke window agar bisa dipanggil dari child component/modal jika perlu

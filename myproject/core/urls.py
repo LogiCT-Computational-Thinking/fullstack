@@ -22,6 +22,7 @@ urlpatterns = [
     # User profile endpoints
     path('auth/profile/', views.user_profile_view, name='user-profile'),
     path('auth/profile/update/', views.update_profile_view, name='update-profile'),
+    path('auth/profile/upload-photo/', views.upload_profile_picture_view, name='upload-photo'),
     path('auth/profiling/student-info/', views.update_student_info_view, name='update-student-info'),
     path('auth/student-classes/', views.get_student_classes, name='student-classes'),
     
@@ -43,7 +44,10 @@ urlpatterns = [
     path('materials/', views.get_materials_view, name='get-materials'),
     path('materials/<int:material_pk>/complete/', views.mark_material_complete, name='mark-material-complete'),
     path('courses/', views.get_courses_view, name='get-courses'),
+    path('courses/<int:course_pk>/quiz/', views.get_course_quiz, name='get-course-quiz'),
+    path('courses/<int:course_pk>/quiz-submit/', views.submit_quiz_answers, name='submit-quiz-answers'),
     path('courses/<int:course_pk>/quiz-complete/', views.mark_quiz_complete, name='mark-quiz-complete'),
+    path('courses/<int:course_pk>/leaderboard/', views.get_quiz_leaderboard, name='quiz-leaderboard'),
 
     # Question Bank Management (Admin)
     path('admin/qbank/', views.get_admin_qbank, name='admin-qbank'),
