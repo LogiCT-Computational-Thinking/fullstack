@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import views_chat
+from . import views_users
 
 app_name = 'core'
 
@@ -63,6 +64,10 @@ urlpatterns = [
 
     # Update file on existing material (inline upload)
     path('admin/materials/<int:pk>/', views.admin_update_material, name='admin-update-material'),
+
+    # Admin User Management
+    path('admin/users/', views_users.admin_user_management, name='admin-users'),
+    path('admin/users/<int:pk>/', views_users.admin_user_detail, name='admin-user-detail'),
 
     # AI Chat History (Exercise Sessions)
     path('exercise/sessions/', views_chat.session_list_create, name='session-list-create'),

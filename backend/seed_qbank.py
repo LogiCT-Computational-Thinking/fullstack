@@ -9,133 +9,208 @@ django.setup()
 from core.models import Quiz, QuizQuestion, Course, Material
 
 def seed_qbank():
-    print("Seeding Question Bank with dummy data...")
+    print("Seeding Question Bank with 15 questions...")
     
     # Clear existing dummy questions to avoid mess
     QuizQuestion.objects.filter(category='GENERAL').delete()
     
-    # Get a course and quiz to attach questions to
-    course = Course.objects.first()
-    if not course:
+    # Get a course and quiz as fallback
+    first_course = Course.objects.first()
+    if not first_course:
         print("No course found. Please run existing seed scripts first.")
         return
     
-    quiz, created = Quiz.objects.get_or_create(course=course)
+    default_quiz, _ = Quiz.objects.get_or_create(course=first_course)
     
-    # Get some materials to link to
+    # Get materials to link to specific courses
     materials = {m.course.week: m for m in Material.objects.all()}
     
     dummy_questions = [
+        # 1. Week 1
         {
-            "question": "Beni has to fill 9 squares in a grid using 3 types of stickers. Each sticker contains one picture. The rule is: in every row and every column, no sticker may be repeated.",
-            "type": "short_answer",
+            "question": "Apa itu Computational Thinking (CT)?",
+            "type": "multiple_choice",
             "category": "GENERAL",
             "level": 1,
-            "weight_abstraction": 100.0,
-            "status": "PENDING",
-            "correctAns": "3 types (e.g. Robot, Apple, Sun)",
-            "material": materials.get(1)
+            "weight_abstraction": 25.0, "weight_decomposition": 25.0, "weight_pattern": 25.0, "weight_algorithm": 25.0,
+            "status": "APPROVED",
+            "option": ["Cara berpikir seperti komputer", "Cara memecahkan masalah kompleks secara sistematis", "Belajar coding bahasa Python", "Membongkar pasang komponen komputer"],
+            "correctAns": "Cara memecahkan masalah kompleks secara sistematis",
+            "week_hint": 1
         },
+        # 2. Week 1
         {
-            "question": "Explain the concept of Decomposition in Computational Thinking with an example from daily life.",
-            "type": "short_answer",
+            "question": "Manakah yang merupakan 4 pilar utama dalam Computational Thinking?",
+            "type": "multi_select",
             "category": "GENERAL",
-            "level": 3,
+            "level": 1,
             "weight_decomposition": 100.0,
-            "status": "PENDING",
-            "correctAns": "Breaking down a recipe into individual steps.",
-            "material": materials.get(2)
+            "status": "APPROVED",
+            "option": ["Dekomposisi", "Abstraksi", "Koding", "Pengenalan Pola", "Algoritma", "Hardware"],
+            "correctAns": "Dekomposisi|Abstraksi|Pengenalan Pola|Algoritma",
+            "week_hint": 1
         },
+        # 3. Week 2
         {
-            "question": "What is the result of the following pattern recognition task? [Triangle, Square, Pentagon, ...]",
+            "question": "Jika Anda ingin membuat aplikasi restoran raksasa, langkah pertama adalah membaginya menjadi modul: Pemesanan, Pembayaran, dan Dapur. Teknik ini disebut...",
+            "type": "multiple_choice",
+            "category": "GENERAL",
+            "level": 2,
+            "weight_decomposition": 100.0,
+            "status": "APPROVED",
+            "option": ["Abstraksi", "Dekomposisi", "Iterasi", "Debugging"],
+            "correctAns": "Dekomposisi",
+            "week_hint": 2
+        },
+        # 4. Week 3
+        {
+            "question": "Lanjutkan pola berikut: 1, 4, 9, 16, ...",
             "type": "short_answer",
             "category": "GENERAL",
             "level": 2,
             "weight_pattern": 100.0,
-            "status": "PENDING",
-            "correctAns": "Hexagon (6 sides)",
-            "material": materials.get(3)
+            "status": "APPROVED",
+            "correctAns": "25",
+            "week_hint": 3
         },
+        # 5. Week 4
         {
-            "question": "Design a simple algorithm to make a cup of tea. List at least 5 steps.",
-            "type": "short_answer",
+            "question": "Menghilangkan detail yang tidak relevan dan fokus pada informasi penting disebut...",
+            "type": "multiple_choice",
+            "category": "GENERAL",
+            "level": 2,
+            "weight_abstraction": 100.0,
+            "status": "APPROVED",
+            "option": ["Pattern Recognition", "Abstraction", "Algorithm", "Decomposition"],
+            "correctAns": "Abstraction",
+            "week_hint": 4
+        },
+        # 6. Week 5
+        {
+            "question": "Langkah-langkah instruksi yang terurut untuk menyelesaikan masalah disebut...",
+            "type": "multiple_choice",
             "category": "GENERAL",
             "level": 1,
             "weight_algorithm": 100.0,
-            "status": "PENDING",
-            "correctAns": "1. Boil water, 2. Put tea bag in cup, 3. Pour water, 4. Wait, 5. Enjoy.",
-            "material": materials.get(5)
+            "status": "APPROVED",
+            "option": ["Algoritma", "Logika", "Aritmatika", "Data"],
+            "correctAns": "Algoritma",
+            "week_hint": 5
         },
+        # 7. Week 5
         {
-            "question": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae risus justo. Sed nec ultricies ipsum. Praesent sit amet sapien at nibh dictum faucibus.",
-            "type": "short_answer",
-            "category": "GENERAL",
-            "level": 4,
-            "weight_abstraction": 50.0,
-            "weight_decomposition": 50.0,
-            "status": "PENDING",
-            "correctAns": "Placeholder Answer",
-            "material": materials.get(4)
-        },
-        {
-            "question": "If an algorithm takes 2 minutes for 10 items, how long will it take for 50 items if the growth is linear?",
-            "type": "short_answer",
+            "question": "Simbol 'Belah Ketupat' dalam flowchart biasanya digunakan untuk...",
+            "type": "multiple_choice",
             "category": "GENERAL",
             "level": 2,
             "weight_algorithm": 100.0,
             "status": "APPROVED",
-            "correctAns": "10 minutes",
-            "material": materials.get(5)
+            "option": ["Mulai/Selesai", "Proses", "Input/Output", "Keputusan (Decision)"],
+            "correctAns": "Keputusan (Decision)",
+            "week_hint": 5
         },
+        # 8. Week 8
         {
-            "question": "Analyze the following set of data and find the recurring pattern: 2, 4, 8, 16, 32...",
-            "type": "short_answer",
+            "question": "Salah satu bentuk perulangan dalam pemrograman adalah 'while loop'.",
+            "type": "true_false",
+            "category": "GENERAL",
+            "level": 1,
+            "weight_algorithm": 100.0,
+            "status": "APPROVED",
+            "correctAns": "True",
+            "week_hint": 8
+        },
+        # 9. Week 10
+        {
+            "question": "Apa langkah pertama yang sebaiknya dilakukan saat menemukan 'bug' dalam program?",
+            "type": "multiple_choice",
             "category": "GENERAL",
             "level": 3,
-            "weight_pattern": 100.0,
-            "status": "REJECTED",
-            "admin_feedback": "Terlalu mudah untuk level ini.",
-            "correctAns": "Next number is 64 (multiply by 2)",
-            "material": materials.get(3)
+            "weight_decomposition": 50.0, "weight_algorithm": 50.0,
+            "status": "APPROVED",
+            "option": ["Menghapus semua kode", "Menyalahkan komputer", "Mereproduksi bug untuk memahami kapan terjadi", "Langsung menulis kode baru"],
+            "correctAns": "Mereproduksi bug untuk memahami kapan terjadi",
+            "week_hint": 10
         },
+        # 10. Week 7
         {
-            "question": "How does abstraction help in simplifying complex problems?",
-            "type": "short_answer",
-            "category": "GENERAL",
-            "level": 5,
-            "weight_abstraction": 100.0,
-            "status": "PENDING",
-            "correctAns": "By focusing on important details and ignoring irrelevant ones.",
-            "material": materials.get(4)
-        },
-        {
-            "question": "Identify the main problem in this scenario: A car won't start, the headlights are dim, and the battery is 5 years old.",
-            "type": "short_answer",
+            "question": "Struktur data yang menyimpan sekumpulan elemen dengan tipe data yang sama dan dapat diakses melalui indeks adalah...",
+            "type": "multiple_choice",
             "category": "GENERAL",
             "level": 2,
-            "weight_decomposition": 100.0,
-            "status": "PENDING",
-            "correctAns": "The battery is dead/faulty.",
-            "material": materials.get(2)
+            "weight_abstraction": 100.0,
+            "status": "APPROVED",
+            "option": ["Array/List", "Stack", "Queue", "Tree"],
+            "correctAns": "Array/List",
+            "week_hint": 7
         },
+        # 11. Week 12
         {
-            "question": "Create a pattern for the next sequence: 1, 1, 2, 3, 5, 8, ...",
-            "type": "short_answer",
+            "question": "Fungsi yang memanggil dirinya sendiri disebut fungsi...",
+            "type": "multiple_choice",
             "category": "GENERAL",
-            "level": 3,
+            "level": 4,
+            "weight_algorithm": 100.0,
+            "status": "APPROVED",
+            "option": ["Iteratif", "Recursive", "Main", "Sub-routine"],
+            "correctAns": "Recursive",
+            "week_hint": 12
+        },
+        # 12. Week 3
+        {
+            "question": "Kemampuan melihat kesamaan atau perbedaan di antara beberapa masalah disebut...",
+            "type": "multiple_choice",
+            "category": "GENERAL",
+            "level": 2,
             "weight_pattern": 100.0,
-            "status": "PENDING",
-            "correctAns": "13 (Fibonacci sequence)",
-            "material": materials.get(3)
+            "status": "APPROVED",
+            "option": ["Dekomposisi", "Abstraksi", "Pengenalan Pola", "Algoritma"],
+            "correctAns": "Pengenalan Pola",
+            "week_hint": 3
+        },
+        # 13. Week 2
+        {
+            "question": "Memecah masalah membersihkan rumah menjadi: mencuci piring, menyapu lantai, dan membuang sampah adalah contoh penerapan...",
+            "type": "multiple_choice",
+            "category": "GENERAL",
+            "level": 1,
+            "weight_decomposition": 100.0,
+            "status": "APPROVED",
+            "option": ["Algoritma", "Abstraksi", "Dekomposisi", "Enkapsulasi"],
+            "correctAns": "Dekomposisi",
+            "week_hint": 2
+        },
+        # 14. Week 6
+        {
+            "question": "Pseudocode digunakan untuk memudahkan manusia memahami logika algoritma sebelum diubah ke kode program asli.",
+            "type": "true_false",
+            "category": "GENERAL",
+            "level": 1,
+            "weight_abstraction": 100.0,
+            "status": "APPROVED",
+            "correctAns": "True",
+            "week_hint": 6
+        },
+        # 15. Week 11
+        {
+            "question": "Notasi Big-O digunakan untuk mengukur...",
+            "type": "multiple_choice",
+            "category": "GENERAL",
+            "level": 5,
+            "weight_algorithm": 100.0,
+            "status": "APPROVED",
+            "option": ["Warna UI", "Kerapihan kode", "Efisiensi/Kompleksitas algoritma", "Jumlah baris kode"],
+            "correctAns": "Efisiensi/Kompleksitas algoritma",
+            "week_hint": 11
         }
     ]
     
     for q_data in dummy_questions:
-        mat = q_data.pop('material', None)
-        target_quiz = quiz # Default to first course's quiz
+        week = q_data.pop('week_hint', 1)
+        mat = materials.get(week)
         
+        target_quiz = default_quiz
         if mat:
-            # Get or create quiz for the specific course attached to the material
             target_quiz, _ = Quiz.objects.get_or_create(course=mat.course)
             
         QuizQuestion.objects.create(
@@ -143,7 +218,7 @@ def seed_qbank():
             **q_data
         )
     
-    print(f"Successfully seeded {len(dummy_questions)} questions.")
+    print(f"Successfully seeded {len(dummy_questions)} questions into the bank.")
 
 if __name__ == "__main__":
     seed_qbank()

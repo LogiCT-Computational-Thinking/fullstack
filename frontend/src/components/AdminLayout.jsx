@@ -4,6 +4,7 @@ import { ClipboardList, LogOut, Bell, User, BookOpen } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import QuestionBank from '../pages/QuestionBank'
 import AdminMaterials from '../pages/AdminMaterials'
+import AdminUserManagement from '../pages/AdminUserManagement'
 
 export default function AdminLayout() {
     const location = useLocation();
@@ -17,6 +18,10 @@ export default function AdminLayout() {
     const allNavItems = [
         { id: 'admin-qbank', label: 'Question Bank', icon: ClipboardList, path: '/admin/qbank', title: 'Question Bank' },
         { id: 'admin-materials', label: 'Course Manager', icon: BookOpen, path: '/admin/materials', title: 'Course Manager' },
+        ...(user?.role === 'admin'
+            ? [{ id: 'admin-users', label: 'User Management', icon: User, path: '/admin/users', title: 'User Management' }]
+            : []
+        ),
     ];
 
     const sidebarItems = allNavItems; // All items are now implicitly sidebar items
@@ -155,6 +160,9 @@ export default function AdminLayout() {
                     <Routes>
                         <Route path="/qbank" element={<QuestionBank />} />
                         <Route path="/materials" element={<AdminMaterials />} />
+                        {user?.role === 'admin' && (
+                            <Route path="/users" element={<AdminUserManagement />} />
+                        )}
                     </Routes>
                 </main>
             </div>

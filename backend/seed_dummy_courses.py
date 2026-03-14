@@ -9,66 +9,67 @@ from core.models import Course, Material
 from django.core.files.base import ContentFile
 
 def seed_courses():
-    print("Seeding dummy courses and materials...")
+    print("Seeding 16 courses with 2 materials each...")
     
-    courses_data = [
-        {
-            "title": "Dasar Pemrograman Python",
-            "description": "Kursus pengenalan pemrograman menggunakan bahasa Python.",
-            "materials": [
-                {"title": "Pengenalan Sintaks Python", "week": 1},
-                {"title": "Struktur Kontrol & Loop", "week": 2}
-            ]
-        },
-        {
-            "title": "Web Development Dasar",
-            "description": "Mempelajari dasar-dasar pembuatan website dengan HTML, CSS, dan JS.",
-            "materials": [
-                {"title": "Struktur HTML & Styling CSS", "week": 1},
-                {"title": "Interaktivitas dengan Javascript", "week": 2}
-            ]
-        },
-        {
-            "title": "Analisis Data dengan Python",
-            "description": "Teknik analisis data menggunakan library Pandas dan Matplotlib.",
-            "materials": [
-                {"title": "Eksplorasi Data dengan Pandas", "week": 1},
-                {"title": "Visualisasi Data Dasar", "week": 2}
-            ]
-        }
+    ct_topics = [
+        "Pengantar Computational Thinking",
+        "Dekomposisi Masalah",
+        "Pengenalan Pola",
+        "Abstraksi",
+        "Algoritma & Flowchart",
+        "Pseudocode & Coding Dasar",
+        "Struktur Data Dasar",
+        "Perulangan & Kondisi",
+        "Fungsi & Modularisasi",
+        "Debugging & Problem Solving",
+        "Kompleksitas Algoritma",
+        "Rekursi",
+        "CT dalam Kehidupan Nyata",
+        "Proyek Akhir Bagian 1",
+        "Proyek Akhir Bagian 2",
+        "Presentasi & Evaluasi"
     ]
 
-    for data in courses_data:
-        course, created = Course.objects.get_or_create(
-            title=data["title"],
-            defaults={"description": data["description"]}
+    for i, topic in enumerate(ct_topics, start=1):
+        course, created = Course.objects.update_or_create(
+            week=i,
+            defaults={
+                "title": topic,
+                "description": f"Materi pembelajaran mandiri untuk {topic} pada Minggu ke-{i}.",
+                "is_active": True
+            }
         )
         
-        if created:
-            print(f"Created Course: {course.title}")
-        else:
-            print(f"Course already exists: {course.title}")
+        status = "Created" if created else "Updated"
+        print(f"{status} Course: Week {course.week} - {course.title}")
 
-        for m_data in data["materials"]:
-            material, m_created = Material.objects.get_or_create(
+        # Create 2 materials for each course
+        material_types = [
+            {"title": f"Slide {topic}", "file_type": "ppt", "order": 1},
+            {"title": f"Modul {topic}", "file_type": "pdf", "order": 2}
+        ]
+
+        for m_data in material_types:
+            material, m_created = Material.objects.update_or_create(
                 course=course,
                 title=m_data["title"],
-                week=m_data["week"],
                 defaults={
-                    "description": f"Materi untuk {m_data['title']}",
-                    "file_type": "pdf"
+                    "description": f"Dapatkan pemahaman mendalam tentang {m_data['title']}.",
+                    "file_type": m_data["file_type"],
+                    "order": m_data["order"]
                 }
             )
             
-            if m_created:
-                # Add a dummy file
-                dummy_content = b"This is a dummy PDF content."
-                material.file.save(f"dummy_{course.id}_{m_data['week']}.pdf", ContentFile(dummy_content))
+            if m_created or not material.file:
+                # Add a dummy file if it doesn't exist
+                ext = "pptx" if m_data["file_type"] == "ppt" else "pdf"
+                dummy_content = f"This is a dummy {ext} content for {material.title}.".encode('utf-8')
+                material.file.save(f"dummy_w{course.week}_{m_data['order']}.{ext}", ContentFile(dummy_content))
                 print(f"  - Created Material: {material.title}")
             else:
-                print(f"  - Material already exists: {material.title}")
+                print(f"  - Updated Material: {material.title}")
 
-    print("Seeding completed successfully!")
+    print("\nSeeding completed successfully! Total 16 courses and 32 materials.")
 
 if __name__ == "__main__":
     seed_courses()

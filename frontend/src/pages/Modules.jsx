@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Search, ChevronDown, Calendar, CheckSquare, LayoutGrid,
-    List, Clock, Layers, MoreHorizontal, Lock, Play,
+    Search, ChevronDown, ChevronUp, Calendar, CheckSquare, LayoutGrid,
+    List, Clock, Layers, MoreHorizontal, Lock, Play, Pin,
     X, Brain, ChevronRight, FileText, Loader2, Download,
-    Send, Bot, User, Sparkles, Lightbulb, RotateCcw, ArrowLeft
+    Send, Bot, User, Sparkles, Lightbulb, RotateCcw, ArrowLeft, CheckCircle2
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -29,7 +29,7 @@ const TABS = [
 
 // ─── Active Card ──────────────────────────────────────────────────────────────
 
-function ActiveCard({ course, themeIndex, onClick }) {
+function ActiveCard({ course, themeIndex, onClick, onClickPin }) {
     const t = CARD_THEMES[themeIndex % CARD_THEMES.length];
 
     return (
@@ -42,18 +42,18 @@ function ActiveCard({ course, themeIndex, onClick }) {
                 className="relative rounded-[14px] overflow-hidden p-4 flex flex-col gap-3 flex-1"
                 style={{ background: t.cardBg }}
             >
-                {/* Donat ring pojok kanan atas */}
+                {/* Donat ring yang lebih subtle (Match List View) */}
                 <div
                     className="absolute pointer-events-none"
                     style={{
-                        width: 180,
-                        height: 180,
+                        width: 280,
+                        height: 280,
                         borderRadius: '50%',
-                        border: `34px solid ${t.quarterColor}`,
+                        border: `60px solid ${t.quarterColor}`,
                         background: 'transparent',
-                        top: -90,
-                        right: -90,
-                        opacity: 0.9,
+                        top: -120,
+                        right: -120,
+                        opacity: 0.35,
                     }}
                 />
 
@@ -65,7 +65,23 @@ function ActiveCard({ course, themeIndex, onClick }) {
                     >
                         Week {course.week}
                     </span>
-                    <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                    <button 
+                        type="button"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation(); 
+                            if (onClickPin) onClickPin(course.id);
+                        }}
+                        className="bg-white p-1.5 rounded-lg border border-gray-100 shadow-sm flex items-center justify-center hover:bg-gray-50 active:scale-90 transition-all cursor-pointer"
+                        title={course.is_pinned ? "Unpin this course" : "Pin this course"}
+                    >
+                        <Pin 
+                            className={`w-3.5 h-3.5 transition-all
+                                ${course.is_pinned 
+                                    ? 'text-black fill-black' 
+                                    : 'text-gray-400 opacity-60'}`} 
+                        />
+                    </button>
                 </div>
 
                 {/* Title */}
@@ -85,15 +101,15 @@ function ActiveCard({ course, themeIndex, onClick }) {
                     {course.description || `Materi pembelajaran mandiri untuk ${course.title} pada Minggu ke-${course.week}.`}
                 </p>
 
-                {/* Progress bar */}
+                {/* Industrial Progress bar (Match List View) */}
                 <div className="relative z-10 mt-auto">
-                    <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-[11px] text-gray-500">Progress</span>
-                        <span className="text-[11px] font-bold text-gray-800">{course.progress}%</span>
+                    <div className="flex justify-between items-center mb-1.5 px-0.5">
+                        <span className="text-[11px] text-gray-400 font-medium">Progress</span>
+                        <span className="text-[11px] font-bold text-gray-900">{course.progress}%</span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-black/10">
+                    <div className="w-full h-[6px] rounded-full bg-black/5 overflow-hidden">
                         <div
-                            className="h-full rounded-full bg-gray-900 transition-all duration-700"
+                            className="h-full rounded-full bg-black transition-all duration-700 shadow-sm"
                             style={{ width: `${course.progress}%` }}
                         />
                     </div>
@@ -107,20 +123,13 @@ function ActiveCard({ course, themeIndex, onClick }) {
                         {course.progress === 100 ? 'Finished' : 'On Progress'}
                     </span>
                 </span>
-                <div className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all
-                    ${course.progress === 100 ? 'bg-green-500 text-white' : 'bg-gray-900 text-white'}`}>
-                    {course.progress === 100 ? (
-                        <>
-                            <CheckSquare className="w-3 h-3 text-white" />
-                            Completed
-                        </>
-                    ) : (
-                        <>
-                            <Play className="w-3 h-3 fill-white" />
-                            Continue
-                        </>
-                    )}
-                </div>
+                
+                {course.progress < 100 && (
+                    <div className="flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-black bg-black text-white transition-all shadow-md hover:scale-105 active:scale-95">
+                        <Play className="w-3.5 h-3.5 fill-white" />
+                        Continue
+                    </div>
+                )}
             </div>
         </button>
     );
@@ -139,18 +148,18 @@ function LockedCard({ course, onClick }) {
                 className="relative rounded-[14px] overflow-hidden p-4 flex flex-col gap-3 flex-1"
                 style={{ background: '#efefef' }}
             >
-                {/* Donat ring abu */}
+                {/* Donat ring abu (Match List View) */}
                 <div
                     className="absolute pointer-events-none"
                     style={{
-                        width: 180,
-                        height: 180,
+                        width: 280,
+                        height: 280,
                         borderRadius: '50%',
-                        border: '34px solid #c8c8c8',
+                        border: '60px solid #c8c8c8',
                         background: 'transparent',
-                        top: -90,
-                        right: -90,
-                        opacity: 0.75,
+                        top: -120,
+                        right: -120,
+                        opacity: 0.35,
                     }}
                 />
 
@@ -159,7 +168,13 @@ function LockedCard({ course, onClick }) {
                     <span className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-500">
                         Week {course.week}
                     </span>
-                    <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                    <button 
+                        disabled
+                        className="p-1.5 rounded-lg border border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed flex items-center justify-center"
+                        title="Materi masih terkunci"
+                    >
+                        <Pin className="w-3 h-3 text-gray-400/70" />
+                    </button>
                 </div>
 
                 {/* Title */}
@@ -206,72 +221,115 @@ function LockedCard({ course, onClick }) {
 
 // ─── Module Row (List View) ───────────────────────────────────────────────────
 
-function ModuleRow({ course, onClick }) {
+function ModuleRow({ course, themeIndex, onClick, onClickPin }) {
+    const t = CARD_THEMES[(themeIndex || 0) % CARD_THEMES.length];
+
     const isLocked = course.status === 'locked';
     const isFinished = course.status === 'finished';
 
+    // Grid View colors for Locked: bg #efefef, ring #c8c8c8
+    // Grid View colors for Active: t.cardBg, ring t.quarterColor
+    const cardBg = isLocked ? '#efefef' : t.cardBg;
+    const ringColor = isLocked ? '#c8c8c8' : t.quarterColor;
+    const badgeBg = isLocked ? '#e5e7eb' : t.badgeBg;
+    const badgeText = isLocked ? '#6b7280' : t.badgeText;
+    
     return (
-        <button
+        <div 
             onClick={onClick}
-            className="group flex items-center gap-6 p-4 bg-white border border-gray-100 rounded-2xl hover:border-blue-200 hover:shadow-md transition-all w-full text-left"
+            className="relative group border border-gray-100/60 rounded-[22px] p-6 hover:border-blue-200 hover:shadow-md transition-all w-full text-left overflow-hidden cursor-pointer mb-1"
+            style={{ backgroundColor: cardBg }}
         >
-            {/* Week Badge */}
-            <div className={`w-16 flex flex-col items-center justify-center p-2 rounded-xl flex-shrink-0 transition-colors
-                ${isLocked ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600'}`}>
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Week</span>
-                <span className="text-lg font-black leading-none">{course.week}</span>
+            {/* Background Ornaments */}
+            <div className="absolute right-0 top-0 h-full w-full pointer-events-none overflow-hidden">
+                 {/* Donut Shape */}
+                 <div 
+                     className="absolute right-[120px] md:right-[220px] -top-[260px] w-[400px] h-[400px] rounded-full opacity-[0.35]"
+                     style={{ border: `80px solid ${ringColor}` }}
+                 />
+                 
+                 {/* Completion Watermark (Seal/Badge Icon) */}
+                 {isFinished && (
+                     <svg className="absolute right-4 -bottom-8 w-28 h-28 opacity-[0.2]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                         <path d="M59.7406 12.2958C54.9969 7.54318 52.6206 5.17578 49.6747 5.17578C46.7288 5.17578 44.3525 7.54763 39.6089 12.2958C36.7609 15.1438 33.9396 16.461 29.8812 16.461C26.339 16.461 21.2927 15.7757 18.5248 18.5658C15.7747 21.3382 16.46 26.3622 16.46 29.8821C16.46 33.9405 15.1383 36.7618 12.2903 39.6098C7.54665 44.3535 5.1748 46.7298 5.1748 49.6757C5.1748 52.6216 7.54665 54.9979 12.2948 59.7416C15.481 62.9322 16.46 64.9926 16.46 69.4693C16.46 73.0115 15.7747 78.0578 18.5648 80.8257C21.3372 83.5713 26.3612 82.8905 29.8812 82.8905C34.2021 82.8905 36.2892 83.736 39.373 86.8198C41.9985 89.4453 45.5184 94.1757 49.6747 94.1757C53.831 94.1757 57.351 89.4453 59.9765 86.8198C63.0648 83.736 65.1474 82.8905 69.4683 82.8905C72.9883 82.8905 78.0123 83.5758 80.7846 80.8257M80.7846 80.8257C83.5748 78.0578 82.8895 73.0115 82.8895 69.4693C82.8895 64.9926 83.8685 62.9322 87.0547 59.7416C91.8028 54.9979 94.1747 52.6216 94.1747 49.6757C94.1747 46.7298 91.8028 44.3535 87.0591 39.6098M80.7846 80.8257H80.8247" stroke={t.badgeText} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                         <path d="M31.874 42.1463C31.874 42.1463 41.8865 40.7757 49.674 58.5757C49.674 58.5757 72.1865 14.0758 94.1739 5.17578" stroke={t.badgeText} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                     </svg>
+                 )}
+
+                 {/* Pin Icon with white background box (Top Right) */}
+                 <div className="absolute right-6 top-6 z-50 pointer-events-auto">
+                    <button 
+                        type="button"
+                        disabled={isLocked}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation(); 
+                            if (!isLocked && onClickPin) onClickPin(course.id);
+                        }}
+                        className={`p-2 rounded-lg border shadow-sm flex items-center justify-center transition-all
+                            ${isLocked 
+                                ? 'bg-gray-50 border-gray-100 cursor-not-allowed opacity-50'
+                                : 'bg-white border-gray-100 hover:bg-gray-50 active:scale-90 cursor-pointer'}`}
+                        title={isLocked ? "Materi masih terkunci" : (course.is_pinned ? "Unpin this course" : "Pin this course")}
+                    >
+                        <Pin 
+                            className={`w-3.5 h-3.5 transition-all
+                                ${course.is_pinned 
+                                    ? 'text-black fill-black' 
+                                    : (isLocked ? 'text-gray-400/30' : 'text-gray-400/80')}`} 
+                        />
+                    </button>
+                 </div>
             </div>
 
-            {/* Content Info */}
-            <div className="flex-1 min-w-0">
-                <h3 className={`text-base font-bold leading-tight truncate mb-1
-                    ${isLocked ? 'text-gray-400' : 'text-gray-900 group-hover:text-blue-700'}`}>
-                    {course.title}
-                </h3>
-                <div className="flex items-center gap-3 text-xs text-gray-400 font-medium">
-                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />60 mins</span>
-                    <span className="text-gray-200">|</span>
-                    <span className="flex items-center gap-1"><Layers className="w-3.5 h-3.5" />{course.modules} modules</span>
-                </div>
-            </div>
+            <div className="relative z-10 flex w-full items-center gap-6">
+                <div className="flex flex-1 flex-col">
+                    <div className="flex justify-between items-start w-full relative">
+                        <div className="flex-1 pr-4">
+                            <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                <h3 className={`text-[19px] font-bold ${isLocked ? 'text-gray-400' : 'text-gray-900'} leading-snug`}>
+                                    {course.title}
+                                </h3>
+                                <span className="text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: badgeBg, color: badgeText }}>
+                                    Week {course.week}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[12px] text-gray-500 font-medium mb-4">
+                                <Clock className="w-3.5 h-3.5" /> {course.duration || '60'} minutes
+                                <span className="text-gray-300">|</span>
+                                <Layers className="w-3.5 h-3.5" /> {course.modules} modules
+                            </div>
+                        </div>
 
-            {/* Progress Bar (Only for active/finished) */}
-            {!isLocked && (
-                <div className="hidden md:block w-48 mx-4">
-                    <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] font-bold text-gray-500 uppercase">Progress</span>
-                        <span className="text-[10px] font-black text-gray-800">{course.progress}%</span>
+                        {/* Percentage Value */}
+                        <div className="flex flex-col items-end pr-2 self-stretch justify-end">
+                             <div className="text-[32px] font-light text-gray-900 leading-none mb-1">
+                                {isFinished ? '100' : (course.progress || 0)}%
+                             </div>
+                        </div>
                     </div>
-                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all duration-500 ${isFinished ? 'bg-green-500' : 'bg-blue-600'}`}
-                            style={{ width: `${course.progress}%` }}
+
+                    {/* Industrial Style Progress Bar */}
+                    <div className="w-full bg-black/5 rounded-full h-[6px] relative z-20 overflow-hidden mt-3">
+                        <div 
+                            className="h-full rounded-full transition-all duration-700 bg-black"
+                            style={{ width: `${isFinished ? '100' : (course.progress || 0)}%` }} 
                         />
                     </div>
                 </div>
-            )}
 
-            {/* Status Badge */}
-            <div className="flex-shrink-0">
-                {isLocked ? (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 text-gray-400 text-[11px] font-bold border border-gray-100">
-                        <Lock className="w-3 h-3" /> Locked
-                    </div>
-                ) : isFinished ? (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-600 text-[11px] font-bold border border-green-100">
-                        <CheckSquare className="w-3 h-3" /> Completed
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-[11px] font-bold shadow-lg shadow-gray-200 group-hover:bg-blue-600 transition-colors">
-                        <Play className="w-3 h-3 fill-white" /> Continue
-                    </div>
-                )}
+                {/* Action Area (Consistent width for bar alignment) */}
+                <div className="flex-shrink-0 ml-4 self-end">
+                    {!isFinished ? (
+                        <button className="px-10 py-2.5 rounded-full text-[13px] font-black bg-black text-white hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/15 mb-[1px]">
+                            Continue
+                        </button>
+                    ) : (
+                        <div className="w-[148px]" /> /* Placeholder width matching the button area */
+                    )}
+                </div>
             </div>
-
-            <ChevronRight className={`w-5 h-5 ml-2 transition-transform group-hover:translate-x-1
-                ${isLocked ? 'text-gray-200' : 'text-gray-300 group-hover:text-blue-400'}`}
-            />
-        </button>
+        </div>
     );
 }
 
@@ -698,6 +756,12 @@ export default function Modules() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const handlePinToggle = (courseId) => {
+        setCourses(prev => prev.map(c => 
+            c.id === courseId ? { ...c, is_pinned: !c.is_pinned } : c
+        ));
+    };
+
     // Filter states
     const [filterWeek, setFilterWeek] = useState('ALL');
     const [showWeekDropdown, setShowWeekDropdown] = useState(false);
@@ -707,47 +771,22 @@ export default function Modules() {
     }, []);
 
     const fetchCourses = async () => {
-        // ── MOCK DATA (untuk preview frontend, hapus/comment blok ini saat connect BE) ──
-        const MOCK_COURSES = [
-            { id: 1,  week: 1,  title: 'Pengantar Computational Thinking', description: 'Memahami dasar-dasar berpikir komputasional dan penerapannya dalam kehidupan sehari-hari.', is_active: true,  progress: 100, materials: [{ id: 101, title: 'Slide Pengantar CT', file_type: 'pptx', file: null }, { id: 102, title: 'Modul Pengantar CT', file_type: 'pdf', file: null }] },
-            { id: 2,  week: 2,  title: 'Dekomposisi Masalah', description: 'Teknik memecah masalah kompleks menjadi bagian-bagian yang lebih kecil dan mudah diselesaikan.', is_active: true,  progress: 75,  materials: [{ id: 201, title: 'Slide Dekomposisi', file_type: 'pptx', file: null }, { id: 202, title: 'Worksheet Dekomposisi', file_type: 'pdf', file: null }] },
-            { id: 3,  week: 3,  title: 'Pengenalan Pola (Pattern Recognition)', description: 'Mengidentifikasi pola dan kesamaan antar masalah untuk menemukan solusi yang efisien.', is_active: true,  progress: 40,  materials: [{ id: 301, title: 'Slide Pattern Recognition', file_type: 'pptx', file: null }, { id: 302, title: 'Latihan Soal', file_type: 'pdf', file: null }] },
-            { id: 4,  week: 4,  title: 'Abstraksi', description: 'Menyederhanakan masalah dengan fokus pada informasi yang relevan dan mengabaikan detail yang tidak penting.', is_active: true,  progress: 0,   materials: [{ id: 401, title: 'Slide Abstraksi', file_type: 'pptx', file: null }] },
-            { id: 5,  week: 5,  title: 'Algoritma & Flowchart', description: 'Menyusun langkah-langkah solusi secara terurut dan memvisualisasikannya dalam bentuk diagram alur.', is_active: false, progress: 0,   materials: [{ id: 501, title: 'Slide Algoritma', file_type: 'pptx', file: null }, { id: 502, title: 'Template Flowchart', file_type: 'pdf', file: null }] },
-            { id: 6,  week: 6,  title: 'Pseudocode & Coding Dasar', description: 'Menulis pseudocode sebagai jembatan antara algoritma dan kode program yang sesungguhnya.', is_active: false, progress: 0,   materials: [{ id: 601, title: 'Slide Pseudocode', file_type: 'pptx', file: null }] },
-            { id: 7,  week: 7,  title: 'Struktur Data Dasar', description: 'Mengenal array, list, dan struktur data sederhana untuk menyimpan dan mengolah kumpulan data.', is_active: false, progress: 0,   materials: [{ id: 701, title: 'Slide Struktur Data', file_type: 'pptx', file: null }, { id: 702, title: 'Modul Latihan', file_type: 'pdf', file: null }] },
-            { id: 8,  week: 8,  title: 'Perulangan & Kondisi', description: 'Memahami konsep loop dan percabangan sebagai kontrol alur program yang fundamental.', is_active: false, progress: 0,   materials: [{ id: 801, title: 'Slide Perulangan', file_type: 'pptx', file: null }] },
-            { id: 9,  week: 9,  title: 'Fungsi & Modularisasi', description: 'Memecah program menjadi fungsi-fungsi kecil yang reusable dan mudah dipelihara.', is_active: false, progress: 0,   materials: [{ id: 901, title: 'Slide Fungsi', file_type: 'pptx', file: null }, { id: 902, title: 'Latihan Fungsi', file_type: 'pdf', file: null }] },
-            { id: 10, week: 10, title: 'Debugging & Problem Solving', description: 'Teknik menemukan dan memperbaiki kesalahan dalam program secara sistematis dan efektif.', is_active: false, progress: 0,   materials: [{ id: 1001, title: 'Slide Debugging', file_type: 'pptx', file: null }] },
-            { id: 11, week: 11, title: 'Kompleksitas Algoritma', description: 'Mengevaluasi efisiensi algoritma menggunakan notasi Big-O dan analisis waktu eksekusi.', is_active: false, progress: 0,   materials: [{ id: 1101, title: 'Slide Kompleksitas', file_type: 'pptx', file: null }, { id: 1102, title: 'Worksheet Analisis', file_type: 'pdf', file: null }] },
-            { id: 12, week: 12, title: 'Rekursi', description: 'Memahami konsep fungsi yang memanggil dirinya sendiri dan penerapannya dalam pemecahan masalah.', is_active: false, progress: 0,   materials: [{ id: 1201, title: 'Slide Rekursi', file_type: 'pptx', file: null }] },
-            { id: 13, week: 13, title: 'CT dalam Kehidupan Nyata', description: 'Penerapan computational thinking dalam berbagai bidang seperti sains, bisnis, dan seni.', is_active: false, progress: 0,   materials: [{ id: 1301, title: 'Slide CT Nyata', file_type: 'pptx', file: null }, { id: 1302, title: 'Case Study', file_type: 'pdf', file: null }] },
-            { id: 14, week: 14, title: 'Proyek Akhir & Presentasi', description: 'Mengintegrasikan seluruh konsep CT dalam proyek nyata dan mempresentasikan hasilnya.', is_active: false, progress: 0,   materials: [{ id: 1401, title: 'Slide Proyek Akhir', file_type: 'pptx', file: null }, { id: 1402, title: 'Template Laporan', file_type: 'pdf', file: null }] },
-        ];
-        const enriched = MOCK_COURSES.map((course) => ({
-            ...course,
-            status: !course.is_active ? 'locked' : (course.progress === 100 ? 'finished' : 'active'),
-            modules: course.materials?.length ?? 0,
-            duration: 60,
-        }));
-        setCourses(enriched);
-        setLoading(false);
-
-        // ── AKTIFKAN INI saat connect ke backend (hapus mock data di atas) ──
-        // try {
-        //     const res = await api.get('/courses/');
-        //     const enriched = res.data.map((course) => ({
-        //         ...course,
-        //         status: !course.is_active ? 'locked' : (course.progress === 100 ? 'finished' : 'active'),
-        //         progress: course.progress || 0,
-        //         modules: course.materials_count ?? course.materials?.length ?? 0,
-        //     }));
-        //     setCourses(enriched);
-        // } catch (err) {
-        //     console.error('Failed to fetch courses:', err);
-        // } finally {
-        //     setLoading(false);
-        // }
+        setLoading(true);
+        try {
+            const res = await api.get('/courses/');
+            const enriched = res.data.map((course) => ({
+                ...course,
+                status: !course.is_active ? 'locked' : (course.progress === 100 ? 'finished' : 'active'),
+                modules: course.materials_count ?? course.materials?.length ?? 0,
+                duration: 60,
+                is_pinned: false,
+            }));
+            setCourses(enriched);
+        } catch (err) {
+            console.error('Failed to fetch courses:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Ekspos fetchCourses ke window agar bisa dipanggil dari child component/modal jika perlu
@@ -775,6 +814,15 @@ export default function Modules() {
             c.title.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }
+
+    // Sort by Status Group (Active -> Locked -> Finished) and then Pin priority
+    const statusWeight = { 'active': 0, 'locked': 1, 'finished': 2 };
+    displayed = [...displayed].sort((a, b) => {
+        if (a.status !== b.status) {
+            return statusWeight[a.status] - statusWeight[b.status];
+        }
+        return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
+    });
 
     // Unique weeks for dropdown
     const availableWeeks = [...new Set(courses.map(c => c.week))].sort((a, b) => a - b);
@@ -847,26 +895,28 @@ export default function Modules() {
                 </div>
             </div>
 
-            {/* ── Tabs ── */}
-            <div className="flex items-center gap-1 mb-6 flex-wrap">
-                {TABS.map(tab => {
-                    const count = tabCounts[tab.countKey] ?? 0;
-                    const isActive = activeTab === tab.id;
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150
-                                ${isActive ? 'bg-white border-2 border-gray-200 text-gray-900 shadow-sm' : 'text-gray-500 hover:bg-gray-100 border-2 border-transparent'}`}
-                        >
-                            <span className={isActive && tab.id === 'active' ? 'text-orange-500' : ''}>{tab.label}</span>
-                            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${isActive && tab.id === 'active' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
-                                {count}
-                            </span>
-                        </button>
-                    );
-                })}
-            </div>
+            {/* ── Tabs (Grid Only) ── */}
+            {viewMode === 'grid' && (
+                <div className="flex items-center gap-1 mb-6 flex-wrap">
+                    {TABS.map(tab => {
+                        const count = tabCounts[tab.countKey] ?? 0;
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-150
+                                    ${isActive ? 'bg-white border-2 border-gray-200 text-gray-900 shadow-sm' : 'text-gray-500 hover:bg-gray-100 border-2 border-transparent'}`}
+                            >
+                                <span className={isActive && tab.id === 'active' ? 'text-orange-500' : ''}>{tab.label}</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${isActive && tab.id === 'active' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                                    {count}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* ── Grid/List Display ── */}
             {loading ? (
@@ -878,27 +928,71 @@ export default function Modules() {
                 <div className="flex flex-col items-center justify-center py-24 text-gray-400">
                     <Layers className="w-12 h-12 mb-3 opacity-30" />
                     <p className="font-semibold">Tidak ada course ditemukan</p>
-                    {filterWeek !== 'ALL' && (
-                        <button
-                            onClick={() => setFilterWeek('ALL')}
-                            className="text-xs text-blue-600 font-bold mt-2 hover:underline"
-                        >
-                            Reset Filter Week
-                        </button>
+                </div>
+            ) : viewMode === 'list' ? (
+                <div className="flex flex-col gap-8 w-full">
+                    {/* Section: Continue Learning */}
+                    {courses.filter(c => c.status === 'active').length > 0 && (
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                                <h2 className="text-lg font-bold text-gray-800">Continue Learning</h2>
+                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <div className="flex flex-col gap-4">
+                                {courses
+                                    .filter(c => c.status === 'active')
+                                    .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
+                                    .map((course, i) => (
+                                        <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
+                                    ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Section: Locked Materials */}
+                    {courses.filter(c => c.status === 'locked').length > 0 && (
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                                <h2 className="text-lg font-bold text-gray-800">Locked Materials</h2>
+                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <div className="flex flex-col gap-4">
+                                {courses
+                                    .filter(c => c.status === 'locked')
+                                    .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
+                                    .map((course, i) => (
+                                        <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
+                                    ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Section: Completed Materials */}
+                    {courses.filter(c => c.status === 'finished').length > 0 && (
+                        <div className="flex flex-col gap-4">
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
+                                <h2 className="text-lg font-bold text-gray-800">Completed Materials</h2>
+                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                            </div>
+                            <div className="flex flex-col gap-4">
+                                {courses
+                                    .filter(c => c.status === 'finished')
+                                    .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
+                                    .map((course, i) => (
+                                        <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
+                                    ))}
+                            </div>
+                        </div>
                     )}
                 </div>
             ) : (
-                <div className={`grid gap-4 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 w-full'}`}>
+                <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
                     {displayed.map(course => {
-                        if (viewMode === 'list') {
-                            return <ModuleRow key={course.id} course={course} onClick={() => setSelectedCourse(course)} />;
-                        }
-
-                        // Grid Mode
-                        if (course.status === 'active') {
-                            const idx = activeCardIdx++;
+                        const isUnlocked = course.status !== 'locked';
+                        const tIdx = isUnlocked ? activeCardIdx++ : 0;
+                        if (isUnlocked) {
                             return (
-                                <ActiveCard key={course.id} course={course} themeIndex={idx} onClick={() => setSelectedCourse(course)} />
+                                <ActiveCard key={course.id} course={course} themeIndex={tIdx} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
                             );
                         }
                         return (

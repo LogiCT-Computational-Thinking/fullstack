@@ -1551,8 +1551,8 @@ def get_admin_qbank(request):
     Get all questions for the question bank.
     Filters by status: PENDING, APPROVED, REJECTED
     """
-    if request.user.role != 'teacher':
-        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin/Teacher access required"}, status=status.HTTP_403_FORBIDDEN)
     
     status_filter = request.query_params.get('status', None)
     if status_filter:
@@ -1569,8 +1569,8 @@ def update_qbank_question(request, pk):
     """
     Update a question's status, feedback, or content.
     """
-    if request.user.role != 'teacher':
-        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin/Teacher access required"}, status=status.HTTP_403_FORBIDDEN)
         
     try:
         question = QuizQuestion.objects.get(pk=pk)
