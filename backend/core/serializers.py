@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Course, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass, Material, QuizResult, QuizResponse
+from .models import User, Course, Quiz, QuizQuestion, Enrollment, PretestQuestion, Pretest, PretestResponse, ProfilingArchetype, StudentClass, Material, QuizResult, QuizResponse, ExerciseSession, ChatMessage
 from django.contrib.auth.hashers import make_password
 
 
@@ -283,3 +283,17 @@ class QuizSubmitResponseSerializer(serializers.Serializer):
 class QuizSubmissionSerializer(serializers.Serializer):
     time_taken = serializers.IntegerField() # in seconds
     responses = QuizSubmitResponseSerializer(many=True)
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['id', 'session', 'role', 'content', 'timestamp']
+        read_only_fields = ['id', 'timestamp']
+
+class ExerciseSessionSerializer(serializers.ModelSerializer):
+    messages = ChatMessageSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = ExerciseSession
+        fields = ['id', 'user', 'course', 'started_at', 'is_active', 'messages']
+        read_only_fields = ['id', 'user', 'started_at', 'messages']

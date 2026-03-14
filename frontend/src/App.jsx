@@ -11,7 +11,7 @@ import QuizResult from './pages/QuizResult'
 import Dashboard from './pages/Dashboard'
 import Modules from './pages/Modules'
 import ProfilingQuiz from './pages/ProfilingQuiz'
-import QuizBank from './pages/QuizBank'
+import Exercise from './pages/Exercise'
 import QuestionBank from './pages/QuestionBank'
 import Settings from './pages/Settings'
 import ForgotPassword from './pages/ForgotPassword'
@@ -42,7 +42,7 @@ function DashboardLayout() {
   const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', title: 'Dashboard', inSidebar: true },
     { id: 'modules', label: 'Material', icon: BookOpen, path: '/dashboard/modules', title: 'Material', inSidebar: true },
-    { id: 'quiz-bank', label: 'Exercise', icon: FileQuestion, path: '/dashboard/quiz-bank', title: 'Exercise', inSidebar: true },
+    { id: 'quiz-bank', label: 'Exercise', icon: FileQuestion, path: '/exercise', title: 'Exercise', inSidebar: true },
     { id: 'quiz-intro', label: 'Material', icon: BookOpen, path: '/dashboard/quiz', title: 'Weekly Challenge', inSidebar: false },
     { id: 'quiz-result', label: 'Material', icon: BookOpen, path: '/dashboard/quiz-result', title: 'Quiz Result', inSidebar: false },
     { id: 'profile-display', label: 'Profile', icon: User, path: '/dashboard/profile-display', title: 'My CT Profile', inSidebar: false },
@@ -216,7 +216,6 @@ function DashboardLayout() {
             <Route path="/modules" element={<Modules />} />
             <Route path="/quiz/:courseId" element={<QuizIntro />} />
             <Route path="/quiz/:courseId/result" element={<QuizResult />} />
-            <Route path="/quiz-bank" element={<QuizBank />} />
             <Route path="/profile-display" element={<ProfilingResult />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
@@ -239,6 +238,7 @@ function App() {
         <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
         <Route path="/quiz/:courseId" element={<Quiz />} />
         <Route path="/profiling-quiz" element={<ProfilingQuiz />} />
+        <Route path="/exercise" element={<Exercise />} />
 
         {/* Dashboard Routes - With Layout */}
         <Route path="/dashboard/*" element={<DashboardLayout />} />

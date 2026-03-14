@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, Check, X, Eye, Loader2, Filter, ChevronRight, MessageSquare } from 'lucide-react';
+import { Search, Bell, User, Check, X, Eye, Loader2, Filter, ChevronRight, MessageSquare, Edit, Save, FileText } from 'lucide-react';
 import api from '../services/api';
 
 export default function QuestionBank() {
@@ -9,6 +9,10 @@ export default function QuestionBank() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedQuestion, setSelectedQuestion] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // Edit states
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editForm, setEditForm] = useState({ question: '', correctAns: '' });
 
     // Filter states
     const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -59,8 +63,28 @@ export default function QuestionBank() {
 
     const handlePreview = (q) => {
         setSelectedQuestion(q);
+        setEditForm({ question: q.question, correctAns: q.correctAns || '' });
+        setIsEditMode(false);
         setIsModalOpen(true);
         setShowFilterMenu(false);
+    };
+
+    const handleEdit = (q) => {
+        setSelectedQuestion(q);
+        setEditForm({ question: q.question, correctAns: q.correctAns || '' });
+        setIsEditMode(true);
+        setIsModalOpen(true);
+        setShowFilterMenu(false);
+    };
+
+    const handleSaveEdit = async () => {
+        try {
+            await api.patch(`/admin/qbank/${selectedQuestion.id}/`, editForm);
+            setIsEditMode(false);
+            fetchQuestions(); // Refresh list after edit
+        } catch (error) {
+            console.error('Error updating question:', error);
+        }
     };
 
     const resetFilters = () => {
@@ -81,9 +105,16 @@ export default function QuestionBank() {
     });
 
     const getLevelBadge = (level) => {
-        if (level <= 2) return <span className="px-5 py-1.5 bg-[#4ADE80] text-white text-[11px] font-black rounded-full shadow-sm">Easy</span>;
-        if (level <= 4) return <span className="px-5 py-1.5 bg-[#FBBF24] text-white text-[11px] font-black rounded-full shadow-sm">Medium</span>;
-        return <span className="px-5 py-1.5 bg-[#F87171] text-white text-[11px] font-black rounded-full shadow-sm">Hard</span>;
+        const colors = {
+            1: 'bg-[#22C55E]',
+            2: 'bg-[#14B8A6]',
+            3: 'bg-[#F59E0B]',
+            4: 'bg-[#EA580C]',
+            5: 'bg-[#EF4444]',
+            6: 'bg-[#B91C1C]'
+        };
+        const color = colors[level] || 'bg-gray-500';
+        return <span className={`px-5 py-1.5 ${color} text-white text-[11px] font-black rounded-full shadow-sm whitespace-nowrap`}>Level {level}</span>;
     };
 
     const getTopicLabel = (q) => {
@@ -167,12 +198,20 @@ export default function QuestionBank() {
                                             {getLevelBadge(q.level)}
                                         </td>
                                         <td className="px-8 py-6 text-center">
-                                            <button
-                                                onClick={() => handlePreview(q)}
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[#5B77B5] text-white text-[11px] font-black rounded-lg shadow-sm hover:bg-[#4A64A0] transition-colors active:scale-95"
-                                            >
-                                                Preview <Eye className="w-3.5 h-3.5" />
-                                            </button>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => handlePreview(q)}
+                                                    className="w-10 h-8 bg-[#5B77B5] text-white rounded-lg flex items-center justify-center shadow-sm hover:bg-[#4A64A0] transition-all active:scale-90"
+                                                >
+                                                    <Eye className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEdit(q)}
+                                                    className="w-10 h-8 bg-[#8B5CF6] text-white rounded-lg flex items-center justify-center shadow-sm hover:bg-[#7C3AED] transition-all active:scale-90"
+                                                >
+                                                    <Edit className="w-[18px] h-[18px]" />
+                                                </button>
+                                            </div>
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex items-center justify-center gap-2">
@@ -192,10 +231,17 @@ export default function QuestionBank() {
                                                         </button>
                                                     </>
                                                 ) : (
-                                                    <span className={`px-4 py-1.5 rounded-lg text-[10px] font-bold ${activeTab === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                                        }`}>
-                                                        {activeTab}
-                                                    </span>
+                                                    <div className="flex flex-col items-center gap-1.5">
+                                                        <span className="italic text-[12px] font-semibold text-gray-800 tracking-wide font-serif">
+                                                            {activeTab === 'APPROVED' ? 'Approved' : 'Rejected'}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => handleUpdateStatus(q.id, 'PENDING')}
+                                                            className="flex items-center gap-1.5 px-3 py-1 bg-[#4A64A0] hover:bg-[#344b80] text-white rounded text-[9px] font-black transition-all active:scale-95 shadow-sm"
+                                                        >
+                                                            <FileText className="w-3 h-3" /> Restore
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </td>
@@ -229,9 +275,19 @@ export default function QuestionBank() {
                                 {/* Left Side: Question */}
                                 <div className="lg:col-span-3">
                                     <div className="bg-white border border-gray-200 rounded-3xl p-8 h-full min-h-[300px] shadow-sm">
-                                        <p className="text-gray-800 text-base leading-relaxed mb-6 font-medium">
-                                            {selectedQuestion.question}
-                                        </p>
+                                        {isEditMode ? (
+                                            <textarea
+                                                value={editForm.question}
+                                                onChange={(e) => setEditForm({...editForm, question: e.target.value})}
+                                                className="w-full text-gray-800 text-base leading-relaxed mb-6 font-medium p-4 border border-gray-200 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50 outline-none transition-all resize-none"
+                                                rows={6}
+                                                placeholder="Enter question text..."
+                                            />
+                                        ) : (
+                                            <p className="text-gray-800 text-base leading-relaxed mb-6 font-medium">
+                                                {selectedQuestion.question}
+                                            </p>
+                                        )}
 
                                         {selectedQuestion.image && (
                                             <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100">
@@ -251,40 +307,62 @@ export default function QuestionBank() {
                                         <h4 className="text-sm font-black text-gray-900 mb-4 uppercase tracking-wider">
                                             Correct Answer:
                                         </h4>
-                                        <div className="bg-orange-500 rounded-3xl p-6 flex-1 min-h-[200px]">
-                                            <p className="text-white text-sm leading-relaxed font-bold">
-                                                {selectedQuestion.correctAns || 'No answer provided.'}
-                                            </p>
-                                            {/* Dummy visual for placeholder like in image */}
-                                            {selectedQuestion.option && selectedQuestion.option.length > 0 && (
-                                                <div className="mt-4 p-4 bg-white/20 rounded-2xl backdrop-blur-sm">
-                                                    <p className="text-white text-[11px] font-black uppercase tracking-widest opacity-80 mb-2 underline decoration-white/30">Options:</p>
-                                                    <ul className="list-disc list-inside text-white/90 text-xs font-bold space-y-1">
-                                                        {selectedQuestion.option.map((opt, i) => (
-                                                            <li key={i}>{opt}</li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            )}
+                                        <div className="bg-[#F97316] rounded-3xl p-6 flex-1 min-h-[200px] flex flex-col justify-between">
+                                            <div>
+                                                {isEditMode ? (
+                                                    <textarea
+                                                        value={editForm.correctAns}
+                                                        onChange={(e) => setEditForm({...editForm, correctAns: e.target.value})}
+                                                        className="w-full text-white text-sm leading-relaxed font-bold bg-white/20 p-4 rounded-2xl outline-none border border-white/30 placeholder-white/50 focus:bg-white/30 transition-all resize-none mb-4"
+                                                        rows={4}
+                                                        placeholder="Enter correct answer explanation..."
+                                                    />
+                                                ) : (
+                                                    <p className="text-white text-sm leading-relaxed font-bold mb-4">
+                                                        {selectedQuestion.correctAns || 'No answer provided.'}
+                                                    </p>
+                                                )}
+
+                                                {/* Dummy visual for placeholder like in image */}
+                                                {!isEditMode && selectedQuestion.option && selectedQuestion.option.length > 0 && (
+                                                    <div className="p-4 bg-white/20 rounded-2xl backdrop-blur-sm mb-4">
+                                                        <p className="text-white text-[11px] font-black uppercase tracking-widest opacity-80 mb-2 underline decoration-white/30">Options:</p>
+                                                        <ul className="list-disc list-inside text-white/90 text-xs font-bold space-y-1">
+                                                            {selectedQuestion.option.map((opt, i) => (
+                                                                <li key={i}>{opt}</li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {/* Actions ONLY for PENDING status */}
-                                        {selectedQuestion.status === 'PENDING' && (
-                                            <div className="mt-6 flex items-center justify-end gap-3">
-                                                <button
-                                                    onClick={() => handleUpdateStatus(selectedQuestion.id, 'REJECTED')}
-                                                    className="px-6 py-2.5 bg-[#EF4444] text-white text-[11px] font-black rounded-xl shadow-lg shadow-red-100 flex items-center gap-2 hover:bg-red-600 transition-all active:scale-95"
+                                        {/* Actions replacing previous Pending Approve/Reject */}
+                                        <div className="mt-6 flex items-center justify-end gap-3">
+                                            {!isEditMode ? (
+                                                <button 
+                                                    onClick={() => setIsEditMode(true)}
+                                                    className="px-6 py-2.5 bg-[#8B5CF6] text-white text-[11px] font-black rounded-xl shadow-lg shadow-purple-100 flex items-center gap-2 hover:bg-[#7C3AED] transition-all active:scale-95"
                                                 >
-                                                    Rejected <X className="w-4 h-4" />
+                                                    <Edit className="w-4 h-4" /> Edit
                                                 </button>
-                                                <button
-                                                    onClick={() => handleUpdateStatus(selectedQuestion.id, 'APPROVED')}
-                                                    className="px-6 py-2.5 bg-[#10B981] text-white text-[11px] font-black rounded-xl shadow-lg shadow-green-100 flex items-center gap-2 hover:bg-green-600 transition-all active:scale-95"
-                                                >
-                                                    Approve <Check className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        )}
+                                            ) : (
+                                                <>
+                                                    <button 
+                                                        onClick={() => setIsEditMode(false)}
+                                                        className="px-6 py-2.5 bg-white text-gray-700 text-[11px] font-black rounded-xl border border-gray-200 hover:bg-gray-50 transition-all active:scale-95"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button 
+                                                        onClick={handleSaveEdit}
+                                                        className="px-6 py-2.5 bg-[#3B82F6] text-white text-[11px] font-black rounded-xl shadow-lg shadow-blue-100 flex items-center gap-2 hover:bg-blue-600 transition-all active:scale-95"
+                                                    >
+                                                        <Save className="w-4 h-4" /> Save
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

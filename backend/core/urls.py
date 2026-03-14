@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import views_chat
 
 app_name = 'core'
 
@@ -62,4 +63,8 @@ urlpatterns = [
 
     # Update file on existing material (inline upload)
     path('admin/materials/<int:pk>/', views.admin_update_material, name='admin-update-material'),
+
+    # AI Chat History (Exercise Sessions)
+    path('exercise/sessions/', views_chat.session_list_create, name='session-list-create'),
+    path('exercise/sessions/<int:pk>/', views_chat.session_detail, name='session-detail'),
 ]
