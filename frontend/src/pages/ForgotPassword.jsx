@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSound } from '../hooks/useSound';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +19,51 @@ export default function ForgotPassword() {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const { playClick, playFocus, playSuccess, playError } = useSound();
     const { forgotPassword, verifyOTP, resetPasswordOTP } = useAuth();
+    const inputRefs = [useRef(), useRef(), useRef(), useRef(), useRef(), useRef()];
+
+    // Sync individual digits to the main otp string
+    const [otpArray, setOtpArray] = useState(['', '', '', '', '', '']);
+
+    useEffect(() => {
+        setOtp(otpArray.join(''));
+    }, [otpArray]);
+
+    const handleOtpChange = (index, value) => {
+        // Only allow digits
+        const cleanValue = value.replace(/\D/g, '').slice(-1);
+        
+        const newOtpArray = [...otpArray];
+        newOtpArray[index] = cleanValue;
+        setOtpArray(newOtpArray);
+
+        // Move focus to next input if value is entered
+        if (cleanValue && index < 5) {
+            inputRefs[index + 1].current.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otpArray[index] && index > 0) {
+            // Move focus to previous input on backspace if current is empty
+            inputRefs[index - 1].current.focus();
+        }
+    };
+
+    const handleOtpPaste = (e) => {
+        e.preventDefault();
+        const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        const newOtpArray = [...otpArray];
+        
+        pastedData.split('').forEach((char, i) => {
+            if (i < 6) newOtpArray[i] = char;
+        });
+        
+        setOtpArray(newOtpArray);
+        
+        // Focus the last filled input or the first empty one
+        const focusIndex = Math.min(pastedData.length, 5);
+        inputRefs[focusIndex].current.focus();
+    };
 
     const handleEmailSubmit = async (e) => {
         e.preventDefault();
@@ -169,20 +214,27 @@ export default function ForgotPassword() {
                     {/* Step 2: OTP Form */}
                     {step === 2 && (
                         <form onSubmit={handleOTPSubmit}>
-                            <div className="mb-6 relative">
-                                <input
-                                    type="text"
-                                    maxLength="6"
-                                    placeholder="000000"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                    onFocus={() => playFocus()}
-                                    required
-                                    className="w-full px-4 py-3 sm:py-3.5 bg-white border border-gray-300 rounded-[14px] text-center text-lg font-bold tracking-[1em] outline-none transition-all focus:border-[#1284FD] focus:shadow-[0_0_0_4px_rgba(18,132,253,0.1)] peer"
-                                />
-                                <label className="absolute left-3 -top-2.5 bg-white px-1.5 text-sm font-bold text-[#1284FD] pointer-events-none">
+                            <div className="mb-6">
+                                <label className="block text-sm font-bold text-[#1284FD] mb-4">
                                     Kode OTP
                                 </label>
+                                <div className="flex justify-between gap-2 sm:gap-3">
+                                    {otpArray.map((digit, index) => (
+                                        <input
+                                            key={index}
+                                            ref={inputRefs[index]}
+                                            type="text"
+                                            maxLength="1"
+                                            value={digit}
+                                            onChange={(e) => handleOtpChange(index, e.target.value)}
+                                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                                            onPaste={handleOtpPaste}
+                                            onFocus={() => playFocus()}
+                                            required
+                                            className="w-full h-12 sm:h-14 bg-white border border-gray-300 rounded-[12px] text-center text-xl font-bold outline-none transition-all focus:border-[#1284FD] focus:shadow-[0_0_0_4px_rgba(18,132,253,0.1)]"
+                                        />
+                                    ))}
+                                </div>
                             </div>
 
                             <button

@@ -237,27 +237,31 @@ function ModuleRow({ course, themeIndex, onClick, onClickPin }) {
     return (
         <div 
             onClick={onClick}
-            className="relative group border border-gray-100/60 rounded-[22px] p-6 hover:border-blue-200 hover:shadow-md transition-all w-full text-left overflow-hidden cursor-pointer mb-1"
-            style={{ backgroundColor: cardBg }}
+            className="group bg-white border border-gray-100/80 rounded-[28px] p-2 hover:border-gray-200 hover:shadow-md hover:-translate-y-0.5 transition-all w-full text-left flex cursor-pointer mb-2"
         >
-            {/* Background Ornaments */}
-            <div className="absolute right-0 top-0 h-full w-full pointer-events-none overflow-hidden">
-                 {/* Donut Shape */}
-                 <div 
-                     className="absolute right-[120px] md:right-[220px] -top-[260px] w-[400px] h-[400px] rounded-full opacity-[0.35]"
-                     style={{ border: `80px solid ${ringColor}` }}
-                 />
-                 
-                 {/* Completion Watermark (Seal/Badge Icon) */}
-                 {isFinished && (
-                     <svg className="absolute right-4 -bottom-8 w-28 h-28 opacity-[0.2]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                         <path d="M59.7406 12.2958C54.9969 7.54318 52.6206 5.17578 49.6747 5.17578C46.7288 5.17578 44.3525 7.54763 39.6089 12.2958C36.7609 15.1438 33.9396 16.461 29.8812 16.461C26.339 16.461 21.2927 15.7757 18.5248 18.5658C15.7747 21.3382 16.46 26.3622 16.46 29.8821C16.46 33.9405 15.1383 36.7618 12.2903 39.6098C7.54665 44.3535 5.1748 46.7298 5.1748 49.6757C5.1748 52.6216 7.54665 54.9979 12.2948 59.7416C15.481 62.9322 16.46 64.9926 16.46 69.4693C16.46 73.0115 15.7747 78.0578 18.5648 80.8257C21.3372 83.5713 26.3612 82.8905 29.8812 82.8905C34.2021 82.8905 36.2892 83.736 39.373 86.8198C41.9985 89.4453 45.5184 94.1757 49.6747 94.1757C53.831 94.1757 57.351 89.4453 59.9765 86.8198C63.0648 83.736 65.1474 82.8905 69.4683 82.8905C72.9883 82.8905 78.0123 83.5758 80.7846 80.8257M80.7846 80.8257C83.5748 78.0578 82.8895 73.0115 82.8895 69.4693C82.8895 64.9926 83.8685 62.9322 87.0547 59.7416C91.8028 54.9979 94.1747 52.6216 94.1747 49.6757C94.1747 46.7298 91.8028 44.3535 87.0591 39.6098M80.7846 80.8257H80.8247" stroke={t.badgeText} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
-                         <path d="M31.874 42.1463C31.874 42.1463 41.8865 40.7757 49.674 58.5757C49.674 58.5757 72.1865 14.0758 94.1739 5.17578" stroke={t.badgeText} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
-                     </svg>
-                 )}
+            <div 
+                className="relative rounded-[20px] overflow-hidden p-6 w-full flex flex-col md:flex-row items-center gap-6"
+                style={{ backgroundColor: cardBg }}
+            >
+                {/* Background Ornaments */}
+                <div className="absolute right-0 top-0 h-full w-full pointer-events-none overflow-hidden">
+                     {/* Donut Shape */}
+                     <div 
+                         className="absolute right-[120px] md:right-[220px] -top-[260px] w-[400px] h-[400px] rounded-full opacity-[0.35]"
+                         style={{ border: `80px solid ${ringColor}` }}
+                     />
+                     
+                     {/* Completion Watermark (Seal/Badge Icon) */}
+                     {isFinished && (
+                         <svg className="absolute right-4 -bottom-8 w-28 h-28 opacity-[0.2]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                             <path d="M59.7406 12.2958C54.9969 7.54318 52.6206 5.17578 49.6747 5.17578C46.7288 5.17578 44.3525 7.54763 39.6089 12.2958C36.7609 15.1438 33.9396 16.461 29.8812 16.461C26.339 16.461 21.2927 15.7757 18.5248 18.5658C15.7747 21.3382 16.46 26.3622 16.46 29.8821C16.46 33.9405 15.1383 36.7618 12.2903 39.6098C7.54665 44.3535 5.1748 46.7298 5.1748 49.6757C5.1748 52.6216 7.54665 54.9979 12.2948 59.7416C15.481 62.9322 16.46 64.9926 16.46 69.4693C16.46 73.0115 15.7747 78.0578 18.5648 80.8257C21.3372 83.5713 26.3612 82.8905 29.8812 82.8905C34.2021 82.8905 36.2892 83.736 39.373 86.8198C41.9985 89.4453 45.5184 94.1757 49.6747 94.1757C53.831 94.1757 57.351 89.4453 59.9765 86.8198C63.0648 83.736 65.1474 82.8905 69.4683 82.8905C72.9883 82.8905 78.0123 83.5758 80.7846 80.8257M80.7846 80.8257C83.5748 78.0578 82.8895 73.0115 82.8895 69.4693C82.8895 64.9926 83.8685 62.9322 87.0547 59.7416C91.8028 54.9979 94.1747 52.6216 94.1747 49.6757C94.1747 46.7298 91.8028 44.3535 87.0591 39.6098M80.7846 80.8257H80.8247" stroke={t.badgeText} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                             <path d="M31.874 42.1463C31.874 42.1463 41.8865 40.7757 49.674 58.5757C49.674 58.5757 72.1865 14.0758 94.1739 5.17578" stroke={t.badgeText} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"/>
+                         </svg>
+                     )}
+                </div>
 
-                 {/* Pin Icon with white background box (Top Right) */}
-                 <div className="absolute right-6 top-6 z-50 pointer-events-auto">
+                {/* Pin Icon with white background box (Top Right) */}
+                <div className="absolute right-4 top-4 md:right-6 md:top-6 z-50 pointer-events-auto">
                     <button 
                         type="button"
                         disabled={isLocked}
@@ -279,54 +283,54 @@ function ModuleRow({ course, themeIndex, onClick, onClickPin }) {
                                     : (isLocked ? 'text-gray-400/30' : 'text-gray-400/80')}`} 
                         />
                     </button>
-                 </div>
-            </div>
-
-            <div className="relative z-10 flex w-full items-center gap-6">
-                <div className="flex flex-1 flex-col">
-                    <div className="flex justify-between items-start w-full relative">
-                        <div className="flex-1 pr-4">
-                            <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                <h3 className={`text-[19px] font-bold ${isLocked ? 'text-gray-400' : 'text-gray-900'} leading-snug`}>
-                                    {course.title}
-                                </h3>
-                                <span className="text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: badgeBg, color: badgeText }}>
-                                    Week {course.week}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-[12px] text-gray-500 font-medium mb-4">
-                                <Clock className="w-3.5 h-3.5" /> {course.duration || '60'} minutes
-                                <span className="text-gray-300">|</span>
-                                <Layers className="w-3.5 h-3.5" /> {course.modules} modules
-                            </div>
-                        </div>
-
-                        {/* Percentage Value */}
-                        <div className="flex flex-col items-end pr-2 self-stretch justify-end">
-                             <div className="text-[32px] font-light text-gray-900 leading-none mb-1">
-                                {isFinished ? '100' : (course.progress || 0)}%
-                             </div>
-                        </div>
-                    </div>
-
-                    {/* Industrial Style Progress Bar */}
-                    <div className="w-full bg-black/5 rounded-full h-[6px] relative z-20 overflow-hidden mt-3">
-                        <div 
-                            className="h-full rounded-full transition-all duration-700 bg-black"
-                            style={{ width: `${isFinished ? '100' : (course.progress || 0)}%` }} 
-                        />
-                    </div>
                 </div>
 
-                {/* Action Area (Consistent width for bar alignment) */}
-                <div className="flex-shrink-0 ml-4 self-end">
-                    {!isFinished ? (
-                        <button className="px-10 py-2.5 rounded-full text-[13px] font-black bg-black text-white hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/15 mb-[1px]">
-                            Continue
-                        </button>
-                    ) : (
-                        <div className="w-[148px]" /> /* Placeholder width matching the button area */
-                    )}
+                <div className="relative z-10 flex w-full items-center gap-6">
+                    <div className="flex flex-1 flex-col">
+                        <div className="flex justify-between items-start w-full relative">
+                            <div className="flex-1 pr-4 md:pr-12">
+                                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                                    <h3 className={`text-[19px] font-bold ${isLocked ? 'text-gray-400' : 'text-gray-900'} leading-snug`}>
+                                        {course.title}
+                                    </h3>
+                                    <span className="text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap" style={{ backgroundColor: badgeBg, color: badgeText }}>
+                                        Week {course.week}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-[12px] text-gray-500 font-medium mb-4">
+                                    <Clock className="w-3.5 h-3.5" /> {course.duration || '60'} minutes
+                                    <span className="text-gray-300">|</span>
+                                    <Layers className="w-3.5 h-3.5" /> {course.modules} modules
+                                </div>
+                            </div>
+    
+                            {/* Percentage Value */}
+                            <div className="flex flex-col items-end self-stretch justify-end">
+                                 <div className="text-[32px] font-light text-gray-900 leading-none mb-1">
+                                    {isFinished ? '100' : (course.progress || 0)}%
+                                 </div>
+                            </div>
+                        </div>
+    
+                        {/* Industrial Style Progress Bar */}
+                        <div className="w-full bg-black/5 rounded-full h-[6px] relative z-20 overflow-hidden mt-3">
+                            <div 
+                                className="h-full rounded-full transition-all duration-700 bg-black"
+                                style={{ width: `${isFinished ? '100' : (course.progress || 0)}%` }} 
+                            />
+                        </div>
+                    </div>
+    
+                    {/* Action Area (Consistent width for bar alignment) */}
+                    <div className="flex-shrink-0 ml-0 md:ml-4 self-end">
+                        {!isFinished ? (
+                            <button className="px-10 py-2.5 rounded-full text-[13px] font-black bg-black text-white hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/15 mb-[1px] w-full md:w-auto">
+                                Continue
+                            </button>
+                        ) : (
+                            <div className="w-[148px] hidden md:block" /> /* Placeholder width matching the button area */
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
@@ -755,6 +759,15 @@ export default function Modules() {
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [collapsed, setCollapsed] = useState({
+        active: false,
+        locked: false,
+        finished: false
+    });
+
+    const toggleSection = (key) => {
+        setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     const handlePinToggle = (courseId) => {
         setCourses(prev => prev.map(c => 
@@ -934,54 +947,69 @@ export default function Modules() {
                     {/* Section: Continue Learning */}
                     {courses.filter(c => c.status === 'active').length > 0 && (
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
-                                <h2 className="text-lg font-bold text-gray-800">Continue Learning</h2>
-                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                            <div 
+                                className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 cursor-pointer group"
+                                onClick={() => toggleSection('active')}
+                            >
+                                <h2 className="text-lg font-bold text-gray-800 transition-colors group-hover:text-blue-600">Continue Learning</h2>
+                                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${collapsed.active ? '-rotate-90' : ''}`} />
                             </div>
-                            <div className="flex flex-col gap-4">
-                                {courses
-                                    .filter(c => c.status === 'active')
-                                    .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
-                                    .map((course, i) => (
-                                        <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
-                                    ))}
-                            </div>
+                            {!collapsed.active && (
+                                <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    {courses
+                                        .filter(c => c.status === 'active')
+                                        .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
+                                        .map((course, i) => (
+                                            <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
+                                        ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {/* Section: Locked Materials */}
                     {courses.filter(c => c.status === 'locked').length > 0 && (
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
-                                <h2 className="text-lg font-bold text-gray-800">Locked Materials</h2>
-                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                            <div 
+                                className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 cursor-pointer group"
+                                onClick={() => toggleSection('locked')}
+                            >
+                                <h2 className="text-lg font-bold text-gray-800 transition-colors group-hover:text-blue-600">Locked Materials</h2>
+                                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${collapsed.locked ? '-rotate-90' : ''}`} />
                             </div>
-                            <div className="flex flex-col gap-4">
-                                {courses
-                                    .filter(c => c.status === 'locked')
-                                    .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
-                                    .map((course, i) => (
-                                        <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
-                                    ))}
-                            </div>
+                            {!collapsed.locked && (
+                                <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    {courses
+                                        .filter(c => c.status === 'locked')
+                                        .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
+                                        .map((course, i) => (
+                                            <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
+                                        ))}
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {/* Section: Completed Materials */}
                     {courses.filter(c => c.status === 'finished').length > 0 && (
                         <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2">
-                                <h2 className="text-lg font-bold text-gray-800">Completed Materials</h2>
-                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                            <div 
+                                className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 cursor-pointer group"
+                                onClick={() => toggleSection('finished')}
+                            >
+                                <h2 className="text-lg font-bold text-gray-800 transition-colors group-hover:text-blue-600">Completed Materials</h2>
+                                <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${collapsed.finished ? '-rotate-90' : ''}`} />
                             </div>
-                            <div className="flex flex-col gap-4">
-                                {courses
-                                    .filter(c => c.status === 'finished')
-                                    .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
-                                    .map((course, i) => (
-                                        <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
-                                    ))}
-                            </div>
+                            {!collapsed.finished && (
+                                <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                    {courses
+                                        .filter(c => c.status === 'finished')
+                                        .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
+                                        .map((course, i) => (
+                                            <ModuleRow key={course.id} course={course} themeIndex={i} onClick={() => setSelectedCourse(course)} onClickPin={handlePinToggle} />
+                                        ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
