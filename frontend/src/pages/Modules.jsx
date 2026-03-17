@@ -843,7 +843,7 @@ export default function Modules() {
     let activeCardIdx = 0;
 
     return (
-        <div className="max-w-[1400px] mx-auto pb-12" style={{ fontFamily: "'Outfit', sans-serif" }}>
+        <div className="w-full pb-12" style={{ fontFamily: "'Outfit', sans-serif" }}>
 
             {/* ── Top bar ── */}
             <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">

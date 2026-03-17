@@ -14,12 +14,12 @@ import 'katex/dist/katex.min.css';
 const formatTitle = (text) => {
     if (!text) return "New Chat";
     const lowercaseWords = new Set([
-        'dan', 'atau', 'tetapi', 'karena', 'jika', 'agar', 'supaya', 'dengan', 
-        'bahwa', 'yang', 'untuk', 'di', 'ke', 'dari', 'pada', 'dalam', 'yaitu', 
-        'yakni', 'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 
+        'dan', 'atau', 'tetapi', 'karena', 'jika', 'agar', 'supaya', 'dengan',
+        'bahwa', 'yang', 'untuk', 'di', 'ke', 'dari', 'pada', 'dalam', 'yaitu',
+        'yakni', 'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at',
         'to', 'from', 'by', 'over', 'in', 'of', 'with', 'about', 'as', 'into', 'like'
     ]);
-    
+
     return text.split(/\s+/).map((word, index) => {
         if (word.length === 0) return word;
         const lowerWord = word.toLowerCase();
@@ -34,18 +34,18 @@ const formatTitle = (text) => {
 export default function Exercise() {
     const navigate = useNavigate();
     const { user } = useAuth();
-    
+
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef(null);
-    
+
     // Evaluation Logic States
     const [activeQuestion, setActiveQuestion] = useState(null);
     const [correctAnswer, setCorrectAnswer] = useState(null);
     const [wrongAttempts, setWrongAttempts] = useState(0);
     const [followupCount, setFollowupCount] = useState(0);
-    
+
     // History states
     const [sessions, setSessions] = useState([]);
     const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -76,7 +76,7 @@ export default function Exercise() {
 
         const userMsg = input.trim();
         setInput('');
-        
+
         // Add user message to UI
         const newMessages = [...messages, { role: 'user', content: userMsg }];
         setMessages(newMessages);
@@ -110,7 +110,7 @@ export default function Exercise() {
 
             // Call LLM Service directly via decoupled logic
             const sessionIdStr = `user-${user?.id || 'guest'}`;
-            
+
             // Ekstrak preference code (misal: "3TGR") jika ada, format aman
             let cognitive = '1PAR'; // Default baseline
             if (user?.preferences) {
@@ -122,51 +122,51 @@ export default function Exercise() {
                     cognitive = cleanedPrefs.toUpperCase();
                 }
             }
-            
-            if (activeQuestion) {
-                 // ======= EVALUATION MODE =======
-                 const evalData = await llmService.evaluate(
-                     userMsg, 
-                     correctAnswer, 
-                     activeQuestion, 
-                     sessionIdStr, 
-                     cognitive, 
-                     wrongAttempts
-                 );
-                 
-                 let asstPayload = {};
 
-                 if (evalData.is_correct) {
-                     // Selesai/Benar
-                     setActiveQuestion(null);
-                     setWrongAttempts(0);
-                     
-                     asstPayload = {
-                         role: 'assistant',
-                         type: 'evaluation',
-                         status: 'correct',
-                         content: "✅ **Jawabanmu BENAR!**\n\n" + (evalData.feedback || ""),
-                         activeQuestion: null,
-                         correctAnswer: null,
-                         wrongAttempts: 0,
-                         followupCount: followupCount
-                     };
-                 } else {
-                     // Salah
-                     const newAttempts = wrongAttempts + 1;
-                     setWrongAttempts(newAttempts);
-                     const nextFollowup = evalData.followup_question || null;
-                     
-                     if (nextFollowup) {
-                         setActiveQuestion(nextFollowup);
-                         setFollowupCount(prev => prev + 1);
-                     }
-                     
-                     let content = `❌ **Jawabanmu belum tepat.**\n\n` + 
-                                   `*Petunjuk (${evalData.hint_level || "Evaluasi"}):*\n\n` + 
-                                   (evalData.feedback || "");
-                                   
-                     asstPayload = {
+            if (activeQuestion) {
+                // ======= EVALUATION MODE =======
+                const evalData = await llmService.evaluate(
+                    userMsg,
+                    correctAnswer,
+                    activeQuestion,
+                    sessionIdStr,
+                    cognitive,
+                    wrongAttempts
+                );
+
+                let asstPayload = {};
+
+                if (evalData.is_correct) {
+                    // Selesai/Benar
+                    setActiveQuestion(null);
+                    setWrongAttempts(0);
+
+                    asstPayload = {
+                        role: 'assistant',
+                        type: 'evaluation',
+                        status: 'correct',
+                        content: "✅ **Jawabanmu BENAR!**\n\n" + (evalData.feedback || ""),
+                        activeQuestion: null,
+                        correctAnswer: null,
+                        wrongAttempts: 0,
+                        followupCount: followupCount
+                    };
+                } else {
+                    // Salah
+                    const newAttempts = wrongAttempts + 1;
+                    setWrongAttempts(newAttempts);
+                    const nextFollowup = evalData.followup_question || null;
+
+                    if (nextFollowup) {
+                        setActiveQuestion(nextFollowup);
+                        setFollowupCount(prev => prev + 1);
+                    }
+
+                    let content = `❌ **Jawabanmu belum tepat.**\n\n` +
+                        `*Petunjuk (${evalData.hint_level || "Evaluasi"}):*\n\n` +
+                        (evalData.feedback || "");
+
+                    asstPayload = {
                         role: 'assistant',
                         type: 'evaluation',
                         status: 'incorrect',
@@ -177,33 +177,33 @@ export default function Exercise() {
                         correctAnswer: correctAnswer,
                         wrongAttempts: newAttempts,
                         followupCount: nextFollowup ? (followupCount + 1) : followupCount
-                     };
-                 }
-                 
-                 setMessages(prev => [...prev, asstPayload]);
-                 await historyService.addMessage(activeSessionId, 'assistant', asstPayload);
-                 
+                    };
+                }
+
+                setMessages(prev => [...prev, asstPayload]);
+                await historyService.addMessage(activeSessionId, 'assistant', asstPayload);
+
             } else {
                 // ======= NORMAL CHAT MODE =======
                 const data = await llmService.chat(userMsg, sessionIdStr, cognitive);
-                
+
                 let activeQ = null;
                 let cAns = null;
                 let nextFollowupCount = 0;
 
                 if (data.followup_question) {
-                     activeQ = data.followup_question;
-                     cAns = data.reply;
-                     nextFollowupCount = 1;
+                    activeQ = data.followup_question;
+                    cAns = data.reply;
+                    nextFollowupCount = 1;
 
-                     setActiveQuestion(activeQ);
-                     setCorrectAnswer(cAns);
-                     setWrongAttempts(0);
-                     setFollowupCount(1);
+                    setActiveQuestion(activeQ);
+                    setCorrectAnswer(cAns);
+                    setWrongAttempts(0);
+                    setFollowupCount(1);
                 }
-                
-                const asstPayload = { 
-                    role: 'assistant', 
+
+                const asstPayload = {
+                    role: 'assistant',
                     type: 'chat',
                     content: data.reply,
                     followup: data.followup_question,
@@ -221,9 +221,9 @@ export default function Exercise() {
 
         } catch (error) {
             console.error('Error in chat:', error);
-            setMessages(prev => [...prev, { 
-                role: 'assistant', 
-                content: "I'm sorry, I encountered an error connecting to my thought engine. Please try again or check the server." 
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: "I'm sorry, I encountered an error connecting to my thought engine. Please try again or check the server."
             }]);
         } finally {
             setIsLoading(false);
@@ -252,7 +252,7 @@ export default function Exercise() {
             setIsLoading(true);
             const data = await historyService.getSessionDetail(id);
             setCurrentSessionId(id);
-            
+
             let lastActiveQ = null;
             let lastCorrectA = null;
             let lastAttempts = 0;
@@ -281,7 +281,7 @@ export default function Exercise() {
             setCorrectAnswer(lastCorrectA);
             setWrongAttempts(lastAttempts);
             setFollowupCount(lastFollowCount);
-        } catch(error) {
+        } catch (error) {
             console.error("Failed to fetch session detail", error);
         } finally {
             setIsLoading(false);
@@ -289,9 +289,9 @@ export default function Exercise() {
     };
 
     return (
-        <div className="flex h-screen bg-white font-['Inter',sans-serif]">
+        <div className="flex bg-white font-['Inter',sans-serif] h-[calc(100vh-80px)] overflow-hidden">
             {/* Custom Sidebar for Exercise */}
-            <aside className="w-[280px] bg-[#F8FAFC] border-r border-gray-100 flex flex-col z-20">
+            <aside className="w-[300px] bg-[#F8FAFC] border-r border-gray-100 flex flex-col z-20">
                 {/* Logo */}
                 <div className="p-6">
                     <div className="flex items-center gap-3">
@@ -316,7 +316,7 @@ export default function Exercise() {
 
                 {/* New Chat Button */}
                 <div className="px-6 py-6">
-                    <button 
+                    <button
                         onClick={startNewChat}
                         className="flex items-center gap-3 text-sm font-bold text-gray-700 hover:text-black transition-colors w-full"
                     >
@@ -336,16 +336,15 @@ export default function Exercise() {
                                 const firstUserMsg = session.messages.find(m => m.role === 'user');
                                 if (firstUserMsg) previewText = formatTitle(firstUserMsg.content);
                             }
-                            
+
                             return (
-                                <p 
-                                    key={session.id} 
+                                <p
+                                    key={session.id}
                                     onClick={() => loadSessionDetail(session.id)}
-                                    className={`text-[11px] font-bold cursor-pointer truncate transition-colors ${
-                                        currentSessionId === session.id 
-                                            ? 'text-blue-600 bg-blue-50 -mx-3 px-3 py-1.5 rounded-lg' 
-                                            : 'text-gray-500 hover:text-gray-900 py-1.5'
-                                    }`}
+                                    className={`text-[11px] font-bold cursor-pointer truncate transition-colors ${currentSessionId === session.id
+                                        ? 'text-blue-600 bg-blue-50 -mx-3 px-3 py-1.5 rounded-lg'
+                                        : 'text-gray-500 hover:text-gray-900 py-1.5'
+                                        }`}
                                 >
                                     {previewText}
                                 </p>
@@ -360,7 +359,7 @@ export default function Exercise() {
                         <Settings className="w-4 h-4" />
                         Settings
                     </button>
-                    <button 
+                    <button
                         onClick={() => navigate('/dashboard')}
                         className="flex items-center gap-3 text-[13px] font-bold text-gray-700 hover:text-black transition-colors w-full"
                     >
@@ -371,15 +370,11 @@ export default function Exercise() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col w-full h-screen overflow-hidden bg-white relative">
-                {/* Header */}
-                <header className="flex-shrink-0 px-8 py-6 w-full bg-white/80 backdrop-blur-md z-10">
-                    <h2 className="text-xl font-bold text-gray-600">Exercise</h2>
-                </header>
+            <main className="flex-1 flex flex-col w-full overflow-hidden bg-white relative">
 
                 {/* Content Container */}
                 <div className="flex-1 flex flex-col w-full max-w-[800px] mx-auto overflow-hidden relative">
-                    
+
                     {messages.length === 0 ? (
                         /* Welcome Area Centered */
                         <div className="flex-1 flex flex-col items-center justify-center px-4 w-full">
@@ -397,20 +392,19 @@ export default function Exercise() {
                         <div className="flex-1 overflow-y-auto space-y-6 px-4 custom-scrollbar flex flex-col pb-4 w-full">
                             {messages.map((msg, index) => (
                                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full`}>
-                                    
+
                                     <div className={`flex flex-col max-w-[85%] sm:max-w-[80%]`}>
-                                        <div className={`rounded-2xl px-5 py-4 ${
-                                            msg.role === 'user' 
-                                                ? 'bg-[#F4F4F5] text-gray-800 rounded-tr-sm shadow-none' 
-                                                : msg.status === 'correct' 
-                                                  ? 'bg-[#f0fdf4] text-gray-800 rounded-tl-sm'
-                                                  : msg.status === 'incorrect'
+                                        <div className={`rounded-2xl px-5 py-4 ${msg.role === 'user'
+                                            ? 'bg-[#F4F4F5] text-gray-800 rounded-tr-sm shadow-none'
+                                            : msg.status === 'correct'
+                                                ? 'bg-[#f0fdf4] text-gray-800 rounded-tl-sm'
+                                                : msg.status === 'incorrect'
                                                     ? 'bg-[#fef2f2] text-gray-800 rounded-tl-sm'
                                                     : 'bg-white text-gray-800 rounded-tl-sm'
-                                        }`}>
+                                            }`}>
                                             <div className="text-[14px] leading-relaxed markdown-body prose prose-sm max-w-none">
-                                                <ReactMarkdown 
-                                                    remarkPlugins={[remarkMath]} 
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkMath]}
                                                     rehypePlugins={[rehypeKatex]}
                                                 >
                                                     {msg.content}
@@ -426,8 +420,8 @@ export default function Exercise() {
                                                     Pertanyaan Lanjutan {msg.followupIndex ? `#${msg.followupIndex}` : ''}
                                                 </span>
                                                 <div className="text-[14px] leading-relaxed text-gray-800 markdown-body prose prose-sm max-w-none">
-                                                    <ReactMarkdown 
-                                                        remarkPlugins={[remarkMath]} 
+                                                    <ReactMarkdown
+                                                        remarkPlugins={[remarkMath]}
                                                         rehypePlugins={[rehypeKatex]}
                                                     >
                                                         {msg.followup}
@@ -439,8 +433,8 @@ export default function Exercise() {
 
                                     {msg.role === 'user' && (
                                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center ml-3 mt-1 overflow-hidden">
-                                           {user?.profilePicture ? 
-                                                <img src={user.profilePicture} alt="User" /> : 
+                                            {user?.profilePicture ?
+                                                <img src={user.profilePicture} alt="User" /> :
                                                 <UserIcon className="w-4 h-4 text-gray-500" />
                                             }
                                         </div>
@@ -463,21 +457,20 @@ export default function Exercise() {
                     {/* Chat Input Field */}
                     <div className="flex-shrink-0 px-4 pb-8 pt-2 w-full bg-white">
                         <div className="w-full relative flex items-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] bg-white border border-gray-200 p-2 pl-6 transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-200">
-                            <textarea 
+                            <textarea
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 disabled={isLoading}
-                                placeholder="Ask anything" 
+                                placeholder="Ask anything"
                                 className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-gray-700 placeholder:text-gray-400 resize-none h-10 py-2.5 custom-scrollbar"
                                 rows={1}
                             />
-                            <button 
+                            <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || isLoading}
-                                className={`w-10 h-10 ml-2 rounded-[14px] flex items-center justify-center transition-all shadow-sm flex-shrink-0 ${
-                                    input.trim() && !isLoading ? 'bg-[#3B82F6] hover:bg-blue-600 text-white active:scale-95' : 'bg-gray-100 text-gray-400'
-                                }`}
+                                className={`w-10 h-10 ml-2 rounded-[14px] flex items-center justify-center transition-all shadow-sm flex-shrink-0 ${input.trim() && !isLoading ? 'bg-[#3B82F6] hover:bg-blue-600 text-white active:scale-95' : 'bg-gray-100 text-gray-400'
+                                    }`}
                             >
                                 <Send className="w-4 h-4 ml-[-2px]" />
                             </button>

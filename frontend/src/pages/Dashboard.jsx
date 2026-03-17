@@ -86,7 +86,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="max-w-[1400px] mx-auto animate-fade-in p-4 sm:p-0 lg:min-h-[calc(100vh-80px)] lg:flex lg:flex-col pb-8">
+    <div className="w-full animate-fade-in p-4 sm:p-0 lg:min-h-[calc(100vh-80px)] lg:flex lg:flex-col pb-8">
       {/* Welcome Header */}
       <div className="mb-6 shrink-0">
         <h1 className="text-3xl font-bold text-gray-800 font-['Outfit'] mb-1">
