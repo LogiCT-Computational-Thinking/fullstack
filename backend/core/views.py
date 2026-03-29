@@ -1448,13 +1448,13 @@ def admin_toggle_course(request, pk):
     })
 
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @authentication_classes([CustomJWTAuthentication])
 @permission_classes([IsAuthenticated])
 def admin_upload_material_to_course(request, course_pk):
     """
-    POST /api/admin/courses/<course_pk>/materials/
-    Upload a material file to a specific course.
+    GET  /api/admin/courses/<course_pk>/materials/ — List all materials for this course.
+    POST /api/admin/courses/<course_pk>/materials/ — Upload a new material file.
     """
     if request.user.role not in ['teacher', 'admin']:
         return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
@@ -1467,6 +1467,12 @@ def admin_upload_material_to_course(request, course_pk):
     except Course.DoesNotExist:
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
 
+    if request.method == 'GET':
+        materials = Material.objects.filter(course=course).order_by('order')
+        serializer = MaterialSerializer(materials, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    # POST
     serializer = MaterialSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save(course=course)
@@ -1521,13 +1527,12 @@ def manage_admin_materials(request):
             print("ERROR IN MATERIALS POST:", tb)
             return Response({"error": str(e), "traceback": tb}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@api_view(['PATCH'])
+@api_view(['PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def admin_update_material(request, pk):
     """
-    PATCH /api/admin/materials/<pk>/
-    Update file (atau field lain) dari material yang sudah ada.
-    Digunakan oleh inline upload di admin course card.
+    PATCH  /api/admin/materials/<pk>/ — Update file or fields of an existing material.
+    DELETE /api/admin/materials/<pk>/ — Delete a material.
     """
     if request.user.role not in ['teacher', 'admin']:
         return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
@@ -1536,6 +1541,10 @@ def admin_update_material(request, pk):
         material = Material.objects.get(pk=pk)
     except Material.DoesNotExist:
         raise Http404('Material tidak ditemukan.')
+
+    if request.method == 'DELETE':
+        material.delete()
+        return Response({"message": "Material berhasil dihapus"}, status=status.HTTP_200_OK)
 
     serializer = MaterialSerializer(material, data=request.data, partial=True)
     if serializer.is_valid():

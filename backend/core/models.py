@@ -395,6 +395,7 @@ class Material(models.Model):
     file_type = models.CharField(max_length=10, choices=FILE_TYPE_CHOICES, default='pdf')  # Jenis file
     file = models.FileField(upload_to='materials/')
     order = models.IntegerField(default=1)                   # Urutan jika >1 materi per minggu
+    is_active = models.BooleanField(default=True)            # Apakah materi terlihat oleh mahasiswa
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

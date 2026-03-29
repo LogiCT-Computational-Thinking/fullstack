@@ -1,291 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    UploadCloud, FileText, Loader2, ExternalLink, ChevronDown,
-    ChevronUp, ToggleLeft, ToggleRight, Plus, X, CheckCircle2,
-    AlertCircle, BookOpen, Layers, Lock, Unlock, Trash2, PlusCircle, Calendar
+    Plus, Search, BookOpen, Loader2,
+    CheckCircle2, AlertCircle, X, FileText,
+    Upload, Trash2, Eye, EyeOff, FilePlus2, Settings2,
+    AlertTriangle
 } from 'lucide-react';
-import axios from 'axios';
 import api from '../services/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
-
-// ─── Toggle Switch Component ───────────────────────────────────────────────────
-function ActiveToggle({ courseId, isActive, onToggle, loading }) {
-    return (
-        <button
-            onClick={() => onToggle(courseId)}
-            disabled={loading}
-            title={isActive ? 'Klik untuk Nonaktifkan' : 'Klik untuk Aktifkan'}
-            className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 border
-                ${isActive
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                    : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
-                } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
-        >
-            {loading ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : isActive ? (
-                <ToggleRight className="w-4 h-4" />
-            ) : (
-                <ToggleLeft className="w-4 h-4" />
-            )}
-            {isActive ? 'Active' : 'Inactive'}
-        </button>
-    );
-}
-
-// ─── Add Course Modal ──────────────────────────────────────────────────────────
-function AddCourseModal({ onClose, onSuccess }) {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [week, setWeek] = useState(1);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setError('');
-        try {
-            const token = localStorage.getItem('access_token');
-            await axios.post(`${API_URL}/admin/courses/`, { title, description, week }, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            onSuccess();
-            onClose();
-        } catch (err) {
-            const data = err.response?.data;
-            if (data && typeof data === 'object') {
-                setError(Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`).join(' | '));
-            } else {
-                setError('Gagal membuat course baru.');
-            }
-        } finally {
-            setSaving(false);
-        }
+// ─────────────────────────────────────────────────────────────
+// Reusable Result / Confirmation Modal
+// type: 'success' | 'error' | 'warning'
+// ─────────────────────────────────────────────────────────────
+function FeedbackModal({ type, title, subtitle, primaryLabel, secondaryLabel, onPrimary, onSecondary, onClose }) {
+    const icons = {
+        success: (
+            <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center mx-auto mb-5">
+                <CheckCircle2 className="w-9 h-9 text-white" strokeWidth={2.5} />
+            </div>
+        ),
+        error: (
+            <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center mx-auto mb-5">
+                <X className="w-9 h-9 text-white" strokeWidth={3} />
+            </div>
+        ),
+        warning: (
+            <div className="w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center mx-auto mb-5">
+                <AlertTriangle className="w-8 h-8 text-white" strokeWidth={2.5} />
+            </div>
+        ),
     };
 
     return (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-                style={{ animation: 'scaleIn 0.2s ease-out' }}>
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-                    <div>
-                        <h3 className="font-bold text-gray-900">Tambah Course Baru</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">Isi data course yang akan dibuat</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-white/60 text-gray-400 transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+        <div className="fixed inset-0 z-[700] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-[1.75rem] shadow-2xl w-full max-w-sm p-8 relative animate-in fade-in zoom-in-95 duration-200 text-center">
+                <button onClick={onClose || onSecondary} className="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition-colors">
+                    <X className="w-4 h-4" />
+                </button>
 
-                <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-4">
-                    {error && (
-                        <div className="flex items-start gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold">
-                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                            <span>{error}</span>
-                        </div>
-                    )}
+                {icons[type]}
 
-                    {/* Week */}
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-gray-600 flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5 text-blue-500" /> Minggu ke- *
-                        </label>
-                        <input
-                            type="number" min="1" max="20" required
-                            value={week} onChange={e => setWeek(parseInt(e.target.value))}
-                            className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                            placeholder="Contoh: 8"
-                        />
-                    </div>
+                <h3 className="text-[18px] font-black text-gray-900 mb-2">{title}</h3>
+                {subtitle && <p className="text-[12.5px] text-gray-400 font-semibold leading-relaxed mb-7">{subtitle}</p>}
 
-                    {/* Title */}
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-gray-600 flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5 text-blue-500" /> Judul Course *
-                        </label>
-                        <input
-                            required value={title} onChange={e => setTitle(e.target.value)}
-                            placeholder="Contoh: Pengenalan Computational Thinking"
-                            className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-                        />
-                    </div>
-
-                    {/* Description */}
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-gray-600">Deskripsi</label>
-                        <textarea
-                            value={description} onChange={e => setDescription(e.target.value)}
-                            rows="3" placeholder="Deskripsi singkat tentang course ini..."
-                            className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
-                        />
-                    </div>
-
-                    <div className="flex gap-2 mt-1">
-                        <button type="button" onClick={onClose}
-                            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
-                            Batal
+                <div className={`flex gap-3 mt-6 ${secondaryLabel ? 'justify-between' : 'justify-center'}`}>
+                    {secondaryLabel && (
+                        <button
+                            onClick={onSecondary}
+                            className="flex-1 py-2.5 rounded-full bg-gray-100 text-gray-500 text-[13px] font-black hover:bg-gray-200 transition-all"
+                        >
+                            {secondaryLabel}
                         </button>
-                        <button type="submit" disabled={saving}
-                            className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-md shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                            {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...</> : <><PlusCircle className="w-4 h-4" /> Buat Course</>}
-                        </button>
-                    </div>
-                </form>
-
-                <style>{`@keyframes scaleIn { from{opacity:0;transform:scale(.95) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }`}</style>
-            </div>
-        </div>
-    );
-}
-
-// ─── Upload Material Modal ─────────────────────────────────────────────────────
-function UploadModal({ course, onClose, onSuccess }) {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [fileType, setFileType] = useState('pdf');
-    const [order, setOrder] = useState((course?.materials?.length || 0) + 1);
-    const [file, setFile] = useState(null);
-    const [uploading, setUploading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!file) { setError('Pilih file terlebih dahulu'); return; }
-
-        setUploading(true);
-        setError('');
-
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('description', description);
-        formData.append('file_type', fileType);
-        formData.append('order', order);
-        formData.append('file', file);
-
-        try {
-            const token = localStorage.getItem('access_token');
-            await axios.post(`${API_URL}/admin/courses/${course.id}/materials/`, formData, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            onSuccess();
-            onClose();
-        } catch (err) {
-            const data = err.response?.data;
-            if (data && typeof data === 'object') {
-                setError(Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(' ') : v}`).join(' | '));
-            } else {
-                setError('Gagal mengupload material.');
-            }
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden"
-                style={{ animation: 'scaleIn 0.2s ease-out' }}>
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-                    <div>
-                        <h3 className="font-bold text-gray-900">Upload Material</h3>
-                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                            <span className="font-semibold text-blue-600">Week {course?.week}</span> · {course?.title}
-                        </p>
-                    </div>
-                    <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 text-gray-400 transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-3">
-                    {error && (
-                        <div className="flex items-start gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-xs font-semibold">
-                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                            <span>{error}</span>
-                        </div>
                     )}
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-gray-600">Judul Material *</label>
-                        <input required value={title} onChange={e => setTitle(e.target.value)}
-                            placeholder="Contoh: Apa itu Computational Thinking?"
-                            className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors" />
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-gray-600">Deskripsi</label>
-                        <textarea value={description} onChange={e => setDescription(e.target.value)}
-                            rows="2" placeholder="Deskripsi singkat material ini..."
-                            className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors resize-none" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1">
-                            <label className="text-xs font-bold text-gray-600">Urutan</label>
-                            <input type="number" min="1" required value={order} onChange={e => setOrder(parseInt(e.target.value))}
-                                className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors" />
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <label className="text-xs font-bold text-gray-600">Tipe</label>
-                            <select value={fileType} onChange={e => setFileType(e.target.value)}
-                                className="px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-400 transition-colors cursor-pointer">
-                                <option value="pdf">PDF</option>
-                                <option value="ppt">PPT</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold text-gray-600">File (.pdf / .pptx) *</label>
-                        <input id="modal-file-upload" type="file" required
-                            onChange={e => setFile(e.target.files[0])}
-                            accept=".pdf,.ppt,.pptx,.mp4,.webm"
-                            className="w-full text-xs text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer bg-gray-50 border border-gray-200 rounded-xl p-1" />
-                    </div>
-
-                    <button type="submit" disabled={uploading}
-                        className="mt-1 w-full bg-blue-600 text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-blue-500/20 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Mengupload...</> : <><UploadCloud className="w-4 h-4" /> Upload ke Course Ini</>}
-                    </button>
-                </form>
-
-                <style>{`@keyframes scaleIn { from{opacity:0;transform:scale(.95) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }`}</style>
-            </div>
-        </div>
-    );
-}
-
-// ─── Confirm Delete Dialog ─────────────────────────────────────────────────────
-function ConfirmDeleteModal({ course, onClose, onConfirm, loading }) {
-    return (
-        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-            <div className="relative bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 text-center"
-                style={{ animation: 'scaleIn 0.2s ease-out' }}>
-                <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-                    <Trash2 className="w-7 h-7 text-red-500" />
-                </div>
-                <h3 className="font-bold text-gray-900 text-lg mb-1">Hapus Course?</h3>
-                <p className="text-sm text-gray-500 mb-1">
-                    Course <span className="font-semibold text-gray-700">"{course?.title}"</span> dan semua materialnya akan dihapus permanen.
-                </p>
-                <p className="text-xs text-red-400 font-semibold mb-5">Tindakan ini tidak bisa dibatalkan!</p>
-                <div className="flex gap-2">
-                    <button onClick={onClose}
-                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
-                        Batal
-                    </button>
-                    <button onClick={onConfirm} disabled={loading}
-                        className="flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                        Hapus
+                    <button
+                        onClick={onPrimary}
+                        className={`${secondaryLabel ? 'flex-1' : 'px-10'} py-2.5 rounded-full bg-black text-white text-[13px] font-black hover:bg-gray-800 active:scale-95 transition-all`}
+                    >
+                        {primaryLabel}
                     </button>
                 </div>
             </div>
@@ -293,193 +63,37 @@ function ConfirmDeleteModal({ course, onClose, onConfirm, loading }) {
     );
 }
 
-// ─── Course Card ──────────────────────────────────────────────────────────────
-function CourseCard({ course, onToggle, onUpload, onDelete, togglingId, onRefresh }) {
-    const [expanded, setExpanded] = useState(false);
-    const [inlineUpload, setInlineUpload] = useState(null);
-    const [inlineFile, setInlineFile] = useState(null);
-    const [uploading, setUploading] = useState(false);
-    const [inlineError, setInlineError] = useState('');
-    const materials = course.materials || [];
-
-    const handleInlineUpload = async (mat) => {
-        if (!inlineFile) { setInlineError('Pilih file terlebih dahulu'); return; }
-        setUploading(true);
-        setInlineError('');
-        try {
-            const token = localStorage.getItem('access_token');
-            const formData = new FormData();
-            formData.append('file', inlineFile);
-            formData.append('title', mat.title);
-            formData.append('file_type', mat.file_type || 'pdf');
-            formData.append('order', mat.order || 1);
-            await axios.patch(`${API_URL}/admin/materials/${mat.id}/`, formData, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            setInlineUpload(null);
-            setInlineFile(null);
-            onRefresh();
-        } catch (err) {
-            setInlineError('Gagal upload. Coba lagi.');
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    return (
-        <div className={`border rounded-2xl overflow-hidden transition-all duration-200 ${course.is_active ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50/50'}`}>
-            {/* Card Header */}
-            <div className="flex items-center gap-3 p-4">
-                {/* Week badge */}
-                <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black
-                    ${course.is_active ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
-                    W{course.week ?? '?'}
-                </div>
-
-                {/* Title + meta */}
-                <div className="flex-1 min-w-0">
-                    <h3 className={`font-bold text-sm leading-snug truncate ${course.is_active ? 'text-gray-800' : 'text-gray-400'}`}>
-                        {course.title}
-                    </h3>
-                    <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1.5">
-                        <BookOpen className="w-3 h-3" />
-                        {materials.length} material{materials.length !== 1 ? 's' : ''}
-                    </p>
-                </div>
-
-                {/* Controls */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                    <ActiveToggle
-                        courseId={course.id}
-                        isActive={course.is_active}
-                        onToggle={onToggle}
-                        loading={togglingId === course.id}
-                    />
-                    {/* Tambah material */}
-                    <button
-                        onClick={() => onUpload(course)}
-                        title="Upload Material ke Course ini"
-                        className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 text-white rounded-full text-xs font-bold hover:bg-blue-700 active:scale-95 transition-all"
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                    </button>
-                    {/* Hapus course */}
-                    <button
-                        onClick={() => onDelete(course)}
-                        title="Hapus Course"
-                        className="p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                        onClick={() => setExpanded(!expanded)}
-                        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 transition-colors"
-                    >
-                        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
-                </div>
-            </div>
-
-            {/* Materials list (expanded) */}
-            {expanded && (
-                <div className="border-t border-gray-100 bg-gray-50/50 px-4 py-3 flex flex-col gap-2">
-                    {materials.length === 0 ? (
-                        <div className="text-center py-4">
-                            <p className="text-xs text-gray-400 mb-2">Belum ada material</p>
-                            <button onClick={() => onUpload(course)}
-                                className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1 mx-auto">
-                                <Plus className="w-3 h-3" /> Klik untuk upload material
-                            </button>
-                        </div>
-                    ) : (
-                        materials.map((mat, idx) => (
-                            <div key={mat.id} className="flex flex-col gap-2 bg-white rounded-xl p-3 border border-gray-100">
-                                {/* Row utama */}
-                                <div className="flex items-center gap-3">
-                                    <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                                        {mat.file_type === 'ppt' ? <Layers className="w-3.5 h-3.5 text-orange-500" /> : <FileText className="w-3.5 h-3.5 text-blue-500" />}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-semibold text-gray-700 truncate">{idx + 1}. {mat.title}</p>
-                                        <p className="text-[10px] text-gray-400">
-                                            {mat.file_type?.toUpperCase()} · Urutan {mat.order} ·{mat.file_url
-                                                ? <span className="text-emerald-500"> ✅ Ada file</span>
-                                                : <span className="text-amber-500"> ⚠️ Belum ada file</span>
-                                            }
-                                        </p>
-                                    </div>
-                                    {/* Action kanan */}
-                                    {mat.file_url ? (
-                                        <a href={mat.file_url} target="_blank" rel="noreferrer"
-                                            className="flex-shrink-0 p-1.5 text-blue-400 hover:text-blue-600 transition-colors">
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                        </a>
-                                    ) : (
-                                        <button
-                                            onClick={() => {
-                                                setInlineUpload(inlineUpload === mat.id ? null : mat.id);
-                                                setInlineFile(null);
-                                                setInlineError('');
-                                            }}
-                                            className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 text-[10px] font-bold border border-amber-200 transition-all active:scale-95"
-                                        >
-                                            <UploadCloud className="w-3 h-3" />
-                                            Upload File
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* Inline upload form */}
-                                {inlineUpload === mat.id && !mat.file_url && (
-                                    <div className="flex flex-col gap-2 pt-1 border-t border-gray-100 mt-1">
-                                        {inlineError && (
-                                            <p className="text-[10px] text-red-500 font-semibold">{inlineError}</p>
-                                        )}
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="file"
-                                                accept=".pdf,.ppt,.pptx"
-                                                onChange={e => setInlineFile(e.target.files[0])}
-                                                className="flex-1 text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer bg-gray-50 border border-gray-200 rounded-lg p-1"
-                                            />
-                                            <button
-                                                onClick={() => handleInlineUpload(mat)}
-                                                disabled={uploading || !inlineFile}
-                                                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-[10px] font-bold rounded-lg hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                                            >
-                                                {uploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <UploadCloud className="w-3 h-3" />}
-                                                {uploading ? 'Uploading...' : 'Upload'}
-                                            </button>
-                                            <button
-                                                onClick={() => { setInlineUpload(null); setInlineFile(null); setInlineError(''); }}
-                                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition-colors"
-                                            >
-                                                <X className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Main Page
+// ─────────────────────────────────────────────────────────────
 export default function AdminMaterials() {
     const [courses, setCourses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [togglingId, setTogglingId] = useState(null);
-    const [uploadTarget, setUploadTarget] = useState(null);
-    const [deleteTarget, setDeleteTarget] = useState(null);
-    const [deleting, setDeleting] = useState(false);
-    const [showAddCourse, setShowAddCourse] = useState(false);
-    const [toast, setToast] = useState(null);
     const [filterStatus, setFilterStatus] = useState('all');
     const [search, setSearch] = useState('');
+    const [toast, setToast] = useState(null);
+    const [showAddCourse, setShowAddCourse] = useState(false);
+
+    // Edit flow modals
+    const [editTarget, setEditTarget] = useState(null);
+    const [editStep, setEditStep] = useState(null); // 'choose' | 'add' | 'manage'
+    const [materials, setMaterials] = useState([]);
+    const [matLoading, setMatLoading] = useState(false);
+    const [matSearch, setMatSearch] = useState('');
+    const [visibility, setVisibility] = useState(true);
+
+    // Add Content form state
+    const [addForm, setAddForm] = useState({ title: '', description: '', order: 1 });
+    const [addFile, setAddFile] = useState(null);
+    const [addSaving, setAddSaving] = useState(false);
+    const fileInputRef = useRef(null);
+
+    // Feedback / Confirmation modal state
+    const [feedback, setFeedback] = useState(null);
+    // { type, title, subtitle, primaryLabel, secondaryLabel, onPrimary, onSecondary }
+
+    // Pending actions (for confirmations)
+    const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
     useEffect(() => { fetchCourses(); }, []);
 
@@ -488,7 +102,7 @@ export default function AdminMaterials() {
         try {
             const res = await api.get('/admin/courses/');
             setCourses(res.data);
-        } catch (err) {
+        } catch {
             showToast('error', 'Gagal memuat data course.');
         } finally {
             setIsLoading(false);
@@ -500,186 +114,685 @@ export default function AdminMaterials() {
         setTimeout(() => setToast(null), 3500);
     };
 
-    const handleToggle = async (courseId) => {
-        setTogglingId(courseId);
-        try {
-            const res = await api.patch(`/admin/courses/${courseId}/toggle/`);
-            setCourses(prev => prev.map(c => c.id === courseId ? { ...c, is_active: res.data.is_active } : c));
-            showToast('success', res.data.message);
-        } catch {
-            showToast('error', 'Gagal mengubah status course.');
-        } finally {
-            setTogglingId(null);
-        }
+    const closeFeedback = () => setFeedback(null);
+
+    // ── Delete entire course — ask for confirmation ───────────────────────────
+    const confirmDeleteCourse = (course) => {
+        setFeedback({
+            type: 'warning',
+            title: 'Delete Entire Course?',
+            subtitle: `Are you sure you want to delete "${course.title}" and all its materials?\nThis action cannot be undone.`,
+            primaryLabel: 'Delete',
+            secondaryLabel: 'Cancel',
+            onPrimary: () => { closeFeedback(); executeDeleteCourse(course.id); },
+            onSecondary: closeFeedback,
+        });
     };
 
-    const handleDelete = async () => {
-        if (!deleteTarget) return;
-        setDeleting(true);
+    const executeDeleteCourse = async (courseId) => {
         try {
-            const token = localStorage.getItem('access_token');
-            await axios.delete(`${API_URL}/admin/courses/${deleteTarget.id}/delete/`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            showToast('success', `Course "${deleteTarget.title}" berhasil dihapus.`);
-            setDeleteTarget(null);
+            await api.delete(`/admin/courses/${courseId}/delete/`);
             fetchCourses();
+            setFeedback({
+                type: 'success',
+                title: 'Course Deleted',
+                subtitle: 'The course has been successfully removed.',
+                primaryLabel: 'Back',
+                onPrimary: closeFeedback,
+            });
         } catch {
             showToast('error', 'Gagal menghapus course.');
-        } finally {
-            setDeleting(false);
         }
     };
 
-    // Stats
-    const activeCount = courses.filter(c => c.is_active).length;
-    const inactiveCount = courses.filter(c => !c.is_active).length;
-    const totalMaterials = courses.reduce((sum, c) => sum + (c.materials?.length || 0), 0);
-    const missingFiles = courses.reduce((sum, c) => sum + (c.materials?.filter(m => !m.file_url).length || 0), 0);
+    // ── Open edit action chooser ──────────────────────────────────────────────
+    const openEdit = (course) => {
+        setEditTarget(course);
+        setEditStep('choose');
+        setMatSearch('');
+        setAddForm({ title: '', description: '', order: 1 });
+        setAddFile(null);
+    };
 
-    // Filter + search
+    const closeEdit = () => {
+        setEditTarget(null);
+        setEditStep(null);
+        setMaterials([]);
+        setAddFile(null);
+        setAddForm({ title: '', description: '', order: 1 });
+    };
+
+    // ── Cancel Add Content — ask if unsaved changes exist ────────────────────
+    const handleCancelAdd = () => {
+        const hasChanges = addForm.title || addForm.description || addFile;
+        if (hasChanges) {
+            setFeedback({
+                type: 'warning',
+                title: 'Discard Changes?',
+                subtitle: 'All unsaved changes will be lost.\nAre you sure you want to cancel?',
+                primaryLabel: 'Discard',
+                secondaryLabel: 'Cancel',
+                onPrimary: () => { closeFeedback(); setEditStep('choose'); },
+                onSecondary: closeFeedback,
+            });
+        } else {
+            setEditStep('choose');
+        }
+    };
+
+    // ── Load materials for Manage modal ───────────────────────────────────────
+    const openManage = async () => {
+        setEditStep('manage');
+        setMatLoading(true);
+        try {
+            const res = await api.get(`/admin/courses/${editTarget.id}/materials/`);
+            setMaterials(res.data);
+            setVisibility(editTarget.is_active);
+        } catch {
+            showToast('error', 'Gagal memuat materi.');
+        } finally {
+            setMatLoading(false);
+        }
+    };
+
+    // ── Delete material — ask for confirmation first ───────────────────────────
+    const confirmDeleteMaterial = (matId) => {
+        setPendingDeleteId(matId);
+        setFeedback({
+            type: 'warning',
+            title: 'Delete Content?',
+            subtitle: 'Are you sure you want to delete this material?\nThis action cannot be undone.',
+            primaryLabel: 'Delete',
+            secondaryLabel: 'Cancel',
+            onPrimary: () => { closeFeedback(); executDeleteMaterial(matId); },
+            onSecondary: () => { closeFeedback(); setPendingDeleteId(null); },
+        });
+    };
+
+    const executDeleteMaterial = async (matId) => {
+        try {
+            await api.delete(`/admin/materials/${matId}/`);
+            setMaterials(prev => prev.filter(m => m.id !== matId));
+            fetchCourses();
+            setFeedback({
+                type: 'success',
+                title: 'Content Deleted',
+                subtitle: 'The material has been successfully removed.',
+                primaryLabel: 'Back',
+                onPrimary: closeFeedback,
+            });
+        } catch {
+            setFeedback({
+                type: 'error',
+                title: 'Failed to Delete',
+                subtitle: 'The material could not be deleted. Please try again.',
+                primaryLabel: 'Try Again',
+                secondaryLabel: 'Back',
+                onPrimary: () => { closeFeedback(); executDeleteMaterial(matId); },
+                onSecondary: closeFeedback,
+            });
+        }
+    };
+
+    // ── Toggle material visibility — ask for confirmation ───────────────────────
+    const confirmToggleMaterialVisibility = (material) => {
+        setFeedback({
+            type: 'warning',
+            title: 'Change Material Visibility?',
+            subtitle: material.is_active
+                ? `"${material.title}" will be hidden from students.`
+                : `"${material.title}" will be visible to students.`,
+            primaryLabel: 'Confirm',
+            secondaryLabel: 'Cancel',
+            onPrimary: () => { closeFeedback(); executeToggleMaterialVisibility(material); },
+            onSecondary: closeFeedback,
+        });
+    };
+
+    const executeToggleMaterialVisibility = async (material) => {
+        try {
+            await api.patch(`/admin/materials/${material.id}/`, {
+                is_active: !material.is_active
+            });
+            // Update local state
+            setMaterials(prev => prev.map(m =>
+                m.id === material.id ? { ...m, is_active: !m.is_active } : m
+            ));
+            showToast('success', 'Visibilitas materi diperbarui.');
+        } catch {
+            showToast('error', 'Gagal mengubah visibilitas materi.');
+        }
+    };
+
+    // ── Toggle course visibility — ask for confirmation ──────────────────────────────
+    const confirmToggleVisibility = () => {
+        setFeedback({
+            type: 'warning',
+            title: 'Change Course Visibility?',
+            subtitle: visibility
+                ? 'This course will be hidden from students.'
+                : 'This course will be visible to students.',
+            primaryLabel: 'Confirm',
+            secondaryLabel: 'Cancel',
+            onPrimary: () => { closeFeedback(); executeToggleVisibility(); },
+            onSecondary: closeFeedback,
+        });
+    };
+
+    const executeToggleVisibility = async () => {
+        try {
+            await api.patch(`/admin/courses/${editTarget.id}/toggle/`);
+            setVisibility(v => !v);
+            fetchCourses();
+        } catch {
+            showToast('error', 'Gagal mengubah visibilitas.');
+        }
+    };
+
+    // ── Add Content ──────────────────────────────────────────────────────────
+    const handleFileChange = (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+
+        const allowedExt = ['pdf', 'ppt', 'pptx', 'doc', 'docx'];
+        const ext = f.name.split('.').pop().toLowerCase();
+        if (!allowedExt.includes(ext)) {
+            setFeedback({
+                type: 'error',
+                title: 'Invalid File Format',
+                subtitle: 'Only PDF, PPT, and DOCX files are supported.',
+                primaryLabel: 'Back',
+                onPrimary: closeFeedback,
+            });
+            return;
+        }
+
+        setAddFile(f);
+        if (!addForm.title) setAddForm(prev => ({ ...prev, title: f.name.replace(/\.[^.]+$/, '') }));
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const f = e.dataTransfer.files[0];
+        if (f) {
+            const allowedExt = ['pdf', 'ppt', 'pptx', 'doc', 'docx'];
+            const ext = f.name.split('.').pop().toLowerCase();
+            if (!allowedExt.includes(ext)) {
+                setFeedback({
+                    type: 'error',
+                    title: 'Invalid File Format',
+                    subtitle: 'Only PDF, PPT, and DOCX files are supported.',
+                    primaryLabel: 'Back',
+                    onPrimary: closeFeedback,
+                });
+                return;
+            }
+            setAddFile(f);
+            if (!addForm.title) setAddForm(prev => ({ ...prev, title: f.name.replace(/\.[^.]+$/, '') }));
+        }
+    };
+
+    const submitAddContent = async () => {
+        if (!addFile) return showToast('error', 'Pilih file terlebih dahulu.');
+        if (!addForm.title.trim()) return showToast('error', 'Judul materi harus diisi.');
+        setAddSaving(true);
+        try {
+            const fd = new FormData();
+            fd.append('title', addForm.title);
+            fd.append('description', addForm.description);
+            fd.append('order', addForm.order);
+            fd.append('file', addFile);
+            const ext = addFile.name.split('.').pop().toLowerCase();
+            fd.append('file_type', ext === 'pdf' ? 'pdf' : (ext === 'ppt' || ext === 'pptx') ? 'ppt' : 'other');
+            await api.post(`/admin/courses/${editTarget.id}/materials/`, fd, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            fetchCourses();
+            setFeedback({
+                type: 'success',
+                title: 'Content Successfully Added',
+                subtitle: 'The learning material has been added successfully to this course.',
+                primaryLabel: 'Back to Course',
+                onPrimary: () => { closeFeedback(); closeEdit(); },
+            });
+        } catch {
+            setFeedback({
+                type: 'error',
+                title: 'Failed to Upload Content',
+                subtitle: 'The file could not be uploaded. Please try again.',
+                primaryLabel: 'Try Again',
+                secondaryLabel: 'Back',
+                onPrimary: () => { closeFeedback(); submitAddContent(); },
+                onSecondary: closeFeedback,
+            });
+        } finally {
+            setAddSaving(false);
+        }
+    };
+
+    // ─────────────────────────────────────────────────────────────
+    const cardStyles = [
+        { bg: 'bg-[#FFF0F7]', border: 'border-pink-100', badge: 'bg-[#FFD6E8] text-pink-700', accent: 'text-pink-300' },
+        { bg: 'bg-[#F0F7FF]', border: 'border-blue-100', badge: 'bg-[#D6E8FF] text-blue-700', accent: 'text-blue-300' },
+        { bg: 'bg-[#FFF7F0]', border: 'border-orange-100', badge: 'bg-[#FFE8D6] text-orange-700', accent: 'text-orange-300' },
+        { bg: 'bg-[#F0FFF7]', border: 'border-green-100', badge: 'bg-[#D6FFE8] text-green-700', accent: 'text-green-300' }
+    ];
+
     let filtered = courses;
     if (filterStatus === 'active') filtered = filtered.filter(c => c.is_active);
     if (filterStatus === 'inactive') filtered = filtered.filter(c => !c.is_active);
     if (search) filtered = filtered.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
 
-    return (
-        <div className="max-w-6xl mx-auto font-['Outfit']">
+    const filteredMats = materials.filter(m => m.title.toLowerCase().includes(matSearch.toLowerCase()));
+    const getFileIcon = (ft) => ft === 'pdf' ? '📄' : ft === 'ppt' ? '📊' : '📁';
+    const getFileLabel = (ft) => ft?.toUpperCase() || 'FILE';
 
-            {/* ── Toast ── */}
+    return (
+        <div className="max-w-[1600px] mx-auto font-['Outfit'] pb-20">
+            {/* Toast */}
             {toast && (
-                <div className={`fixed top-6 right-6 z-[500] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-sm font-semibold transition-all animate-in slide-in-from-top-4
+                <div className={`fixed top-6 right-6 z-[9999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl text-sm font-bold
                     ${toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
-                    {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                    {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                     {toast.msg}
                 </div>
             )}
 
-            {/* ── Header ── */}
-            <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Course Manager</h1>
-                    <p className="text-sm text-gray-500 mt-0.5">Kelola course, status aktif, dan upload material per course</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={fetchCourses} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600">
-                        <Loader2 className="w-4 h-4" />
-                        Refresh
-                    </button>
-                    {/* ➕ Tambah Course */}
-                    <button
-                        onClick={() => setShowAddCourse(true)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-500/20"
-                    >
-                        <PlusCircle className="w-4 h-4" />
-                        Tambah Course
-                    </button>
-                </div>
-            </div>
+            {/* ── Feedback / Confirmation Modal ── */}
+            {feedback && (
+                <FeedbackModal
+                    {...feedback}
+                    onClose={feedback.onSecondary || feedback.onPrimary}
+                />
+            )}
 
-            {/* ── Stats ── */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                {[
-                    { label: 'Total Course', value: courses.length, icon: BookOpen, color: 'text-blue-600 bg-blue-50' },
-                    { label: 'Active', value: activeCount, icon: Unlock, color: 'text-emerald-600 bg-emerald-50' },
-                    { label: 'Inactive', value: inactiveCount, icon: Lock, color: 'text-gray-500 bg-gray-100' },
-                    { label: 'File Belum Upload', value: missingFiles, icon: AlertCircle, color: 'text-orange-500 bg-orange-50' },
-                ].map((s, i) => {
-                    const Icon = s.icon;
-                    return (
-                        <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${s.color}`}>
-                                <Icon className="w-5 h-5" />
+            {/* ── EDIT FLOW BACKDROP ── */}
+            {editStep && (
+                <div
+                    className="fixed inset-0 z-[500] bg-black/30 backdrop-blur-sm flex items-center justify-center p-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}
+                >
+                    {/* STEP 1: Choose Action */}
+                    {editStep === 'choose' && (
+                        <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in-95 duration-200">
+                            <button onClick={closeEdit} className="absolute top-5 right-5 text-gray-300 hover:text-gray-500 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                            <h2 className="text-xl font-black text-gray-900 mb-1">{editTarget?.title}</h2>
+                            <p className="text-[13px] text-gray-400 font-semibold mb-8">Choose an action to manage course content</p>
+
+                            <div className="flex flex-col gap-3 mb-8">
+                                <button
+                                    onClick={() => setEditStep('add')}
+                                    className="flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group"
+                                >
+                                    <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                        <FilePlus2 className="w-5 h-5 text-blue-500" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-black text-gray-900 text-[14px]">Add Content</div>
+                                        <div className="text-[12px] text-gray-400 font-semibold">Add new learning materials</div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={openManage}
+                                    className="flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 hover:border-pink-200 hover:bg-pink-50/50 transition-all group"
+                                >
+                                    <div className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center group-hover:bg-pink-100 transition-colors">
+                                        <Settings2 className="w-5 h-5 text-pink-500" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-black text-gray-900 text-[14px]">Manage Content</div>
+                                        <div className="text-[12px] text-gray-400 font-semibold">Edit existing materials</div>
+                                    </div>
+                                </button>
                             </div>
-                            <div>
-                                <p className="text-2xl font-black text-gray-800">{s.value}</p>
-                                <p className="text-[11px] text-gray-400 font-medium">{s.label}</p>
+
+                            <button onClick={closeEdit} className="w-full py-3.5 bg-gray-100 text-gray-500 font-black text-[13px] rounded-2xl hover:bg-gray-200 transition-all">
+                                Batalkan
+                            </button>
+                        </div>
+                    )}
+
+                    {/* STEP 2a: Add Content */}
+                    {editStep === 'add' && (
+                        <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative animate-in fade-in zoom-in-95 duration-200">
+                            <div className="p-8 border-b border-gray-100">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+                                        <FilePlus2 className="w-6 h-6 text-blue-500" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-gray-900">Add Content</h2>
+                                        <p className="text-[13px] text-gray-400 font-semibold">Create and organize learning materials for this course</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-8 flex flex-col gap-6">
+                                {/* Material Details */}
+                                <div>
+                                    <div className="flex items-center gap-2 text-blue-600 text-[13px] font-black mb-4">
+                                        <FileText className="w-4 h-4" /> Material Details
+                                    </div>
+                                    <div className="flex flex-col gap-3">
+                                        <div>
+                                            <label className="block text-[12.5px] font-black text-gray-700 mb-1.5">Material Title</label>
+                                            <input type="text" placeholder="Type here..." value={addForm.title}
+                                                onChange={e => setAddForm(p => ({ ...p, title: e.target.value }))}
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[12.5px] font-black text-gray-700 mb-1.5">Description</label>
+                                            <textarea placeholder="Type here..." value={addForm.description} rows={3}
+                                                onChange={e => setAddForm(p => ({ ...p, description: e.target.value }))}
+                                                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 resize-none" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[12.5px] font-black text-gray-700 mb-1.5">Content Order</label>
+                                            <input type="number" min={1} value={addForm.order}
+                                                onChange={e => setAddForm(p => ({ ...p, order: parseInt(e.target.value) || 1 }))}
+                                                className="w-24 px-4 py-3 rounded-xl border border-gray-200 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Upload File */}
+                                <div>
+                                    <div className="flex items-center gap-2 text-blue-600 text-[13px] font-black mb-4">
+                                        <Upload className="w-4 h-4" /> Upload File
+                                    </div>
+                                    <div
+                                        className="border-2 border-dashed border-gray-200 rounded-2xl p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-all"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={handleDrop}
+                                    >
+                                        {addFile ? (
+                                            <>
+                                                <div className="text-3xl">{getFileIcon(addFile.name.split('.').pop())}</div>
+                                                <p className="font-black text-gray-700 text-[13px]">{addFile.name}</p>
+                                                <p className="text-[11px] text-gray-400">{(addFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload className="w-8 h-8 text-gray-300" />
+                                                <p className="font-black text-gray-500 text-[13px]">Upload File*</p>
+                                                <p className="text-[11px] text-gray-300">Supported formats: PDF, PPT, DOCX</p>
+                                            </>
+                                        )}
+                                    </div>
+                                    <input ref={fileInputRef} type="file" accept=".pdf,.ppt,.pptx,.doc,.docx"
+                                        className="hidden" onChange={handleFileChange} />
+                                    {addFile && (
+                                        <div className="flex items-center gap-2 mt-3">
+                                            <input type="text" value={addFile.name} readOnly
+                                                className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-[12.5px] text-gray-500 bg-gray-50 font-semibold" />
+                                            <button onClick={() => setAddFile(null)}
+                                                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 text-[12px] text-gray-500 hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all font-bold">
+                                                <Trash2 className="w-3.5 h-3.5" /> Delete
+                                            </button>
+                                            <button onClick={() => fileInputRef.current?.click()}
+                                                className="flex items-center gap-1.5 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-[12px] font-black hover:bg-blue-700 transition-all">
+                                                <Upload className="w-3.5 h-3.5" /> Choose file...
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="px-8 py-5 border-t border-gray-100 flex items-center justify-end gap-3">
+                                <button onClick={handleCancelAdd}
+                                    className="px-6 py-2.5 rounded-xl border border-gray-200 text-[13px] font-black text-gray-500 hover:bg-gray-50 transition-all">
+                                    Cancel
+                                </button>
+                                <button onClick={submitAddContent} disabled={addSaving}
+                                    className="flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white rounded-xl text-[13px] font-black hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50">
+                                    {addSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                                    Save
+                                </button>
                             </div>
                         </div>
-                    );
-                })}
-            </div>
+                    )}
 
-            {/* ── Filter & Search ── */}
-            <div className="flex items-center gap-3 mb-4 flex-wrap">
-                <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
-                    {[['all', 'Semua'], ['active', 'Active'], ['inactive', 'Inactive']].map(([val, label]) => (
-                        <button key={val} onClick={() => setFilterStatus(val)}
-                            className={`px-4 py-2 text-xs font-bold transition-colors ${filterStatus === val ? 'bg-slate-800 text-white' : 'text-gray-500 hover:bg-gray-50'}`}>
-                            {label}
-                        </button>
-                    ))}
-                </div>
-                <input value={search} onChange={e => setSearch(e.target.value)}
-                    placeholder="Cari nama course..."
-                    className="flex-1 min-w-[180px] px-4 py-2 text-sm border border-gray-200 rounded-xl bg-white outline-none focus:border-blue-400 transition-colors" />
-                <span className="text-xs text-gray-400 font-medium">{filtered.length} course</span>
-            </div>
+                    {/* STEP 2b: Manage Content */}
+                    {editStep === 'manage' && (
+                        <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md relative animate-in fade-in zoom-in-95 duration-200">
+                            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-lg font-black text-gray-900">Manage Content</h2>
+                                    <p className="text-[12.5px] text-gray-400 font-semibold">Edit, remove, or manage course materials</p>
+                                </div>
+                                <button onClick={closeEdit} className="text-gray-300 hover:text-gray-500 transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
 
-            {/* ── Course List ── */}
-            {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-                    <Loader2 className="w-10 h-10 animate-spin mb-3 text-blue-400" />
-                    <p className="text-sm font-semibold">Memuat data course...</p>
-                </div>
-            ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-gray-400">
-                    <BookOpen className="w-12 h-12 mb-3 opacity-20" />
-                    <p className="font-semibold text-sm">Tidak ada course ditemukan</p>
-                    <button
-                        onClick={() => setShowAddCourse(true)}
-                        className="mt-4 flex items-center gap-2 px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-95 transition-all">
-                        <PlusCircle className="w-4 h-4" /> Tambah Course Baru
-                    </button>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {filtered.map(course => (
-                        <CourseCard
-                            key={course.id}
-                            course={course}
-                            onToggle={handleToggle}
-                            onUpload={setUploadTarget}
-                            onDelete={setDeleteTarget}
-                            togglingId={togglingId}
-                            onRefresh={fetchCourses}
-                        />
-                    ))}
+                            <div className="p-6 flex flex-col gap-4">
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                                    <input type="text" placeholder="Search" value={matSearch} onChange={e => setMatSearch(e.target.value)}
+                                        className="w-full pl-11 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-blue-100 placeholder:text-gray-300" />
+                                </div>
+
+                                <div className="flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
+                                    {matLoading ? (
+                                        <div className="flex justify-center py-8">
+                                            <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
+                                        </div>
+                                    ) : filteredMats.length === 0 ? (
+                                        <div className="text-center py-8 text-gray-300 font-bold text-[13px]">Belum ada materi</div>
+                                    ) : filteredMats.map(mat => (
+                                        <div key={mat.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-all group">
+                                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0 text-lg">
+                                                {getFileIcon(mat.file_type)}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-black text-gray-800 text-[13px] truncate">{mat.title}</div>
+                                                <div className="text-[11px] text-gray-400 font-semibold">{getFileLabel(mat.file_type)}</div>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                                <button
+                                                    onClick={() => confirmToggleMaterialVisibility(mat)}
+                                                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${mat.is_active ? 'text-green-500 hover:bg-green-50' : 'text-gray-300 hover:bg-gray-100'}`}
+                                                    title={mat.is_active ? 'Visible' : 'Hidden'}
+                                                >
+                                                    {mat.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                                </button>
+                                                <button onClick={() => confirmDeleteMaterial(mat.id)}
+                                                    className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Visibility Toggle */}
+                                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                    <span className="text-[13px] font-black text-gray-600 flex items-center gap-2">
+                                        {visibility ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
+                                        Course Visibility
+                                    </span>
+                                    <button onClick={confirmToggleVisibility}
+                                        className={`relative w-12 h-6 rounded-full transition-all duration-300 ${visibility ? 'bg-green-400' : 'bg-gray-200'}`}>
+                                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${visibility ? 'left-7' : 'left-1'}`} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="px-6 py-4 border-t border-gray-100">
+                                <button onClick={closeEdit} className="w-full py-3 bg-gray-100 text-gray-500 font-black text-[13px] rounded-2xl hover:bg-gray-200 transition-all">
+                                    Batalkan
+                                </button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
-            {/* ── Add Course Modal ── */}
+            {/* ── ADD COURSE MODAL ── */}
             {showAddCourse && (
                 <AddCourseModal
                     onClose={() => setShowAddCourse(false)}
-                    onSuccess={() => {
-                        fetchCourses();
-                        showToast('success', 'Course baru berhasil dibuat!');
-                    }}
+                    onSaved={() => { fetchCourses(); setShowAddCourse(false); showToast('success', 'Course berhasil ditambahkan!'); }}
                 />
             )}
 
-            {/* ── Upload Material Modal ── */}
-            {uploadTarget && (
-                <UploadModal
-                    course={uploadTarget}
-                    onClose={() => setUploadTarget(null)}
-                    onSuccess={() => {
-                        fetchCourses();
-                        showToast('success', 'Material berhasil diupload!');
-                    }}
-                />
-            )}
+            <div className="mb-10">
+                <h1 className="text-[32px] font-black text-gray-900 tracking-tight">Course Manager</h1>
+            </div>
 
-            {/* ── Confirm Delete Modal ── */}
-            {deleteTarget && (
-                <ConfirmDeleteModal
-                    course={deleteTarget}
-                    onClose={() => setDeleteTarget(null)}
-                    onConfirm={handleDelete}
-                    loading={deleting}
-                />
+            {/* Controls Row */}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+                <div className="flex items-center p-1.5 bg-gray-100/80 rounded-full w-fit">
+                    {[{ id: 'all', label: 'All' }, { id: 'active', label: 'Active' }, { id: 'inactive', label: 'Inactive' }].map(tab => (
+                        <button key={tab.id} onClick={() => setFilterStatus(tab.id)}
+                            className={`px-8 py-2.5 rounded-full text-[13px] font-black tracking-tight transition-all ${filterStatus === tab.id ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}>
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <button onClick={() => setShowAddCourse(true)}
+                        className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[#5D21D0] text-white rounded-2xl font-black text-[14px] hover:bg-[#4B19B0] active:scale-95 transition-all shadow-lg shadow-purple-200">
+                        <Plus className="w-5 h-5" /> Add Course
+                    </button>
+                    <div className="relative flex-1 md:w-[350px]">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-300" />
+                        <input type="text" placeholder="Search" value={search} onChange={e => setSearch(e.target.value)}
+                            className="w-full pl-14 pr-6 py-3.5 bg-white border border-gray-200 rounded-2xl text-[14px] font-bold focus:outline-none focus:ring-4 focus:ring-purple-50 focus:border-purple-100 transition-all placeholder:text-gray-300" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Course Grid */}
+            {isLoading ? (
+                <div className="flex items-center justify-center py-40">
+                    <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
+                </div>
+            ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-40 text-gray-300">
+                    <BookOpen className="w-20 h-20 mb-4 opacity-20" />
+                    <p className="text-xl font-bold">No courses found</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {filtered.map((course, idx) => {
+                        const style = cardStyles[idx % cardStyles.length];
+                        return (
+                            <div key={course.id}
+                                className={`relative group px-10 py-5 rounded-[2.5rem] border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden ${style.bg} ${style.border}`}>
+                                {/* Triangle Background */}
+                                <div className="absolute top-0 right-0 bottom-0 w-[35%] pointer-events-none">
+                                    <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
+                                        <defs>
+                                            <radialGradient id={`rg-${idx}`} cx="80" cy="50" r="90" gradientUnits="userSpaceOnUse">
+                                                <stop offset="13%" stopColor={idx % 4 === 0 ? '#FFD1F7' : idx % 4 === 1 ? '#D1E8FF' : idx % 4 === 2 ? '#FFE8D1' : '#D1FFE8'} stopOpacity="1" />
+                                                <stop offset="100%" stopColor={idx % 4 === 0 ? '#FF4ADF' : idx % 4 === 1 ? '#4AAEFF' : idx % 4 === 2 ? '#FF8C4A' : '#4ADF8C'} stopOpacity="1" />
+                                            </radialGradient>
+                                        </defs>
+                                        {[...Array(4)].map((_, i) => (
+                                            <path key={i}
+                                                d="M 300 -250 L 6 44 Q 0 50 6 56 L 300 350 Z"
+                                                fill={i === 3 ? `url(#rg-${idx})` : 'currentColor'}
+                                                className={i < 3 ? style.accent : ''}
+                                                style={{ opacity: i === 3 ? 0.55 : 0.1 + (i * 0.12), transform: `translateX(${i * 7}%)` }}
+                                            />
+                                        ))}
+                                    </svg>
+                                </div>
+
+                                <div className="relative z-10 flex flex-col h-full min-h-[110px]">
+                                    <div className={`w-fit px-5 py-1.5 rounded-full text-[11px] font-black tracking-widest mb-3 ${style.badge}`}>
+                                        WEEK {course.week || '1'}
+                                    </div>
+                                    <h3 className="text-[19px] font-black text-gray-900 leading-tight mb-2 pr-10">{course.title}</h3>
+                                    <div className="flex items-center gap-2 text-gray-400 font-bold text-[12.5px] mb-auto">
+                                        <BookOpen className="w-4 h-4" strokeWidth={3} />
+                                        <span>{course.materials?.length || 0} Modules</span>
+                                    </div>
+                                    <div className="mt-5 flex items-center justify-between">
+                                        <button onClick={() => openEdit(course)}
+                                            className="px-9 py-2.5 bg-black text-white text-[12.5px] font-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-md">
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); confirmDeleteCourse(course); }}
+                                            className="w-10 h-10 rounded-full flex items-center justify-center text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100"
+                                            title="Delete Course"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             )}
+        </div>
+    );
+}
+
+// ── Add Course Modal ──────────────────────────────────────────────────────────
+function AddCourseModal({ onClose, onSaved }) {
+    const [form, setForm] = useState({ title: '', description: '', week: 1 });
+    const [saving, setSaving] = useState(false);
+    const [err, setErr] = useState('');
+
+    const save = async () => {
+        if (!form.title.trim()) return setErr('Judul course harus diisi.');
+        setSaving(true);
+        try {
+            await api.post('/admin/courses/', form);
+            onSaved();
+        } catch {
+            setErr('Gagal menyimpan course.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[600] bg-black/30 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in-95 duration-200">
+                <button onClick={onClose} className="absolute top-5 right-5 text-gray-300 hover:text-gray-500">
+                    <X className="w-5 h-5" />
+                </button>
+                <h2 className="text-xl font-black text-gray-900 mb-1">Add Course</h2>
+                <p className="text-[13px] text-gray-400 font-semibold mb-6">Create a new course in the system</p>
+                {err && <p className="text-red-500 text-[12px] font-bold mb-4">{err}</p>}
+                <div className="flex flex-col gap-4">
+                    <div>
+                        <label className="block text-[12.5px] font-black text-gray-700 mb-1.5">Title</label>
+                        <input type="text" placeholder="Course title..." value={form.title}
+                            onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-300" />
+                    </div>
+                    <div>
+                        <label className="block text-[12.5px] font-black text-gray-700 mb-1.5">Description</label>
+                        <textarea placeholder="Course description..." value={form.description} rows={3}
+                            onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-300 resize-none" />
+                    </div>
+                    <div>
+                        <label className="block text-[12.5px] font-black text-gray-700 mb-1.5">Week</label>
+                        <input type="number" min={1} value={form.week}
+                            onChange={e => setForm(p => ({ ...p, week: parseInt(e.target.value) || 1 }))}
+                            className="w-24 px-4 py-3 rounded-xl border border-gray-200 text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-300" />
+                    </div>
+                </div>
+                <div className="flex gap-3 mt-8">
+                    <button onClick={onClose} className="flex-1 py-3 bg-gray-100 text-gray-500 font-black text-[13px] rounded-2xl hover:bg-gray-200 transition-all">Cancel</button>
+                    <button onClick={save} disabled={saving}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 bg-[#5D21D0] text-white font-black text-[13px] rounded-2xl hover:bg-[#4B19B0] transition-all disabled:opacity-50">
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Save
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

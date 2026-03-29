@@ -122,7 +122,7 @@ class MaterialSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Material
-        fields = ['id', 'title', 'description', 'file_type', 'order', 'file', 'file_url', 'created_at', 'course']
+        fields = ['id', 'title', 'description', 'file_type', 'order', 'file', 'file_url', 'is_active', 'created_at', 'course']
         extra_kwargs = {
             'course': {'required': False, 'allow_null': True},
             'file': {'required': False, 'allow_null': True},
