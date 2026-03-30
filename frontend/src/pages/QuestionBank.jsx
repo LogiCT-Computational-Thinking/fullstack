@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, Check, X, Eye, Loader2, Filter, ChevronRight, MessageSquare, Edit, Save, FileText, HelpCircle, UploadCloud, GripVertical, Trash2, CheckSquare, ChevronDown, Image as ImageIcon } from 'lucide-react';
+import { Search, Bell, User, Check, X, Eye, Loader2, Filter, ChevronRight, MessageSquare, Edit, Save, FileText, HelpCircle, UploadCloud, GripVertical, Trash2, CheckSquare, ChevronDown, Image as ImageIcon, Sparkles } from 'lucide-react';
 import api from '../services/api';
 
 export default function QuestionBank() {
@@ -19,6 +19,11 @@ export default function QuestionBank() {
         option: [],
         solution: ''
     });
+
+    // Generation states
+    const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+    const [targetWeek, setTargetWeek] = useState(1);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // Filter states
     const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -102,6 +107,20 @@ export default function QuestionBank() {
         setShowFilterMenu(false);
     };
 
+    const handleGenerateQuestions = async () => {
+        setIsGenerating(true);
+        try {
+            await api.post('/admin/qbank/generate/', { week: targetWeek });
+            setIsGenerateModalOpen(false);
+            fetchQuestions();
+        } catch (error) {
+            console.error('Error generating questions:', error);
+            alert('Gagal mendaur ulang soal. Silakan coba lagi.');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     const handleSaveEdit = async () => {
         try {
             await api.patch(`/admin/qbank/${selectedQuestion.id}/`, editForm);
@@ -183,7 +202,16 @@ export default function QuestionBank() {
             {/* Main Content */}
             <div className="max-w-[1400px] mx-auto p-8">
                 
-                <h1 className="text-2xl font-bold text-gray-900 mb-8 px-2">Question Bank</h1>
+                <div className="flex items-center justify-between mb-8 px-2">
+                    <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
+                    <button 
+                        onClick={() => setIsGenerateModalOpen(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2"
+                    >
+                        <Sparkles className="w-4 h-4" />
+                        Generate Questions
+                    </button>
+                </div>
 
                 {/* Tabs / Filter Row */}
                 <div className="bg-[#E9ECF3] rounded-2xl p-1.5 mb-8 flex items-center gap-1 w-fit shadow-inner">
@@ -773,6 +801,76 @@ export default function QuestionBank() {
                     <Filter className={`w-6 h-6 group-hover:scale-110 transition-transform ${showFilterMenu ? 'rotate-180' : ''}`} />
                 </button>
             </div>
+
+            {/* AI Generator Modal */}
+            {isGenerateModalOpen && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+                    <div 
+                        className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+                        onClick={() => !isGenerating && setIsGenerateModalOpen(false)}
+                    />
+                    <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 overflow-hidden animate-in zoom-in duration-300">
+                        <div className="p-8 pb-4 flex items-center justify-between">
+                            <h3 className="text-xl font-bold text-gray-900">Auto Generate Questions</h3>
+                            <button 
+                                onClick={() => setIsGenerateModalOpen(false)}
+                                className="w-10 h-10 rounded-2xl flex items-center justify-center text-gray-400 hover:bg-gray-50 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="p-8 pt-2">
+                            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                                AI akan secara otomatis membuat 10 soal baru (6 MCQ + 4 Open Question) untuk materi di minggu yang Anda pilih.
+                            </p>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3">Pilih Minggu (Week)</label>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {[...Array(14)].map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setTargetWeek(i + 1)}
+                                                className={`py-3 rounded-xl text-sm font-bold transition-all border-2 ${
+                                                    targetWeek === i + 1 
+                                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                                                    : 'bg-white border-gray-100 text-gray-600 hover:border-blue-200'
+                                                }`}
+                                            >
+                                                {i + 1}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={handleGenerateQuestions}
+                                    disabled={isGenerating}
+                                    className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-3 mt-4 ${
+                                        isGenerating 
+                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/20 active:scale-[0.98]'
+                                    }`}
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Sedang Men-generate...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-5 h-5" />
+                                            Generate This Week's Questions
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -12,6 +12,7 @@ import os
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import api_router
 from app.core.config import get_settings
@@ -38,6 +39,15 @@ def create_app() -> FastAPI:
         version="3.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
+    )
+
+    # ── CORS Middleware ───────────────────────────────────────────────────
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Adjust this in production
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # ── Static files ──────────────────────────────────────────────────────

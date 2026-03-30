@@ -228,8 +228,10 @@ function App() {
           <Route path="/dashboard/quiz/:courseId/result" element={<QuizResult />} />
           <Route path="/dashboard/profile-display" element={<ProfilingResult />} />
           <Route path="/dashboard/settings" element={<Settings />} />
-          <Route path="/exercise" element={<Exercise />} />
         </Route>
+
+        {/* Exercise - Full page with sidebar as per design */}
+        <Route path="/exercise" element={<Exercise />} />
 
         {/* Material Viewer - Full page, no sidebar */}
         <Route path="/dashboard/material" element={<MaterialViewer />} />

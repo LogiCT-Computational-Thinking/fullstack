@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, Search, Edit, Settings, LogOut, Send, Loader2, User as UserIcon, Bot, CheckCircle2, XCircle } from 'lucide-react';
+import { Menu, Search, Edit, Settings, LogOut, Send, Loader2, User as UserIcon, Bot, CheckCircle2, XCircle, HelpCircle, MessageSquare, FileText, Sparkles, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { llmService } from '../services/llmApi';
@@ -135,6 +135,7 @@ export default function Exercise() {
                 );
 
                 let asstPayload = {};
+                let nextFollowup = null;
 
                 if (evalData.is_correct) {
                     // Selesai/Benar
@@ -155,7 +156,7 @@ export default function Exercise() {
                     // Salah
                     const newAttempts = wrongAttempts + 1;
                     setWrongAttempts(newAttempts);
-                    const nextFollowup = evalData.followup_question || null;
+                    nextFollowup = evalData.followup_question || null;
 
                     if (nextFollowup) {
                         setActiveQuestion(nextFollowup);
@@ -286,194 +287,215 @@ export default function Exercise() {
         } finally {
             setIsLoading(false);
         }
-    };
-
-    return (
-        <div className="flex bg-white font-['Inter',sans-serif] h-[calc(100vh-80px)] overflow-hidden">
-            {/* Custom Sidebar for Exercise */}
-            <aside className="w-[300px] bg-[#F8FAFC] border-r border-gray-100 flex flex-col z-20">
-                {/* Logo */}
-                <div className="p-6">
+    }; return (
+        <div className="flex bg-white font-['Outfit',sans-serif] h-screen overflow-hidden">
+            {/* ── Sidebar ── */}
+            <aside className="w-[280px] bg-white border-r border-gray-100 flex flex-col z-20">
+                {/* Logo Section */}
+                <div className="p-6 pb-2">
                     <div className="flex items-center gap-3">
-                        <img
-                            src="/images/logo-logict.png"
-                            alt="LogiCT"
-                            className="w-8 h-8 rounded-lg"
-                        />
-                        <h1 className="text-[18px] font-black text-gray-900 font-['Outfit']">LogiCT</h1>
+                        <div className="w-10 h-10 bg-white rounded-xl shadow-sm border border-gray-50 flex items-center justify-center">
+                            <img src="/images/logo-logict.png" alt="LogiCT" className="w-7 h-7" />
+                        </div>
+                        <h1 className="text-xl font-black text-gray-900 tracking-tight">LogiCT</h1>
                     </div>
                 </div>
 
-                {/* Top actions (Hamburger & Search) */}
-                <div className="px-6 py-2 flex items-center justify-between text-gray-500">
-                    <button className="p-1 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                        <Menu className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                        <Search className="w-4 h-4" />
-                    </button>
-                </div>
-
-                {/* New Chat Button */}
-                <div className="px-6 py-6">
+                {/* Sidebar Navigation */}
+                <div className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
                     <button
                         onClick={startNewChat}
-                        className="flex items-center gap-3 text-sm font-bold text-gray-700 hover:text-black transition-colors w-full"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all group"
                     >
-                        <Edit className="w-[18px] h-[18px]" />
+                        <Edit className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
                         New chat
                     </button>
-                </div>
+                    <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 rounded-xl transition-all group">
+                        <Search className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+                        Search
+                    </button>
 
-                {/* Conversation List */}
-                <div className="px-6 py-2 flex-1 overflow-y-auto">
-                    <h3 className="text-[10px] font-black text-black uppercase tracking-wider mb-4">Conversation</h3>
-                    <div className="space-y-4">
-                        {sessions.map((session) => {
-                            let previewText = "New Chat";
-                            if (session.messages && session.messages.length > 0) {
-                                // Find first user message for a good title
-                                const firstUserMsg = session.messages.find(m => m.role === 'user');
-                                if (firstUserMsg) previewText = formatTitle(firstUserMsg.content);
-                            }
+                    {/* Spacer Gap */}
+                    <div className="h-8" />
 
-                            return (
-                                <p
-                                    key={session.id}
-                                    onClick={() => loadSessionDetail(session.id)}
-                                    className={`text-[11px] font-bold cursor-pointer truncate transition-colors ${currentSessionId === session.id
-                                        ? 'text-blue-600 bg-blue-50 -mx-3 px-3 py-1.5 rounded-lg'
-                                        : 'text-gray-500 hover:text-gray-900 py-1.5'
-                                        }`}
-                                >
-                                    {previewText}
-                                </p>
-                            );
-                        })}
+                    <div className="mt-10">
+                        <h3 className="px-4 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em] mb-4">Your chats</h3>
+                        <div className="space-y-1">
+                            {sessions.length === 0 ? (
+                                <div className="px-4 py-3 space-y-3">
+                                    <p className="text-xs text-gray-300 font-medium italic">Lorem ipsum dolor sit amet</p>
+                                    <p className="text-xs text-gray-300 font-medium italic">Lorem ipsum dolor sit amet</p>
+                                    <p className="text-xs text-gray-300 font-medium italic">Lorem ipsum dolor sit amet</p>
+                                </div>
+                            ) : sessions.map((session) => {
+                                let previewText = "New Chat";
+                                if (session.messages && session.messages.length > 0) {
+                                    const firstUserMsg = session.messages.find(m => m.role === 'user');
+                                    if (firstUserMsg) previewText = formatTitle(firstUserMsg.content);
+                                }
+                                return (
+                                    <button
+                                        key={session.id}
+                                        onClick={() => loadSessionDetail(session.id)}
+                                        className={`w-full text-left px-4 py-3 text-sm font-bold truncate rounded-xl transition-all ${currentSessionId === session.id
+                                                ? 'bg-blue-50 text-blue-600'
+                                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                                            }`}
+                                    >
+                                        {previewText}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
 
-                {/* Bottom Actions */}
-                <div className="p-6 space-y-5 mb-2">
-                    <button className="flex items-center gap-3 text-[13px] font-bold text-gray-700 hover:text-black transition-colors w-full">
-                        <Settings className="w-4 h-4" />
+                {/* Sidebar Bottom */}
+                <div className="p-4 border-t border-gray-50 space-y-1">
+                    <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
+                        <Settings className="w-5 h-5" />
                         Settings
                     </button>
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="flex items-center gap-3 text-[13px] font-bold text-gray-700 hover:text-black transition-colors w-full"
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl transition-all"
                     >
-                        <LogOut className="w-4 h-4 rotate-180" />
+                        <LogOut className="w-5 h-5" />
                         Back to course
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <main className="flex-1 flex flex-col w-full overflow-hidden bg-white relative">
+            {/* ── Main Content ── */}
+            <main className="flex-1 flex flex-col relative bg-white overflow-hidden">
+                {/* Header title */}
+                <div className="px-10 py-8">
+                    <h2 className="text-xl font-bold text-gray-800">Exercise</h2>
+                </div>
 
-                {/* Content Container */}
-                <div className="flex-1 flex flex-col w-full max-w-[800px] mx-auto overflow-hidden relative">
-
+                <div className="flex-1 flex flex-col items-center overflow-y-auto px-6 pb-40 scrollbar-hide">
                     {messages.length === 0 ? (
-                        /* Welcome Area Centered */
-                        <div className="flex-1 flex flex-col items-center justify-center px-4 w-full">
-                            <div className="w-full bg-gradient-to-br from-[#E1EAFE] via-[#F3EEFE] to-white border border-gray-200/60 rounded-[2rem] py-16 px-10 text-center shadow-[0_4px_25px_-5px_rgba(0,0,0,0.03)] mb-12">
-                                <h2 className="text-[28px] font-bold text-black mb-1 tracking-tight">
+                        <div className="w-full max-w-[800px] mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                            {/* Greeting */}
+                            <div className="text-center mb-16">
+                                <h1 className="text-[44px] font-bold text-black leading-tight">
                                     Hello, {user?.name ? user.name.split(' ')[0] : 'Rio'} 👋
-                                </h2>
-                                <h2 className="text-[28px] font-bold text-black tracking-tight">
+                                </h1>
+                                <h1 className="text-[44px] font-bold text-black leading-tight">
                                     What can I help with?
-                                </h2>
+                                </h1>
+                            </div>
+
+                            {/* Action Cards Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[680px] mx-auto">
+                                {[
+                                    { icon: <Edit className="w-5 h-5" />, label: "Explain a topic", color: "text-[#EF5800]", bg: "bg-[#FFF2EB]" },
+                                    { icon: <HelpCircle className="w-5 h-5" />, label: "Generate practice questions", color: "text-[#1089D9]", bg: "bg-[#F1F9FF]" },
+                                    { icon: <MessageSquare className="w-5 h-5" />, label: "Help solve a question", color: "text-[#8910D9]", bg: "bg-[#F8F1FF]" },
+                                    { icon: <FileText className="w-5 h-5" />, label: "Summarize this topic", color: "text-[#D91089]", bg: "bg-[#FFF1F8]" }
+                                ].map((card, i) => (
+                                    <button
+                                        key={i}
+                                        className="bg-white border border-gray-100 hover:border-gray-200 hover:shadow-lg hover:shadow-gray-100/50 transition-all p-4 rounded-2xl flex items-center justify-between group"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className={`${card.bg} ${card.color} w-11 h-11 rounded-xl flex items-center justify-center shadow-sm`}>
+                                                {card.icon}
+                                            </div>
+                                            <span className="text-sm font-bold text-gray-800">{card.label}</span>
+                                        </div>
+                                        <div className="w-8 h-8 border border-gray-100 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-gray-900 group-hover:border-gray-300 transition-all">
+                                            <ChevronRight className="w-4 h-4" />
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
                         </div>
                     ) : (
-                        /* Chat Messages Scrollable Area */
-                        <div className="flex-1 overflow-y-auto space-y-6 px-4 custom-scrollbar flex flex-col pb-4 w-full">
-                            {messages.map((msg, index) => (
-                                <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} w-full`}>
-
-                                    <div className={`flex flex-col max-w-[85%] sm:max-w-[80%]`}>
-                                        <div className={`rounded-2xl px-5 py-4 ${msg.role === 'user'
-                                            ? 'bg-[#F4F4F5] text-gray-800 rounded-tr-sm shadow-none'
-                                            : msg.status === 'correct'
-                                                ? 'bg-[#f0fdf4] text-gray-800 rounded-tl-sm'
-                                                : msg.status === 'incorrect'
-                                                    ? 'bg-[#fef2f2] text-gray-800 rounded-tl-sm'
-                                                    : 'bg-white text-gray-800 rounded-tl-sm'
-                                            }`}>
-                                            <div className="text-[14px] leading-relaxed markdown-body prose prose-sm max-w-none">
-                                                <ReactMarkdown
-                                                    remarkPlugins={[remarkMath]}
-                                                    rehypePlugins={[rehypeKatex]}
-                                                >
-                                                    {msg.content}
-                                                </ReactMarkdown>
-                                            </div>
+                        /* Chat Messages */
+                        <div className="w-full max-w-[800px] mt-4 space-y-8 animate-in fade-in duration-500 pb-10">
+                            {messages.map((msg, idx) => (
+                                <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`${
+                                        msg.role === 'user' 
+                                        ? 'max-w-[85%] bg-[#F6F6F6] px-6 py-4 rounded-[0.5rem]' 
+                                        : 'w-full bg-transparent py-4 text-gray-900 border-none'
+                                    }`}>
+                                        <div className={`text-[15px] leading-relaxed markdown-body prose prose-sm max-w-none 
+                                            ${msg.role === 'user' ? 'text-gray-700' : 'prose-p:mb-4'}
+                                            ${msg.role === 'assistant' ? 
+                                                'prose-headings:text-[#1e2a5e] prose-headings:font-bold ' +
+                                                'prose-blockquote:border-l-4 prose-blockquote:border-[#9fa9d3] prose-blockquote:bg-[#f6f7fb] prose-blockquote:rounded-r-lg prose-blockquote:py-1 prose-blockquote:px-4 ' +
+                                                'prose-code:bg-[#f3f4f6] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none ' +
+                                                'prose-pre:bg-[#f3f4f6] prose-pre:border prose-pre:border-gray-200 ' +
+                                                'prose-th:bg-[#f1f2f7] prose-th:px-3 prose-th:py-2 prose-td:border prose-td:border-gray-200 ' +
+                                                'prose-strong:text-[#1b255a]' : ''}`}
+                                        >
+                                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                                                {msg.content}
+                                            </ReactMarkdown>
                                         </div>
 
-                                        {/* Follow-up Question Card Layout */}
-                                        {msg.followup && (
-                                            <div className="mt-3 bg-[#f8fafc] border border-blue-100/80 rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                                <div className="absolute top-0 left-0 w-1 h-full bg-blue-400"></div>
-                                                <span className="inline-block px-2.5 py-1 bg-blue-100/60 text-blue-700 text-[11px] font-bold rounded mb-2 uppercase tracking-wide">
-                                                    Pertanyaan Lanjutan {msg.followupIndex ? `#${msg.followupIndex}` : ''}
+                                        {/* Follow-up Question Card (Static Design Match) */}
+                                        {msg.role === 'assistant' && msg.followup && (
+                                            <div className="mt-6 bg-[#eef3ff] border-l-4 border-[#1e2a5e] rounded-r-xl p-5 shadow-sm animate-in fade-in slide-in-from-left-2 duration-500">
+                                                <span className="inline-block bg-[#1e2a5e] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider mb-3">
+                                                    Pertanyaan
                                                 </span>
-                                                <div className="text-[14px] leading-relaxed text-gray-800 markdown-body prose prose-sm max-w-none">
-                                                    <ReactMarkdown
-                                                        remarkPlugins={[remarkMath]}
-                                                        rehypePlugins={[rehypeKatex]}
-                                                    >
+                                                <div className="text-[15px] font-bold text-[#1e2a5e] leading-relaxed markdown-body prose prose-sm max-w-none prose-p:m-0">
+                                                    <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
                                                         {msg.followup}
                                                     </ReactMarkdown>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
-
-                                    {msg.role === 'user' && (
-                                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center ml-3 mt-1 overflow-hidden">
-                                            {user?.profilePicture ?
-                                                <img src={user.profilePicture} alt="User" /> :
-                                                <UserIcon className="w-4 h-4 text-gray-500" />
-                                            }
-                                        </div>
-                                    )}
-
                                 </div>
                             ))}
                             {isLoading && (
-                                <div className="flex justify-start w-full">
-                                    <div className="bg-white rounded-2xl rounded-tl-sm px-5 py-4 flex items-center gap-3">
-                                        <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
-                                        <span className="text-xs text-gray-400 font-medium tracking-wide animate-pulse">Thinking...</span>
-                                    </div>
+                                <div className="w-full flex justify-start animate-pulse">
+                                    <div className="bg-gray-50 h-16 w-full max-w-[400px] rounded-2xl rounded-tl-sm"></div>
                                 </div>
                             )}
                             <div ref={messagesEndRef} />
                         </div>
                     )}
+                </div>
 
-                    {/* Chat Input Field */}
-                    <div className="flex-shrink-0 px-4 pb-8 pt-2 w-full bg-white">
-                        <div className="w-full relative flex items-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] bg-white border border-gray-200 p-2 pl-6 transition-all focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-200">
-                            <textarea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                disabled={isLoading}
-                                placeholder="Ask anything"
-                                className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-gray-700 placeholder:text-gray-400 resize-none h-10 py-2.5 custom-scrollbar"
-                                rows={1}
-                            />
-                            <button
-                                onClick={handleSend}
-                                disabled={!input.trim() || isLoading}
-                                className={`w-10 h-10 ml-2 rounded-[14px] flex items-center justify-center transition-all shadow-sm flex-shrink-0 ${input.trim() && !isLoading ? 'bg-[#3B82F6] hover:bg-blue-600 text-white active:scale-95' : 'bg-gray-100 text-gray-400'
-                                    }`}
-                            >
-                                <Send className="w-4 h-4 ml-[-2px]" />
-                            </button>
+                {/* ── Fixed Input Area (Rainbow) ── */}
+                <div className="absolute bottom-0 left-0 right-0 px-10 pb-12 pt-6 bg-gradient-to-t from-white via-white to-transparent pointer-events-none">
+                    <div className="max-w-[820px] mx-auto pointer-events-auto">
+                        <div className="relative group">
+                            {/* Rainbow Border Container */}
+                            <div
+                                className="absolute -inset-[1.5px] rounded-[2rem] opacity-40 group-focus-within:opacity-100 transition-opacity blur-[0.2px]"
+                                style={{ background: 'linear-gradient(90deg, #3F67E3 0%, #85DDAF 56%, #EFE68A 73%, #FCB021 86%)' }}
+                            ></div>
+
+                            {/* Inner Input */}
+                            <div className="relative bg-white rounded-[1.95rem] p-3 flex items-end gap-3">
+                                <div className="pl-4 pb-3.5 text-gray-300 self-start mt-2">
+                                    <Sparkles className="w-6 h-6" />
+                                </div>
+                                <textarea
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="Ask anything"
+                                    rows={3}
+                                    className="flex-1 bg-transparent border-none outline-none text-base font-medium text-gray-700 placeholder:text-gray-300 py-3 resize-none max-h-40 scrollbar-hide"
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={!input.trim() || isLoading}
+                                    className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center transition-all mb-0.5 mr-0.5 ${input.trim() && !isLoading
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 active:scale-95'
+                                            : 'bg-gray-100 text-gray-300'
+                                        }`}
+                                >
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -263,6 +263,7 @@ class QuizQuestion(models.Model):
     correctAns = models.TextField(default='')
     solution = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    cognitive_style = models.CharField(max_length=10, blank=True, null=True, help_text="Cognitive style for adaptive questions")
     admin_feedback = models.TextField(blank=True, null=True)
 
     # CT Framework Weights (0-100, should total 100 across 4 fields)

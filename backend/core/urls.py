@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import views_chat
 from . import views_users
+from . import views_questions
 
 app_name = 'core'
 
@@ -69,6 +70,10 @@ urlpatterns = [
     # Admin User Management
     path('admin/users/', views_users.admin_user_management, name='admin-users'),
     path('admin/users/<int:pk>/', views_users.admin_user_detail, name='admin-user-detail'),
+
+    # Question Bank Management (New)
+    path('admin/qbank/generate/', views_questions.generate_questions_view, name='admin-qbank-generate'),
+    path('questions/live/', views_questions.get_live_questions, name='questions-live'),
 
     # AI Chat History (Exercise Sessions)
     path('exercise/sessions/', views_chat.session_list_create, name='session-list-create'),
