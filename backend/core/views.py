@@ -1592,3 +1592,50 @@ def update_qbank_question(request, pk):
         serializer.save()
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_qbank_image_view(request):
+    """
+    POST /api/admin/qbank/upload-image/
+    Upload image specifically for Question Bank options.
+    Saves to 'media/asah otak/'
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    if 'image' not in request.FILES:
+        return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    image = request.FILES['image']
+    
+    # Check extension
+    ext = os.path.splitext(image.name)[1].lower()
+    if ext not in ['.jpg', '.jpeg', '.png']:
+        return Response({'error': 'Only JPEG and PNG are allowed'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Create unique filename
+    import time
+    filename = f"q_{int(time.time())}_{image.name.replace(' ', '_')}"
+    relative_path = os.path.join('asah otak', filename)
+    full_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+    
+    # Ensure directory exists
+    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+    
+    # Save file
+    try:
+        with open(full_path, 'wb+') as destination:
+            for chunk in image.chunks():
+                destination.write(chunk)
+                
+        # Return the absolute URL
+        image_url = request.build_absolute_uri(settings.MEDIA_URL + relative_path)
+        # Fix path separator issues if any
+        image_url = image_url.replace('\\', '/')
+        
+        return Response({
+            'message': 'Image uploaded successfully',
+            'url': image_url
+        }, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

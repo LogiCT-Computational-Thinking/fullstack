@@ -20,7 +20,26 @@ def admin_user_management(request):
         return Response({'detail': 'You do not have permission to perform this action.'}, status=status.HTTP_403_FORBIDDEN)
 
     if request.method == 'GET':
+        role = request.query_params.get('role')
+        search = request.query_params.get('search')
+        
         users = User.objects.all().order_by('-created_at')
+        
+        if role:
+            # Map 'user' to student and 'admin' to admin/teacher if needed
+            if role == 'student':
+                users = users.filter(role='student')
+            elif role == 'admin':
+                users = users.filter(role__in=['admin', 'teacher'])
+                
+        if search:
+            from django.db.models import Q
+            users = users.filter(
+                Q(name__icontains=search) | 
+                Q(email__icontains=search) | 
+                Q(student_id__icontains=search)
+            )
+            
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 

@@ -7,6 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model"""
     password = serializers.CharField(write_only=True, required=False)
     archetype_info = serializers.SerializerMethodField()
+    cognitive_style = serializers.CharField(required=False, write_only=True)
 
     def get_archetype_info(self, obj):
         archetype = obj.archetype_info
@@ -14,13 +15,21 @@ class UserSerializer(serializers.ModelSerializer):
             return ProfilingArchetypeSerializer(archetype).data
         return None
     
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if instance.preferences and len(instance.preferences) >= 3:
+            ret['cognitive_style'] = instance.preferences[-3:].upper()
+        else:
+            ret['cognitive_style'] = None
+        return ret
+    
     class Meta:
         model = User
         fields = [
             'id', 'name', 'first_name', 'last_name', 'email', 'password', 'role', 
             'profilePicture', 'preferences', 'is_profiled', 'birth_date', 
-            'gender', 'student_class', 'student_id', 'archetype_info',
-            'ct_decomposition', 'ct_abstraction', 'ct_pattern', 'ct_algorithm',
+            'gender', 'student_class', 'student_id', 'archetype_info', 'cognitive_style',
+            'is_active', 'ct_decomposition', 'ct_abstraction', 'ct_pattern', 'ct_algorithm',
             'cog_tp_value', 'cog_ga_value', 'cog_ir_value'
         ]
         extra_kwargs = {
@@ -34,12 +43,20 @@ class UserSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         """Create user with hashed password"""
+        cog_style = validated_data.pop('cognitive_style', None)
+        if cog_style:
+            validated_data['preferences'] = cog_style
+            
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
         """Update user with hashed password if provided"""
+        cog_style = validated_data.pop('cognitive_style', None)
+        if cog_style:
+            validated_data['preferences'] = cog_style
+
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
         return super().update(instance, validated_data)
