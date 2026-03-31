@@ -198,12 +198,12 @@ export default function QuestionBank() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] font-['Outfit']">
+        <div className="flex flex-col gap-8 pb-12 font-['Outfit']">
             {/* Main Content */}
-            <div className="max-w-[1400px] mx-auto p-8">
+            <div className="pb-8">
                 
-                <div className="flex items-center justify-between mb-8 px-2">
-                    <h1 className="text-2xl font-bold text-gray-900">Question Bank</h1>
+                <div className="flex items-center justify-between mb-6 shrink-0">
+                    <h1 className="text-3xl font-bold text-gray-800">Question Bank</h1>
                     <button 
                         onClick={() => setIsGenerateModalOpen(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2"

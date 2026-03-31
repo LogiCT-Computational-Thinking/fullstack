@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     
     # Local apps
     'core',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

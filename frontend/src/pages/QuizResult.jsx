@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, Clock, CheckCircle2, XCircle, Minus, Check, X, FileText, Bot } from 'lucide-react';
+import { Calendar, Clock, CheckCircle2, XCircle, Minus, Check, X, FileText, Bot, Loader2 } from 'lucide-react';
+import api from '../services/api';
 
 // ─── Mock result data ─────────────────────────────────────────────────────────
 
@@ -303,12 +305,55 @@ export default function QuizResult() {
     const navigate = useNavigate();
     const { courseId } = useParams();
 
-    const data = location.state?.resultData || MOCK_RESULT;
+    const [data, setData] = useState(location.state?.resultData || null);
+    const [loading, setLoading] = useState(!data);
     const font = "'Outfit', sans-serif";
+
+    useEffect(() => {
+        if (!data) {
+            const fetchResult = async () => {
+                try {
+                    const res = await api.get(`/courses/${courseId}/quiz-result/`);
+                    setData(res.data);
+                } catch (err) {
+                    console.error('Failed to fetch quiz result:', err);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchResult();
+        }
+    }, [courseId, data]);
 
     const scrollToQ = (idx) => {
         document.getElementById(`q-${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
+
+    if (loading) {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+                <Loader2 style={{ width: 40, height: 40, color: '#06b6d4', animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+                <p style={{ color: '#9ca3af', fontWeight: 500 }}>Loading Results...</p>
+            </div>
+        );
+    }
+
+    if (!data) {
+        return (
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff', padding: 16 }}>
+                <div style={{ background: '#f9fafb', padding: 40, borderRadius: 32, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: 448 }}>
+                    <h2 style={{ fontSize: 24, fontWeight: 800, color: '#111827', marginBottom: 16 }}>No Results Found</h2>
+                    <p style={{ color: '#6b7280', marginBottom: 32 }}>You haven't completed this quiz yet.</p>
+                    <button
+                        onClick={() => navigate('/dashboard/modules')}
+                        style={{ padding: '12px 32px', background: '#06b6d4', color: '#fff', borderRadius: 999, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div style={{ fontFamily: font }}>

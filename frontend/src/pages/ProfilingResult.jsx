@@ -128,18 +128,20 @@ export default function ProfilingResult({ data }) {
             }}
         >
             {/* Page Title */}
-            <h1 className="text-3xl font-black text-gray-900 mb-8 ml-2">
+            <div className="w-full max-w-[1400px] mx-auto mb-6 shrink-0">
+                <h1 className="text-3xl font-bold text-gray-800">
                     Your Cognitive Profile is..
                 </h1>
+            </div>
 
             {/* TOP SECTION: Profile Card + Cognitive Traits Card */}
-            <div className="w-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-6 mb-8">
-
-                {/* LEFT CARD: Profile */}
-                <div
-                    className="flex-[1] flex flex-col rounded-3xl overflow-hidden shadow-lg relative"
-                    style={{ background: 'white', minWidth: 220 }}
-                >
+            <div className="w-full max-w-[1400px] mx-auto">
+                <div className="w-full flex flex-col lg:flex-row gap-6 mb-8">
+                    {/* LEFT CARD: Profile */}
+                    <div
+                        className="flex-[1] flex flex-col rounded-3xl overflow-hidden shadow-lg relative"
+                        style={{ background: 'white', minWidth: 220 }}
+                    >
                     {/* Archetype background Grid — Full height background */}
                     <div
                         className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none"
@@ -201,8 +203,8 @@ export default function ProfilingResult({ data }) {
                             />
                         </div>
 
-                        {/* Description */}
-                        <p className="text-[14px] text-gray-700 leading-relaxed text-left w-full mb-8">
+                        {/* Description / Self-quote - Centered to match user request */}
+                        <p className="text-[14px] text-gray-700 leading-relaxed text-center w-full mb-8 italic italic-quote">
                             {displayData.description}
                         </p>
                     </div>
@@ -407,6 +409,7 @@ export default function ProfilingResult({ data }) {
                                 Test Taken: {testTakenDate}
                             </p>
                         </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -559,7 +562,7 @@ export default function ProfilingResult({ data }) {
             </div>
 
             {/* Back to Dashboard Button */}
-            <div className="w-full max-w-[1400px] mx-auto flex justify-center mb-6">
+            <div className="w-full flex justify-center mb-6">
                 <button
                     onClick={() => navigate('/dashboard')}
                     className="text-white px-16 py-4 rounded-full font-black text-[17px] shadow-xl hover:scale-105 active:scale-95 transition-all"

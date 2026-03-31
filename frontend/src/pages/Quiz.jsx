@@ -76,23 +76,27 @@ export default function Quiz() {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    // ── MOCK DATA (hapus blok ini saat connect ke backend) ──
-    setQuestions(MOCK_QUESTIONS);
-    setLoading(false);
+  const [startTime] = useState(Date.now());
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+  const [timesPerQuestion, setTimesPerQuestion] = useState({});
 
-    // ── AKTIFKAN saat connect ke backend ──
-    // const fetchQuiz = async () => {
-    //   try {
-    //     const res = await api.get(`/courses/${courseId}/quiz/`);
-    //     setQuestions(res.data.questions || []);
-    //   } catch (err) {
-    //     console.error('Failed to fetch quiz:', err);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-    // fetchQuiz();
+  useEffect(() => {
+    // Reset question start time on index change
+    setQuestionStartTime(Date.now());
+  }, [currentIdx]);
+
+  useEffect(() => {
+    const fetchQuiz = async () => {
+      try {
+        const res = await api.get(`/courses/${courseId}/quiz/`);
+        setQuestions(res.data.questions || []);
+      } catch (err) {
+        console.error('Failed to fetch quiz:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuiz();
   }, [courseId]);
 
   // ── Loading ──────────────────────────────────────────────────────────────────
@@ -141,17 +145,34 @@ export default function Quiz() {
   };
 
   const handleNext = async () => {
+    // Save time taken for current question
+    const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+    const qId = questions[currentIdx].id;
+    setTimesPerQuestion(prev => ({
+      ...prev,
+      [qId]: (prev[qId] || 0) + timeSpent
+    }));
+
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
       setSubmitting(true);
       try {
-        // ── AKTIFKAN saat connect ke backend ──
-        // const res = await api.post(`/courses/${courseId}/quiz-complete/`, { answers: selectedAnswers });
-        // navigate(`/dashboard/quiz/${courseId}/result`, { state: { resultData: res.data } });
-
-        // ── MOCK: langsung ke result page ──
-        navigate(`/dashboard/quiz/${courseId}/result`);
+        const totalDuration = Math.floor((Date.now() - startTime) / 1000);
+        // Build responses with real time_taken
+        const payload = {
+          time_taken: totalDuration,
+          responses: questions.map((q) => {
+            const ans = selectedAnswers[q.id];
+            return {
+              question_id: q.id,
+              answer: Array.isArray(ans) ? ans.join(',') : (ans || ''),
+              time_taken: timesPerQuestion[q.id] || 0 + (q.id === questions[currentIdx].id ? timeSpent : 0)
+            };
+          })
+        };
+        const res = await api.post(`/courses/${courseId}/quiz-submit/`, payload);
+        navigate(`/dashboard/quiz/${courseId}/result`, { state: { resultData: res.data } });
       } catch (err) {
         console.error('Failed to submit quiz:', err);
       } finally {

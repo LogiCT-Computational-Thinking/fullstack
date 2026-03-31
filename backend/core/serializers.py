@@ -283,18 +283,24 @@ class UpdateStudentInfoSerializer(serializers.ModelSerializer):
 class QuizResultSerializer(serializers.ModelSerializer):
     user_name = serializers.ReadOnlyField(source='user.name')
     user_avatar = serializers.ReadOnlyField(source='user.profilePicture')
+    time_spent = serializers.SerializerMethodField()
     
     class Meta:
         model = QuizResult
         fields = [
             'id', 'user', 'user_name', 'user_avatar', 'quiz', 
             'score', 'total_score', 'percentage', 'passed', 
-            'time_taken', 'points', 'completed_at'
+            'time_taken', 'time_spent', 'points', 'completed_at'
         ]
+
+    def get_time_spent(self, obj):
+        minutes = obj.time_taken // 60
+        seconds = obj.time_taken % 60
+        return f"{minutes}m {seconds}s"
 
 class QuizSubmitResponseSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
-    answer = serializers.CharField()
+    answer = serializers.CharField(allow_blank=True, allow_null=True, required=False)
     time_taken = serializers.IntegerField(default=0)
 
 class QuizSubmissionSerializer(serializers.Serializer):

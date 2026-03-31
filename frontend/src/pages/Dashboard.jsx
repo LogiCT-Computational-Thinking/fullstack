@@ -414,7 +414,7 @@ export default function Dashboard() {
                   I noticed you found <b>Belajar Dasar Pseudocode</b> hard. Want a 3 minutes refresher?
                 </p>
                 <button
-                  onClick={() => navigate('/dashboard/modules')}
+                  onClick={() => navigate('/exercise')}
                   className="bg-white text-[#007AFF] px-4 py-1.5 rounded-full text-[11px] font-bold hover:bg-gray-100 transition-colors shadow-sm cursor-pointer"
                 >
                   Let's go!

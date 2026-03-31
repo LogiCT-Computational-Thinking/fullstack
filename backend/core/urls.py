@@ -49,6 +49,7 @@ urlpatterns = [
     path('courses/', views.get_courses_view, name='get-courses'),
     path('courses/<int:course_pk>/quiz/', views.get_course_quiz, name='get-course-quiz'),
     path('courses/<int:course_pk>/quiz-submit/', views.submit_quiz_answers, name='submit-quiz-answers'),
+    path('courses/<int:course_pk>/quiz-result/', views.get_quiz_result, name='quiz-result'),
     path('courses/<int:course_pk>/quiz-complete/', views.mark_quiz_complete, name='mark-quiz-complete'),
     path('courses/<int:course_pk>/leaderboard/', views.get_quiz_leaderboard, name='quiz-leaderboard'),
 
@@ -66,6 +67,9 @@ urlpatterns = [
 
     # Update file on existing material (inline upload)
     path('admin/materials/<int:pk>/', views.admin_update_material, name='admin-update-material'),
+
+    # Admin Dashboard Stats
+    path('admin/dashboard/stats/', views.admin_dashboard_stats, name='admin-dashboard-stats'),
 
     # Admin User Management
     path('admin/users/', views_users.admin_user_management, name='admin-users'),

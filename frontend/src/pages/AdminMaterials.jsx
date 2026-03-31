@@ -388,7 +388,7 @@ export default function AdminMaterials() {
     const getFileLabel = (ft) => ft?.toUpperCase() || 'FILE';
 
     return (
-        <div className="max-w-[1600px] mx-auto font-['Outfit'] pb-20">
+        <div className="w-full font-['Outfit'] pb-20">
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-6 right-6 z-[9999] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl text-sm font-bold
@@ -640,8 +640,8 @@ export default function AdminMaterials() {
                 />
             )}
 
-            <div className="mb-10">
-                <h1 className="text-[32px] font-black text-gray-900 tracking-tight">Course Manager</h1>
+            <div className="mb-6 shrink-0">
+                <h1 className="text-3xl font-bold text-gray-800">Course Manager</h1>
             </div>
 
             {/* Controls Row */}

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import {
     Users, UserCheck, BookOpen, MessageSquare, Activity,
     ArrowUpRight, Clock, Trash2, PlusCircle, Edit3, ShieldCheck,
@@ -10,59 +11,69 @@ import {
 } from 'recharts';
 
 const AdminDashboard = () => {
-    // Mock data for charts
-    const activityData = [
-        { name: 'Senin', value: 18, color: '#8B5CF6' },
-        { name: 'Selasa', value: 10, color: '#EC4899' },
-        { name: 'Rabu', value: 15, color: '#06B6D4' },
-        { name: 'Kamis', value: 28, color: '#FACC15' },
-        { name: 'Jumat', value: 32, color: '#3B82F6' },
-        { name: 'Sabtu', value: 16, color: '#10B981' },
-        { name: 'Minggu', value: 4, color: '#6366F1' },
+    const [stats, setStats] = useState({
+        total_users: 0,
+        total_admins: 0,
+        total_courses: 0,
+        total_questions: 0,
+        active_today: 0,
+        activity_data: [],
+        cognitive_data: [],
+        top_scores: [],
+        recent_activities: []
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await api.get('/admin/dashboard/stats/');
+                setStats(response.data);
+            } catch (error) {
+                console.error('Error fetching admin stats:', error);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    // Real data for charts from stats
+    const activityData = stats.activity_data?.length > 0 ? stats.activity_data : [
+        { name: 'Senin', value: 0, color: '#8B5CF6' },
+        { name: 'Selasa', value: 0, color: '#EC4899' },
+        { name: 'Rabu', value: 0, color: '#06B6D4' },
+        { name: 'Kamis', value: 0, color: '#FACC15' },
+        { name: 'Jumat', value: 0, color: '#3B82F6' },
+        { name: 'Sabtu', value: 0, color: '#10B981' },
+        { name: 'Minggu', value: 0, color: '#6366F1' },
     ];
 
-    const cognitiveData = [
-        { name: 'PAR', value: 20, color: '#7CC1E5', count: 20, percentage: '13.4%' },
-        { name: 'TAI', value: 33, color: '#10B981', count: 33, percentage: '15.7%' },
-        { name: 'PGI', value: 28, color: '#F18CBC', count: 28, percentage: '19.0%' },
-        { name: 'PGR', value: 17, color: '#75DEA4', count: 17, percentage: '19.0%' },
-        { name: 'TAR', value: 12, color: '#9B6FD8', count: 12, percentage: '13.7%' },
-        { name: 'TGI', value: 15, color: '#FFB84D', count: 15, percentage: '20.0%' },
-        { name: 'TGR', value: 11, color: '#BDBDBD', count: 11, percentage: '18.1%' },
-        { name: 'PAI', value: 14, color: '#FFB88D', count: 14, percentage: '18.1%' },
-    ];
+    const cognitiveData = stats.cognitive_data?.length > 0 ? stats.cognitive_data : [];
 
-    const topScores = [
-        { name: 'Rusydi Balfas', id: 'ST-28', score: '13.408', avatar: '/images/avatar-1.png' },
-        { name: 'Zaky Ghoetty', id: 'ST-29', score: '9.398', avatar: '/images/avatar-2.png' },
-        { name: 'Fadhil Mumtaz', id: 'ST-25', score: '9.160', avatar: '/images/avatar-3.png' },
-        { name: 'Rio Alvein', id: 'ST-26', score: '8.237', avatar: '/images/avatar-1.png' },
-        { name: 'Agal Lulanika', id: 'ST-28', score: '7.246', avatar: '/images/avatar-2.png' },
-        { name: 'Raihan Zhafran', id: 'ST-27', score: '6.384', avatar: '/images/avatar-3.png' },
-    ];
+    const topScores = stats.top_scores?.length > 0 ? stats.top_scores : [];
 
-    const recentActivities = [
-        { icon: UserCheck, color: 'bg-blue-100 text-blue-600', action: 'New Admin Created:', detail: 'Andrea', time: '5 mins ago' },
-        { icon: BookOpen, color: 'bg-green-100 text-green-600', action: 'New Courses Added:', detail: 'Week 2', time: '10 mins ago' },
-        { icon: Edit3, color: 'bg-purple-100 text-purple-600', action: 'Edit Courses:', detail: 'Week 1', time: '30 mins ago' },
-        { icon: Trash2, color: 'bg-red-100 text-red-600', action: 'Deleted Course:', detail: 'Week 7', time: '1 hour ago' },
-    ];
+    const recentActivities = stats.recent_activities?.map(r => ({
+        icon: r.type === 'quiz' ? BookOpen : UserCheck,
+        color: r.type === 'quiz' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600',
+        action: r.action,
+        detail: r.detail,
+        time: r.time
+    })) || [];
+
 
     return (
         <div className="flex flex-col gap-8 pb-12 font-['Outfit']">
             {/* Page Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <div className="mb-6">
+                <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
             </div>
 
             {/* Top Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 {[
-                    { label: 'Total Users', value: '1.280', type: 'users' },
-                    { label: 'Total Admins', value: '4', type: 'admins' },
-                    { label: 'Total Course', value: '14', type: 'courses' },
-                    { label: 'Questions Generated', value: '30', type: 'questions' },
-                    { label: 'Active Users Today', value: '100', type: 'active' },
+                    { label: 'Total Users', value: stats.total_users?.toLocaleString() || '0', type: 'users' },
+                    { label: 'Total Admins', value: stats.total_admins?.toLocaleString() || '0', type: 'admins' },
+                    { label: 'Total Course', value: stats.total_courses?.toLocaleString() || '0', type: 'courses' },
+                    { label: 'Questions Generated', value: stats.total_questions?.toLocaleString() || '0', type: 'questions' },
+                    { label: 'Active Users Today', value: stats.active_today?.toLocaleString() || '0', type: 'active' },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all min-h-[140px]">
                         <div className="flex flex-col h-full items-start">
@@ -233,22 +244,42 @@ const AdminDashboard = () => {
 
                     {/* Insights Panel */}
                     <div className="w-full md:w-[400px] flex flex-col gap-10">
-                        <div>
-                            <h3 className="text-[18px] font-black text-gray-900 border-b-2 border-slate-100 pb-2 mb-5 tracking-tight inline-block">Key Insights</h3>
+                        <div className="flex flex-col gap-6">
                             <div className="flex flex-col gap-4">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[13px] font-bold text-gray-500">Dominant Style:</span>
-                                    <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-black tracking-tight flex items-center gap-2">
-                                        <div className="w-4 h-4 rounded-full bg-emerald-400"></div> TAI
-                                    </span>
-                                    <span className="text-[13px] font-black text-gray-700">(33 user)</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[13px] font-bold text-gray-500">Lowest Style:</span>
-                                    <span className="px-3 py-1 rounded-full bg-slate-200 text-slate-600 text-[10px] font-black tracking-tight flex items-center gap-2">
-                                        <div className="w-4 h-4 rounded-full bg-slate-400"></div> TGR
-                                    </span>
-                                    <span className="text-[13px] font-black text-gray-700">(11 user)</span>
+                                <h4 className="text-[13px] font-black text-gray-800 tracking-tight">Key Insights</h4>
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-gray-400">Dominant Style:</span>
+                                        <div className="flex items-center gap-2">
+                                            {cognitiveData.length > 0 && (
+                                                <>
+                                                    <span 
+                                                        className="px-2 py-0.5 rounded text-[10px] font-black text-white"
+                                                        style={{ background: [...cognitiveData].sort((a,b)=>b.value-a.value)[0].color }}
+                                                    >
+                                                        {[...cognitiveData].sort((a,b)=>b.value-a.value)[0].name}
+                                                    </span>
+                                                    <span className="text-[11px] font-black text-gray-700">({[...cognitiveData].sort((a,b)=>b.value-a.value)[0].count} user)</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-bold text-gray-400">Lowest Style:</span>
+                                        <div className="flex items-center gap-2">
+                                            {cognitiveData.length > 0 && (
+                                                <>
+                                                    <span 
+                                                        className="px-2 py-0.5 rounded text-[10px] font-black text-white"
+                                                        style={{ background: [...cognitiveData].sort((a,b)=>a.value-b.value)[0].color }}
+                                                    >
+                                                        {[...cognitiveData].sort((a,b)=>a.value-b.value)[0].name}
+                                                    </span>
+                                                    <span className="text-[11px] font-black text-gray-700">({[...cognitiveData].sort((a,b)=>a.value-b.value)[0].count} user)</span>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

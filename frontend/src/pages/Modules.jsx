@@ -33,7 +33,7 @@ function ActiveCard({ course, themeIndex, onClick, onClickPin }) {
     const t = CARD_THEMES[themeIndex % CARD_THEMES.length];
 
     return (
-        <button
+        <div
             onClick={onClick}
             className="text-left rounded-[22px] bg-white flex flex-col shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 w-full cursor-pointer border border-gray-100 p-3 gap-3"
         >
@@ -131,7 +131,7 @@ function ActiveCard({ course, themeIndex, onClick, onClickPin }) {
                     </div>
                 )}
             </div>
-        </button>
+        </div>
     );
 }
 
@@ -139,7 +139,7 @@ function ActiveCard({ course, themeIndex, onClick, onClickPin }) {
 
 function LockedCard({ course, onClick }) {
     return (
-        <button
+        <div
             onClick={onClick}
             className="text-left rounded-[22px] bg-white flex flex-col shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 w-full cursor-pointer border border-gray-100 p-3 gap-3"
         >
@@ -168,13 +168,12 @@ function LockedCard({ course, onClick }) {
                     <span className="text-xs font-semibold px-3 py-1 rounded-full bg-gray-200 text-gray-500">
                         Week {course.week}
                     </span>
-                    <button 
-                        disabled
-                        className="p-1.5 rounded-lg border border-gray-100 bg-gray-50 opacity-40 cursor-not-allowed flex items-center justify-center"
+                    <div 
+                        className="p-1.5 rounded-lg border border-gray-100 bg-gray-50 opacity-40 flex items-center justify-center cursor-not-allowed"
                         title="Materi masih terkunci"
                     >
                         <Pin className="w-3 h-3 text-gray-400/70" />
-                    </button>
+                    </div>
                 </div>
 
                 {/* Title */}
@@ -215,7 +214,7 @@ function LockedCard({ course, onClick }) {
                     <Lock className="w-4 h-4" />
                 </div>
             </div>
-        </button>
+        </div>
     );
 }
 

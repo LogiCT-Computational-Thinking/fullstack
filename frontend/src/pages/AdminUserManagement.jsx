@@ -184,8 +184,8 @@ const AdminUserManagement = () => {
 
     return (
         <div className="flex flex-col gap-8 pb-12 font-['Outfit'] animate-in fade-in duration-500">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">User Manager</h1>
+            <div className="mb-6 shrink-0">
+                <h1 className="text-3xl font-bold text-gray-800">User Manager</h1>
             </div>
 
             {/* Tab Switcher */}

@@ -1216,6 +1216,8 @@ def get_course_quiz(request, course_pk):
         serializer = QuizQuestionSerializer(questions, many=True)
         return Response({
             "course": course.title,
+            "deadline": quiz.deadline,
+            "time_limit": quiz.time_limit,
             "questions": serializer.data
         })
     except Course.DoesNotExist:
@@ -1237,6 +1239,12 @@ def submit_quiz_answers(request, course_pk):
     try:
         course = Course.objects.get(pk=course_pk)
         quiz = Quiz.objects.get(course=course)
+        
+        # Prevent multiple submissions (Only once policy)
+        if QuizResult.objects.filter(user=request.user, quiz=quiz).exists():
+            return Response({
+                "error": "You have already completed this quiz. Results cannot be modified."
+            }, status=status.HTTP_400_BAD_REQUEST)
     except (Course.DoesNotExist, Quiz.DoesNotExist):
         return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1301,14 +1309,108 @@ def submit_quiz_answers(request, course_pk):
     qresult.calculate_points()
     qresult.save()
 
+    # Format response for frontend
+    formatted_questions = []
+    for q in questions:
+        # Find user response for this question
+        resp = next((r for r in user_responses if r.get('question_id') == q.id), None)
+        user_ans = resp.get('answer', '') if resp else None
+        
+        is_correct = False
+        if user_ans is not None:
+            is_correct = str(user_ans).strip().lower() == str(q.correctAns).strip().lower()
+        
+        status_label = 'skipped' if user_ans is None else ('correct' if is_correct else 'wrong')
+        
+        formatted_questions.append({
+            'id': q.id,
+            'text': q.question,
+            'type': q.type,
+            'timeSpent': f"{resp.get('time_taken', 0)}s" if resp else '0s',
+            'status': status_label,
+            'correctAnswer': q.correctAns,
+            'userAnswer': user_ans,
+            'aiFeedback': q.solution or "No explanation available."
+        })
+
+    # Helper for time formatting
+    minutes = time_taken // 60
+    seconds = time_taken % 60
+    time_str = f"{minutes}m {seconds}s"
+
     return Response({
-        'id': qresult.id,
-        'score': correct_count,
-        'total_questions': total_questions,
-        'percentage': percentage,
-        'points': qresult.points,
-        'passed': passed,
-        'completed_at': qresult.completed_at
+        'courseTitle': course.title,
+        'courseWeek': course.week,
+        'finishedAt': qresult.completed_at,
+        'totalQuestions': total_questions,
+        'correctCount': correct_count,
+        'wrongCount': total_questions - correct_count - (total_questions - len(user_responses)),
+        'skippedCount': total_questions - len(user_responses),
+        'accuracyScore': round(percentage),
+        'timeSpent': time_str,
+        'questions': formatted_questions
+    })
+
+
+@api_view(['GET'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def get_quiz_result(request, course_pk):
+    """
+    GET /api/courses/<course_pk>/quiz-result/
+    Returns the formatted result of the latest quiz attempt for this course.
+    """
+    from .models import Course, Quiz, QuizQuestion, QuizResult, QuizResponse
+    
+    try:
+        course = Course.objects.get(pk=course_pk)
+        quiz = Quiz.objects.get(course=course)
+    except (Course.DoesNotExist, Quiz.DoesNotExist):
+        return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        qresult = QuizResult.objects.get(user=request.user, quiz=quiz)
+    except QuizResult.DoesNotExist:
+        return Response({"error": "No result found for this quiz"}, status=status.HTTP_404_NOT_FOUND)
+
+    questions = QuizQuestion.objects.filter(quiz=quiz)
+    total_questions = questions.count()
+    user_responses = QuizResponse.objects.filter(user=request.user, quiz=quiz)
+
+    formatted_questions = []
+    for q in questions:
+        resp = user_responses.filter(question=q).first()
+        user_ans = resp.userAns if resp else None
+        is_correct = resp.is_correct if resp else False
+        
+        status_label = 'skipped' if user_ans is None else ('correct' if is_correct else 'wrong')
+        
+        formatted_questions.append({
+            'id': q.id,
+            'text': q.question,
+            'type': q.type,
+            'timeSpent': f"{resp.time_taken if resp else 0}s",
+            'status': status_label,
+            'correctAnswer': q.correctAns,
+            'userAnswer': user_ans,
+            'aiFeedback': q.solution or "No explanation available."
+        })
+
+    minutes = qresult.time_taken // 60
+    seconds = qresult.time_taken % 60
+    time_str = f"{minutes}m {seconds}s"
+
+    return Response({
+        'courseTitle': course.title,
+        'courseWeek': course.week,
+        'finishedAt': qresult.completed_at,
+        'totalQuestions': total_questions,
+        'correctCount': int(qresult.score),
+        'wrongCount': total_questions - int(qresult.score) - (total_questions - user_responses.count()),
+        'skippedCount': total_questions - user_responses.count(),
+        'accuracyScore': round(qresult.percentage),
+        'timeSpent': time_str,
+        'questions': formatted_questions
     })
 
 
@@ -1639,3 +1741,122 @@ def upload_qbank_image_view(request):
         }, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_dashboard_stats(request):
+    """
+    GET /api/admin/dashboard/stats/
+    Get real-time statistics for the admin dashboard.
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import User, Course, QuizQuestion, QuizResult
+    from django.utils import timezone
+    from datetime import timedelta
+
+    today = timezone.now().date()
+    
+    total_users = User.objects.filter(role='student').count()
+    total_admins = User.objects.filter(role__in=['admin', 'teacher']).count()
+    total_courses = Course.objects.count()
+    total_questions = QuizQuestion.objects.count()
+    
+    # Active today: users who completed at least one quiz today
+    active_today = QuizResult.objects.filter(completed_at__date=today).values('user').distinct().count()
+
+    # 1. Activity Data (Last 7 Days)
+    activity_data = []
+    days_map = {0: 'Senin', 1: 'Selasa', 2: 'Rabu', 3: 'Kamis', 4: 'Jumat', 5: 'Sabtu', 6: 'Minggu'}
+    colors_map = ['#8B5CF6', '#EC4899', '#06B6D4', '#FACC15', '#3B82F6', '#10B981', '#6366F1']
+    
+    for i in range(6, -1, -1):
+        target_date = today - timedelta(days=i)
+        count = QuizResult.objects.filter(completed_at__date=target_date).count()
+        day_index = target_date.weekday()
+        activity_data.append({
+            'name': days_map[day_index],
+            'value': count,
+            'color': colors_map[day_index]
+        })
+
+    # 2. Cognitive Distribution
+    from .models import ProfilingArchetype
+    all_prefs = User.objects.filter(role='student', is_profiled=True).values_list('preferences', flat=True)
+    stats_cog = {}
+    for pref in all_prefs:
+        if pref and len(pref) >= 3:
+            code = pref[-3:].upper()
+            stats_cog[code] = stats_cog.get(code, 0) + 1
+    
+    color_map_archetypes = {
+        'PAR': '#7CC1E5', 'TAI': '#10B981', 'PGI': '#F18CBC', 'PGR': '#75DEA4',
+        'TAR': '#9B6FD8', 'TGI': '#FFB84D', 'TGR': '#BDBDBD', 'PAI': '#FFB88D',
+    }
+
+    archetypes = list(ProfilingArchetype.objects.all())
+    cognitive_data = []
+    total_profiled = len(all_prefs)
+    
+    for arch in archetypes:
+        count = stats_cog.get(arch.code, 0)
+        perc = (count / total_profiled * 100) if total_profiled > 0 else 0
+        cognitive_data.append({
+            'name': arch.code,
+            'value': count,
+            'color': color_map_archetypes.get(arch.code, '#CCCCCC'),
+            'count': count,
+            'percentage': f"{perc:.1f}%"
+        })
+
+    # 3. Top Performers (Cumulative)
+    from django.db.models import Sum
+    top_perf = QuizResult.objects.values('user__name', 'user__student_id', 'user__profilePicture') \
+        .annotate(total_points=Sum('points')) \
+        .order_by('-total_points')[:6]
+
+    formatted_top_scores = []
+    for p in top_perf:
+        formatted_top_scores.append({
+            'name': p['user__name'],
+            'id': p['user__student_id'] or 'N/A',
+            'score': f"{p['total_points']:,.0f}".replace(',', '.'),
+            'avatar': p['user__profilePicture'] or '/images/welkam_atas.png'
+        })
+
+    # 4. Recent Activities
+    # Mix of new users and (new materials or quiz submissions)
+    from django.contrib.humanize.templatetags.humanize import naturaltime
+    recent_qs = QuizResult.objects.order_by('-completed_at')[:3]
+    recent_users = User.objects.filter(role='student').order_by('-id')[:2]
+    
+    recent_activities = []
+    for r in recent_qs:
+        recent_activities.append({
+            'type': 'quiz',
+            'action': 'Kuis Selesai:',
+            'detail': f"{r.user.name} ({r.quiz.course.title})",
+            'time': naturaltime(r.completed_at)
+        })
+    for u in recent_users:
+        recent_activities.append({
+            'type': 'user',
+            'action': 'Siswa Baru:',
+            'detail': u.name,
+            'time': naturaltime(u.created_at) if u.created_at else 'Baru saja'
+        })
+
+    return Response({
+        "total_users": total_users,
+        "total_admins": total_admins,
+        "total_courses": total_courses,
+        "total_questions": total_questions,
+        "active_today": active_today,
+        "activity_data": activity_data,
+        "cognitive_data": cognitive_data,
+        "top_scores": formatted_top_scores,
+        "recent_activities": recent_activities
+    })
