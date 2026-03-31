@@ -50,7 +50,24 @@ def generate_questions_view(request):
         saved_count = 0
         for q_data in generated_questions:
             # Map LLM output to Django Model
-            # Assumed output format: { question, type, options, correctAns, solution }
+            # =========================================================================
+            # DITUJUKAN UNTUK TIM LLM: Format Output JSON yang diharapkan dari LLM Engine
+            # =========================================================================
+            # Type list:
+            # - 'multiple_choice': Jawaban tunggal (Opsi berupa List of String)
+            # - 'multi_select': Jawaban lebih dari satu (Opsi berupa List of String, correctAns dipisah koma)
+            # - 'true_false': Pilih Benar/Salah (Opsi ["True", "False"])
+            # - 'short_answer': Esai/Jawaban pendek (Opsi [])
+            # 
+            # Contoh Opsi & CorrectAns:
+            # {
+            #   "question": "Berapakah 1 + 1?",
+            #   "type": "multiple_choice",
+            #   "options": ["1", "2", "3", "4"],
+            #   "correctAns": "2",
+            #   "solution": "1 + 1 = 2"
+            # }
+            # =========================================================================
             QuizQuestion.objects.create(
                 quiz=quiz,
                 question=q_data.get('question'),
