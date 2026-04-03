@@ -77,6 +77,7 @@ urlpatterns = [
 
     # Question Bank Management (New)
     path('admin/qbank/generate/', views_questions.generate_questions_view, name='admin-qbank-generate'),
+    path('admin/qbank/sync/', views_questions.sync_questions_view, name='admin-qbank-sync'),
     path('questions/live/', views_questions.get_live_questions, name='questions-live'),
 
     # AI Chat History (Exercise Sessions)

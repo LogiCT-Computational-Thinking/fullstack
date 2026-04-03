@@ -25,6 +25,7 @@ const AdminUserManagement = () => {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalUsers, setTotalUsers] = useState(0);
+    const [studentClasses, setStudentClasses] = useState([]);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,11 +37,14 @@ const AdminUserManagement = () => {
         name: '',
         email: '',
         student_id: '',
-        student_class: '',
-        cognitive_style: 'TAI',
+        student_class: '', // Format: "TYPE-NUMBER" (e.g., "SE-1")
+        cognitive_style: null,
         role: 'student',
         status: 'Active'
     });
+
+    // Helper state for class selection in modal
+    const [tempClass, setTempClass] = useState({ type: '', number: '' });
 
     // Alert/Feedback Modal State
     const [statusModal, setStatusModal] = useState({
@@ -81,8 +85,18 @@ const AdminUserManagement = () => {
         }
     };
 
+    const fetchClasses = async () => {
+        try {
+            const res = await api.get('/auth/student-classes/');
+            setStudentClasses(res.data);
+        } catch (err) {
+            console.error('Error fetching classes:', err);
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
+        fetchClasses();
     }, [activeTab, searchQuery, currentPage]);
 
     const showStatus = (type, title, message, onConfirm = null, confirmText = '') => {
@@ -99,12 +113,13 @@ const AdminUserManagement = () => {
     const handleAddClick = () => {
         setIsEditMode(false);
         setSelectedUser(null);
+        setTempClass({ type: '', number: '' });
         setUserForm({
             name: '',
             email: '',
             student_id: '',
             student_class: '',
-            cognitive_style: 'TAI',
+            cognitive_style: null,
             role: activeTab === 'admin' ? 'admin' : 'student',
             status: 'Active'
         });
@@ -114,12 +129,23 @@ const AdminUserManagement = () => {
     const handleEditClick = (user) => {
         setIsEditMode(true);
         setSelectedUser(user);
+        
+        // Parse "TYPE-NUMBER" string
+        let cType = '';
+        let cNum = '';
+        if (user.student_class && user.student_class.includes('-')) {
+            const parts = user.student_class.split('-');
+            cType = parts[0];
+            cNum = parts[1];
+        }
+        setTempClass({ type: cType, number: cNum });
+
         setUserForm({
             name: user.name || '',
             email: user.email || '',
             student_id: user.student_id || '',
             student_class: user.student_class || '',
-            cognitive_style: user.cognitive_style || 'TAI',
+            cognitive_style: user.cognitive_style || null,
             role: user.role || 'student',
             status: user.is_active ? 'Active' : 'Inactive'
         });
@@ -171,6 +197,7 @@ const AdminUserManagement = () => {
     };
 
     const getCognitiveColor = (style) => {
+        if (!style) return 'bg-gray-50 text-gray-400 border-gray-100';
         const colors = {
             'TAI': 'bg-[#E3F9F1] text-[#2DCA8C] border-[#B2F0DA]',
             'PAR': 'bg-[#E3F2FD] text-[#2196F3] border-[#BBDEFB]',
@@ -179,8 +206,11 @@ const AdminUserManagement = () => {
             'PAI': 'bg-[#FFF3E0] text-[#FB8C00] border-[#FFE0B2]',
             'PGR': 'bg-[#E0F2F1] text-[#009688] border-[#B2DFDB]',
         };
-        return colors[style ? style.toUpperCase() : ''] || 'bg-gray-50 text-gray-400 border-gray-100';
+        return colors[style.toUpperCase()] || 'bg-gray-50 text-gray-400 border-gray-100';
     };
+
+    // Extract unique class types
+    const classTypes = [...new Set(studentClasses.map(c => c.class_type))].sort();
 
     return (
         <div className="flex flex-col gap-8 pb-12 font-['Outfit'] animate-in fade-in duration-500">
@@ -313,7 +343,7 @@ const AdminUserManagement = () => {
                         {/* Modal Header */}
                         <div className="px-10 pt-10 pb-6 flex items-start justify-between">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-900">{isEditMode ? 'User Edit' : 'Add New User'}</h2>
+                                <h1 className="text-2xl font-bold text-gray-900">{isEditMode ? 'User Edit' : 'Add New User'}</h1>
                                 <p className="text-sm text-gray-400 mt-1">Update user informatioan & status</p>
                             </div>
                             <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -336,18 +366,58 @@ const AdminUserManagement = () => {
                                     <label className="text-[13px] font-bold text-gray-900 uppercase">EMAIL</label>
                                     <input required type="email" value={userForm.email} onChange={(e) => setUserForm({...userForm, email: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 transition-all" placeholder="alvrio12@gmail.com" />
                                 </div>
+                                
+                                {/* Nested Selection for CLASS */}
                                 <div className="space-y-2">
                                     <label className="text-[13px] font-bold text-gray-900 uppercase">CLASS</label>
-                                    <input type="text" value={userForm.student_class} onChange={(e) => setUserForm({...userForm, student_class: e.target.value})} className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 transition-all" placeholder="ST 25" />
+                                    <div className="flex gap-2">
+                                        <select 
+                                            value={tempClass.type}
+                                            onChange={(e) => {
+                                                const newType = e.target.value;
+                                                setTempClass({ type: newType, number: '' });
+                                                setUserForm({ ...userForm, student_class: newType ? `${newType}-${tempClass.number}` : '' });
+                                            }}
+                                            className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 transition-all bg-white"
+                                        >
+                                            <option value="">Type</option>
+                                            {classTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                                        </select>
+                                        <select 
+                                            disabled={!tempClass.type}
+                                            value={tempClass.number}
+                                            onChange={(e) => {
+                                                const newNum = e.target.value;
+                                                setTempClass({ ...tempClass, number: newNum });
+                                                setUserForm({ ...userForm, student_class: tempClass.type && newNum ? `${tempClass.type}-${newNum}` : '' });
+                                            }}
+                                            className="flex-1 border border-gray-200 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 transition-all bg-white disabled:bg-gray-50"
+                                        >
+                                            <option value="">Number</option>
+                                            {studentClasses
+                                                .filter(c => c.class_type === tempClass.type)
+                                                .sort((a,b) => a.class_number - b.class_number)
+                                                .map(c => <option key={c.id} value={c.class_number}>{c.class_number}</option>)
+                                            }
+                                        </select>
+                                    </div>
                                 </div>
+
                                 <div className="space-y-2 relative">
                                     <label className="text-[13px] font-bold text-gray-900 uppercase">COGNITIVE STYLE</label>
                                     <div onClick={() => setIsCogDropdownOpen(!isCogDropdownOpen)} className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm font-medium text-gray-700 flex items-center justify-between cursor-pointer hover:border-gray-300 transition-all h-[46px]">
-                                        <span>{userForm.cognitive_style}</span>
+                                        <span>{userForm.cognitive_style || 'Empty'}</span>
                                         <ChevronDown className={`w-4 h-4 transition-transform ${isCogDropdownOpen ? 'rotate-180' : ''}`} />
                                     </div>
                                     {isCogDropdownOpen && (
                                         <div className="absolute top-full left-0 right-0 z-[110] bg-white border border-gray-100 rounded-lg shadow-xl mt-1 max-h-[200px] overflow-y-auto">
+                                            {/* Option for Null/Empty */}
+                                            <div 
+                                                onClick={() => { setUserForm({...userForm, cognitive_style: null}); setIsCogDropdownOpen(false); }} 
+                                                className={`px-4 py-2 text-sm font-medium hover:bg-gray-50 cursor-pointer ${userForm.cognitive_style === null ? 'text-blue-600 bg-blue-50' : 'text-gray-400'}`}
+                                            >
+                                                None (Empty)
+                                            </div>
                                             {cognitiveOptions.map(opt => (
                                                 <div key={opt} onClick={() => { setUserForm({...userForm, cognitive_style: opt}); setIsCogDropdownOpen(false); }} className={`px-4 py-2 text-sm font-medium hover:bg-gray-50 cursor-pointer ${userForm.cognitive_style === opt ? 'text-blue-600 bg-blue-50' : 'text-gray-600'}`}>{opt}</div>
                                             ))}

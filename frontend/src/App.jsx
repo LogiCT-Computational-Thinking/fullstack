@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate, Navigate, Outlet } from 'react-router-dom'
 import { LayoutDashboard, ClipboardList, BookOpen, FileQuestion, Settings as SettingsIcon, Search, Bell, User, LogOut } from 'lucide-react'
 import { useAuth } from './context/AuthContext'

@@ -1,0 +1,608 @@
+[
+  {
+    "id": "a6ab47ba-5b4b-4840-ae36-1bd16b46bfb0",
+    "type": "mcq",
+    "topic": "abstraksi",
+    "difficulty": "sedang",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:19.906971+00:00",
+    "question": "Apa yang dimaksud dengan abstraksi dalam konteks pemrograman dan berpikir sehari-hari?",
+    "options": {
+      "A": "Proses menyederhanakan dengan fokus pada inti penting dan mengabaikan detail yang tidak diperlukan.",
+      "B": "Proses menambahkan detail-detail kecil untuk memperjelas informasi.",
+      "C": "Metode pengolahan data yang mengutamakan kecepatan lebih dari ketepatan.",
+      "D": "Cara memahami informasi dengan cara menganalisis semua aspek secara mendalam."
+    },
+    "correct_answer": "A",
+    "explanation": "Jawaban A tepat karena menggambarkan definisi abstraksi, yaitu mengeksplorasi inti atau bagian penting sambil mengabaikan detail yang kurang relevan, baik dalam konteks pemrograman maupun berpikir sehari-hari.",
+    "approved_at": "2026-04-03T04:34:51.508762+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "0a04d809-cacb-40b8-aebd-ac75427c2473",
+    "type": "mcq",
+    "topic": "abstraksi",
+    "difficulty": "sulit",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:22.456338+00:00",
+    "question": "Dalam konteks pemrograman, mengapa penggunaan fungsi dapat dianggap sebagai bentuk abstraksi?",
+    "options": {
+      "A": "Karena fungsi menyederhanakan proses dengan menyembunyikan detail implementasi yang tidak perlu.",
+      "B": "Karena fungsi selalu menentukan langkah-langkah yang harus diikuti secara terperinci.",
+      "C": "Karena semua fungsi memiliki nama yang jelas dan tidak memerlukan parameter.",
+      "D": "Karena fungsi tidak dapat digunakan kembali dalam kode."
+    },
+    "correct_answer": "A",
+    "explanation": "Jawaban A benar karena fungsi membantu programmer untuk fokus pada hasil yang ingin dicapai tanpa harus memahami setiap langkah detail dari prosesnya. Ini mencerminkan prinsip abstraksi dengan menyederhanakan pemrosesan informasi.",
+    "approved_at": "2026-04-03T04:34:51.838492+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "754899f7-2d9c-4459-a719-f0bbb43348f3",
+    "type": "mcq",
+    "topic": "abstraksi",
+    "difficulty": "sulit",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:24.611569+00:00",
+    "question": "Mengapa proses abstraksi sangat penting dalam pemrograman dan pemecahan masalah?",
+    "options": {
+      "A": "Karena memungkinkan fokus pada konsep utama tanpa terganggu detail yang kompleks.",
+      "B": "Karena menyederhanakan semua detail menjadi satu bentuk tunggal.",
+      "C": "Karena membantu mengurangi jumlah baris kode yang ditulis.",
+      "D": "Karena dapat menghilangkan semua masalah yang ada."
+    },
+    "correct_answer": "A",
+    "explanation": "Jawaban ini benar karena abstraksi memungkinkan programmer untuk memusatkan perhatian pada gagasan atau logika utama dari masalah yang dihadapi, sehingga mengurangi kompleksitas dan meningkatkan efisiensi pemecahan masalah.",
+    "approved_at": "2026-04-03T04:34:52.044244+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "815ef5b9-34c4-481e-91e8-c89129eeb836",
+    "type": "multi",
+    "topic": "abstraksi",
+    "difficulty": "mudah",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:26.938975+00:00",
+    "question": "Apa saja yang termasuk contoh penggunaan abstraksi dalam kehidupan sehari-hari? Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Peta yang menunjukkan hanya jalan dan lokasi penting.",
+      "B": "Menjelaskan secara rinci setiap elemen dalam suatu objek.",
+      "C": "Menggunakan fungsi dalam pemrograman tanpa mengetahui detail implementasinya.",
+      "D": "Membaca novel tanpa memahami tema dan karakter utama.",
+      "E": "Membuat rangkuman dari suatu artikel."
+    },
+    "correct_answers": [
+      "A",
+      "C",
+      "E"
+    ],
+    "correct_answer": [
+      "A",
+      "C",
+      "E"
+    ],
+    "explanation": "Opsi A, C, dan E benar karena semua contoh tersebut menunjukkan penyederhanaan dengan fokus pada inti penting. Opsi B salah karena menjelaskan detail, sedangkan opsi D tidak menunjukkan abstraksi yang tepat karena membaca novel dengan fokus pada detail tidak mengutamakan inti cerita.",
+    "approved_at": "2026-04-03T04:34:52.870181+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "91fdb8fe-f0f7-48f6-8ab4-fc24c9a9065a",
+    "type": "multi",
+    "topic": "abstraksi",
+    "difficulty": "sedang",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:30.928568+00:00",
+    "question": "Apa saja manfaat dari penggunaan abstraksi dalam berbagai bidang? Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Abstraksi memungkinkan kita untuk fokus pada gagasan utama.",
+      "B": "Abstraksi menampilkan semua detail secara rinci.",
+      "C": "Abstraksi membantu menyederhanakan informasi kompleks.",
+      "D": "Abstraksi hanya digunakan dalam pemrograman.",
+      "E": "Abstraksi membuat kita lebih mudah memahami konsep yang rumit."
+    },
+    "correct_answers": [
+      "A",
+      "C",
+      "E"
+    ],
+    "correct_answer": [
+      "A",
+      "C",
+      "E"
+    ],
+    "explanation": "Opsi A, C, dan E menjelaskan manfaat dari abstraksi dengan tepat, yaitu membantu fokus pada inti penting, menyederhanakan informasi kompleks, dan memudahkan pemahaman konsep yang rumit. Opsi B salah karena abstraksi justru mengabaikan detail yang tidak diperlukan. Opsi D salah karena abstraksi digunakan di berbagai bidang, bukan hanya dalam pemrograman.",
+    "approved_at": "2026-04-03T04:34:53.116445+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "0455273b-030b-4d28-ab42-52f8aa0fc76e",
+    "type": "multi",
+    "topic": "abstraksi",
+    "difficulty": "mudah",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:34.900677+00:00",
+    "question": "Apa saja yang merupakan contoh dari proses abstraksi? Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Peta yang menunjukkan lokasi penting seperti jalan dan gedung.",
+      "B": "Detail lengkap dari sebuah sistem operasi komputer.",
+      "C": "Penggunaan fungsi dalam pemrograman tanpa mengetahui implementasi dalamnya.",
+      "D": "Sebuah novel yang menguraikan setiap aspek kehidupan karakter secara mendetail.",
+      "E": "Spesifikasi teknis dari sebuah perangkat keras."
+    },
+    "correct_answers": [
+      "A",
+      "C"
+    ],
+    "correct_answer": [
+      "A",
+      "C"
+    ],
+    "explanation": "Opsi A dan C merupakan contoh dari proses abstraksi, dimana peta hanya menampilkan informasi penting dan fungsi dalam pemrograman memungkinkan penggunaan tanpa pemahaman detail. Sebaliknya, opsi B, D, dan E mengandung banyak detail yang tidak disederhanakan, sehingga tidak mencerminkan konsep abstraksi.",
+    "approved_at": "2026-04-03T04:34:53.305984+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "f1e4a982-be58-4e1d-bfbe-e66fc365e1ea",
+    "type": "truefalse",
+    "topic": "abstraksi",
+    "difficulty": "mudah",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:36.552561+00:00",
+    "question": "Abstraksi dalam pemrograman memungkinkan kita untuk menggunakan fungsi tanpa perlu mengetahui semua detail cara kerjanya di dalam.",
+    "options": {
+      "Benar": "Benar",
+      "Salah": "Salah"
+    },
+    "correct_answer": "Benar",
+    "explanation": "Pernyataan ini benar karena sesuai dengan penjelasan tentang abstraksi dalam materi. Abstraksi memungkinkan fokus pada fungsi utama tanpa terpengaruh oleh detail teknis yang rumit.",
+    "approved_at": "2026-04-03T04:34:54.230809+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "0b9d7111-6586-488d-8544-1cfcaabbee91",
+    "type": "truefalse",
+    "topic": "abstraksi",
+    "difficulty": "sulit",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:38.327632+00:00",
+    "question": "Abstraksi dalam pemrograman memungkinkan kita menggunakan fungsi tanpa mengetahui rincian detail cara kerja fungsi tersebut.",
+    "options": {
+      "Benar": "Benar",
+      "Salah": "Salah"
+    },
+    "correct_answer": "Benar",
+    "explanation": "Pernyataan ini benar karena sesuai dengan pengertian abstraksi yang diuraikan. Dalam konteks pemrograman, abstraksi menyederhanakan cara kita berinteraksi dengan kode, fokus pada fungsi utamanya tanpa terjebak dalam detail teknis yang kompleks.",
+    "approved_at": "2026-04-03T04:34:54.437424+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "afc77042-5fba-4b41-89ac-263ee7520b3a",
+    "type": "open",
+    "topic": "abstraksi",
+    "difficulty": "mudah",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:40.948127+00:00",
+    "question": "Anda diminta untuk merancang sebuah peta sederhana untuk sebuah festival musik yang diadakan di taman kota. Dalam peta tersebut, Anda hanya perlu mencantumkan lokasi panggung, area makan, dan toilet. Bagaimana Anda dapat menerapkan konsep abstraksi dalam pembuatan peta tersebut, dan mengapa penting untuk mengabaikan detail-detail yang tidak relevan?",
+    "options": null,
+    "correct_answer": "Dalam merancang peta festival musik, penerapan konsep abstraksi dapat dilakukan dengan hanya menampilkan elemen-elemen kunci seperti lokasi panggung, area makan, dan toilet. Detail-detail lain seperti spesifikasi tanaman, jenis bangunan, atau jalan kecil tidak perlu dicantumkan, karena dapat mengganggu fokus pengunjung. Dengan demikian, peta yang dihasilkan lebih mudah dipahami dan digunakan oleh pengunjung festival.",
+    "explanation": "Jawaban yang benar harus mencakup penjelasan tentang pemilihan elemen penting yang ditampilkan pada peta dan pengabaian detail yang tidak relevan. Mahasiswa juga harus menjelaskan pentingnya fokus pada inti informasi untuk kemudahan penggunaan peta oleh pengunjung.",
+    "approved_at": "2026-04-03T04:34:54.926425+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "1ae74f5b-32f0-448d-a167-6ad2e1aa2d83",
+    "type": "open",
+    "topic": "abstraksi",
+    "difficulty": "sedang",
+    "week_id": "2026-W14",
+    "status": "approved",
+    "created_at": "2026-04-03T04:34:43.474070+00:00",
+    "question": "Anda sedang merancang aplikasi peta untuk memudahkan pengguna menemukan lokasi penting di kota. Bagaimana Anda dapat menggunakan konsep abstraksi dalam desain aplikasi tersebut agar pengguna tidak merasa kewalahan dengan informasi yang tidak penting? Sebutkan beberapa fitur yang dapat diterapkan untuk mencapai tujuan ini.",
+    "options": null,
+    "correct_answer": "Abstraksi dalam desain aplikasi peta dapat dicapai dengan menampilkan hanya informasi penting seperti jalan utama, lokasi landmark, dan titik akses transportasi tanpa memperlihatkan detail kecil seperti nama jalan yang kurang dikenal atau bangunan yang tidak relevan. Fitur-fitur yang bisa diterapkan termasuk filter untuk menunjukkan jenis lokasi tertentu (misal, restoran, rumah sakit), zoom yang otomatis menyoroti lokasi penting, dan antarmuka yang sederhana dengan pilihan navigasi yang jelas.",
+    "explanation": "Jawaban yang benar harus mencakup penggunaan abstraksi dengan menonjolkan fitur-fitur utama yang mendukung kemudahan pengguna dalam memahami informasi penting. Selain itu, mahasiswa perlu menjelaskan alasan pemilihan fitur tersebut dalam konteks fokus pada inti data dan mengurangi kebingungan bagi pengguna.",
+    "approved_at": "2026-04-03T04:34:55.233251+00:00",
+    "admin_note": ""
+  },
+  {
+    "id": "1ab612b5-70b2-47d4-8e5e-762f3a66a65c",
+    "type": "mcq",
+    "topic": "Pendahuluan",
+    "difficulty": "sulit",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:36.130731+00:00",
+    "question": "Dalam konteks Computational Thinking, manakah dari berikut ini yang paling tepat mendefinisikan 'Decomposition' dan mengapa hal ini penting dalam menyelesaikan masalah?",
+    "options": {
+      "A": "Proses memecah masalah kompleks menjadi bagian-bagian lebih kecil yang lebih mudah dikelola dan dianalisis, sehingga meningkatkan pemahaman dan efisiensi penyelesaian masalah.",
+      "B": "Menggunakan algoritma untuk menghasilkan solusi yang tepat tanpa mempertimbangkan aspek lain dari masalah.",
+      "C": "Menyusun semua bagian dari masalah menjadi satu kesatuan untuk mendapatkan solusi akhir tanpa menguraikannya.",
+      "D": "Menganalisis solusi yang ada dengan tujuan untuk menemukan solusi yang lebih baik, meskipun tidak memperhitungkan komponen masalah yang lebih besar."
+    },
+    "correct_answer": "A",
+    "explanation": "Jawaban A benar karena 'Decomposition' merupakan salah satu prinsip utama dalam Computational Thinking, yang memungkinkan individu untuk memahami dan menyelesaikan masalah kompleks dengan lebih baik. Dengan memecahnya menjadi bagian yang lebih kecil, kita dapat fokus pada elemen tertentu dan menerapkan solusi dengan lebih efisien."
+  },
+  {
+    "id": "e936828e-bd57-4d08-bd6a-ac5b607481eb",
+    "type": "mcq",
+    "topic": "Pendahuluan",
+    "difficulty": "mudah",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:39.161429+00:00",
+    "question": "Apa tujuan utama dari Computational Thinking dalam pemecahan masalah?",
+    "options": {
+      "A": "Mengembangkan kemampuan untuk memecahkan masalah dengan pendekatan sistematis",
+      "B": "Meningkatkan kecepatan dalam mengetik kode program",
+      "C": "Menghafal teknik pemrograman tertentu",
+      "D": "Mempelajari sintaks bahasa pemrograman"
+    },
+    "correct_answer": "A",
+    "explanation": "Computational Thinking bertujuan untuk membantu individu mengembangkan cara berpikir yang sistematis dan logis dalam memecahkan masalah, bukan hanya fokus pada aspek teknis atau hafalan. Dengan pemahaman ini, seseorang dapat lebih mudah menyusun solusi yang efisien terhadap masalah kompleks."
+  },
+  {
+    "id": "31f38b97-ca2d-4e7e-a996-cc8da86a4259",
+    "type": "mcq",
+    "topic": "Pendahuluan",
+    "difficulty": "sulit",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:42.019101+00:00",
+    "question": "Dalam konteks Computational Thinking, mana di antara berikut ini yang paling tepat menggambarkan tujuan utama dari pendekatan ini?",
+    "options": {
+      "A": "Menyelesaikan masalah kompleks dengan cara yang sistematis dan terstruktur.",
+      "B": "Menghafal algoritma untuk penggunaan dalam pemrograman.",
+      "C": "Berkolaborasi dalam tim untuk menghasilkan kode baru.",
+      "D": "Menggunakan perangkat lunak tertentu untuk memecahkan masalah."
+    },
+    "correct_answer": "A",
+    "explanation": "Jawaban A benar karena Computational Thinking bertujuan untuk mengembangkan kemampuan individu dalam menyelesaikan masalah dengan pendekatan sistematis dan terstruktur. Pendekatan ini memfokuskan pada pemahaman proses pemecahan masalah daripada sekadar penggunaan perangkat atau algoritma."
+  },
+  {
+    "id": "91f7900d-35a1-42f6-b5a1-25107ec63913",
+    "type": "multi",
+    "topic": "Pendahuluan",
+    "difficulty": "mudah",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:44.334215+00:00",
+    "question": "Apa saja yang merupakan komponen dasar dari pemikiran komputasi? Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Dekomposisi",
+      "B": "Algoritma",
+      "C": "Kreativitas",
+      "D": "Analisis data",
+      "E": "Pengolahan manual"
+    },
+    "correct_answers": [
+      "A",
+      "B",
+      "C"
+    ],
+    "correct_answer": [
+      "A",
+      "B",
+      "C"
+    ],
+    "explanation": "Dekomposisi dan algoritma adalah komponen utama dalam pemikiran komputasi yang membantu dalam memecahkan masalah secara sistematis. Kreativitas juga penting karena memungkinkan individu untuk menemukan solusi inovatif. Sementara itu, analisis data tidak termasuk komponen dasar, dan pengolahan manual tidak sejalan dengan pendekatan otomatisasi yang dianut dalam pemikiran komputasi."
+  },
+  {
+    "id": "a6b75854-1c36-4bbe-983a-da42f5e99942",
+    "type": "multi",
+    "topic": "Pendahuluan",
+    "difficulty": "sulit",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:48.066551+00:00",
+    "question": "Apa yang termasuk dalam tujuan utama Computational Thinking? Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Meningkatkan kemampuan memecahkan masalah secara sistematis.",
+      "B": "Merupakan teknik yang hanya digunakan untuk pemrograman komputer.",
+      "C": "Memungkinkan pemahaman yang lebih baik tentang algoritma dan struktur data.",
+      "D": "Menggantikan kebutuhan akan pengetahuan matematika.",
+      "E": "Membantu dalam merancang solusi yang efisien dan efektif."
+    },
+    "correct_answers": [
+      "A",
+      "C",
+      "E"
+    ],
+    "correct_answer": [
+      "A",
+      "C",
+      "E"
+    ],
+    "explanation": "Opsi A, C, dan E adalah tujuan utama dari Computational Thinking, yaitu memecahkan masalah, memahami algoritma, dan merancang solusi efisien. Opsi B salah karena Computational Thinking tidak hanya terbatas pada pemrograman, dan opsi D salah karena matematika tetap penting dalam berbagai aspek pemrograman dan algoritma."
+  },
+  {
+    "id": "eb569f15-7822-4fa0-a8c4-197d0e92fa60",
+    "type": "multi",
+    "topic": "Pendahuluan",
+    "difficulty": "mudah",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:50.596633+00:00",
+    "question": "Apa saja komponen utama dari Computational Thinking? Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Dekomposisi",
+      "B": "Algoritma",
+      "C": "Abstraksi",
+      "D": "Seni lukis",
+      "E": "Evaluasi"
+    },
+    "correct_answers": [
+      "A",
+      "B",
+      "C"
+    ],
+    "correct_answer": [
+      "A",
+      "B",
+      "C"
+    ],
+    "explanation": "Opsi A (Dekomposisi), B (Algoritma), dan C (Abstraksi) adalah komponen utama dari Computational Thinking. Dekomposisi membantu memecah masalah menjadi bagian-bagian yang lebih kecil, algoritma menyusun langkah-langkah penyelesaian, dan abstraksi menyaring informasi penting. Opsi D (Seni lukis) dan E (Evaluasi) tidak termasuk dalam komponen utama Computational Thinking."
+  },
+  {
+    "id": "89bccafd-95a4-43da-a8d6-93b2e8781bdd",
+    "type": "truefalse",
+    "topic": "Pendahuluan",
+    "difficulty": "sedang",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:53.252738+00:00",
+    "question": "Computational Thinking adalah kemampuan untuk menyelesaikan masalah dengan pendekatan yang sistematik dan algoritmis, serta dapat diterapkan di berbagai disiplin ilmu.",
+    "options": {
+      "Benar": "Benar",
+      "Salah": "Salah"
+    },
+    "correct_answer": "Benar",
+    "explanation": "Pernyataan ini benar karena Computational Thinking melibatkan cara berpikir yang terstruktur dalam memecahkan masalah, yang relevan di berbagai bidang, tidak hanya dalam ilmu komputer. Selain itu, tujuan pembelajaran dalam Computational Thinking adalah untuk mengembangkan keterampilan penyelesaian masalah yang dapat diadaptasi di berbagai konteks."
+  },
+  {
+    "id": "1addedc4-ec7a-4822-92f5-f2d80d8fa2c1",
+    "type": "truefalse",
+    "topic": "Pendahuluan",
+    "difficulty": "sedang",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:45:56.512964+00:00",
+    "question": "Computational Thinking mencakup kemampuan untuk memecahkan masalah dengan menggunakan teknik pemrograman dan algoritma.",
+    "options": {
+      "Benar": "Benar",
+      "Salah": "Salah"
+    },
+    "correct_answer": "Benar",
+    "explanation": "Pernyataan ini benar karena Computational Thinking adalah proses berpikir yang melibatkan metode sistematis untuk memecahkan masalah dengan cara yang dapat diterapkan dalam konteks pemrograman dan algoritma. Ini mencakup langkah-langkah seperti dekomposisi, pola pengenalan, abstraksi, dan algoritma."
+  },
+  {
+    "id": "2035a92d-bc91-474c-bff5-34fb61d61024",
+    "type": "open",
+    "topic": "Pendahuluan",
+    "difficulty": "sedang",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:46:00.197646+00:00",
+    "question": "Anda adalah seorang guru yang ingin mengajarkan tentang pentingnya pemecahan masalah kepada siswa. Dalam konteks ini, Anda ingin menggunakan metode Computational Thinking untuk membantu siswa memahami proses pemecahan masalah. Bagaimana Anda akan menerapkan langkah-langkah Computational Thinking dalam mengatasi masalah yang dihadapi siswa dalam pembelajaran, dan apa tujuan dari setiap langkah tersebut?",
+    "options": null,
+    "correct_answer": "Langkah pertama adalah mendefinisikan masalah yang dihadapi siswa sehingga mereka memahami konteks dan tujuan pembelajaran. Langkah kedua adalah memecah masalah tersebut menjadi bagian-bagian yang lebih kecil (dekomposisi), sehingga siswa dapat fokus pada setiap bagian. Langkah ketiga adalah mencari pola atau membuat model yang relevan untuk membantu siswa memahami hubungan antar bagian masalah. Terakhir, siswa akan melaksanakan solusi yang diusulkan dan mengevaluasi hasilnya untuk melihat apakah solusinya efektif dan apa yang dapat diperbaiki di masa mendatang.",
+    "explanation": "Jawaban harus mencakup penjelasan empat langkah dari Computational Thinking: mendefinisikan masalah, dekomposisi masalah, mencari pola atau model, dan evaluasi solusi. Setiap langkah harus dihubungkan dengan tujuan yang jelas untuk meningkatkan pemahaman siswa terhadap proses pemecahan masalah."
+  },
+  {
+    "id": "ba1ee847-6381-4023-88a6-6e91e9f6a4cc",
+    "type": "open",
+    "topic": "Pendahuluan",
+    "difficulty": "mudah",
+    "week_id": "1",
+    "status": "pending",
+    "created_at": "2026-04-03T16:46:03.471383+00:00",
+    "question": "Bayangkan Anda adalah seorang guru yang ingin mengajarkan konsep pemrograman dasar kepada siswa kelas 6. Dengan menggunakan pendekatan Computational Thinking, bagaimana Anda akan merancang suatu aktivitas belajar yang membantu siswa memahami proses pemecahan masalah? Apa langkah-langkah spesifik yang akan Anda ambil?",
+    "options": null,
+    "correct_answer": "Saya akan merancang aktivitas belajar berbasis proyek di mana siswa bekerja secara kelompok untuk membuat game sederhana menggunakan perangkat lunak pemrograman visual seperti Scratch. Langkah pertama adalah mendefinisikan masalah atau tema game yang ingin dibuat. Selanjutnya, saya akan memandu siswa untuk memecah proyek menjadi bagian yang lebih kecil, seperti mendesain karakter, menulis kode sederhana untuk gerakan, dan menguji game. Akhirnya, setiap kelompok akan mempresentasikan game mereka dan menjelaskan logika pemrograman yang digunakan.",
+    "explanation": "Jawaban harus mencakup langkah-langkah dalam Computational Thinking seperti mendefinisikan masalah, memecah masalah menjadi bagian-bagian kecil, serta menerapkan solusi konkret. Siswa juga harus menunjukkan pemahaman tentang kolaborasi dalam kelompok untuk mencapai tujuan pembelajaran yang sama."
+  },
+  {
+    "id": "04403e6c-e8d0-44cb-8092-e0e622bfc6ef",
+    "type": "mcq",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "sedang",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:33.459129+00:00",
+    "question": "Dalam konteks pemecahan masalah kompleks, manakah dari pernyataan berikut yang paling tepat menggambarkan peran logika?",
+    "options": {
+      "A": "Logika membantu kita untuk menyusun langkah-langkah sistematis dalam memecahkan masalah.",
+      "B": "Logika hanya diperlukan saat membuat program komputer.",
+      "C": "Logika tidak berpengaruh dalam pemecahan masalah praktis.",
+      "D": "Logika sama saja dengan kreativitas dalam menemukan solusi."
+    },
+    "correct_answer": "A",
+    "explanation": "Jawaban A benar karena logika berfungsi sebagai fondasi yang membantu kita merumuskan langkah-langkah sistematis dan terstruktur dalam proses pemecahan masalah, sehingga memudahkan dalam analisis dan penarikan kesimpulan."
+  },
+  {
+    "id": "db6062eb-a531-4014-bde1-ce970af7ff84",
+    "type": "mcq",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "sedang",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:35.683313+00:00",
+    "question": "Dalam konteks Computational Thinking, langkah pertama dalam memecahkan masalah kompleks adalah:",
+    "options": {
+      "A": "Mendefinisikan masalah dengan jelas",
+      "B": "Mencari solusi yang paling cepat",
+      "C": "Mengumpulkan data tanpa analisis",
+      "D": "Mengimplementasikan solusi secara langsung"
+    },
+    "correct_answer": "A",
+    "explanation": "Mendefinisikan masalah dengan jelas adalah langkah pertama yang krusial dalam Computational Thinking karena tanpa pemahaman yang baik mengenai masalah, solusi yang dihasilkan mungkin tidak relevan atau efektif. Ini membantu untuk memecah masalah menjadi bagian-bagian yang lebih kecil dan lebih mudah dikelola."
+  },
+  {
+    "id": "8a9c3598-2a84-4019-ae94-701523d68205",
+    "type": "mcq",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "sulit",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:39.464551+00:00",
+    "question": "Dalam konteks pemecahan masalah kompleks, logika berperan penting untuk menentukan langkah-langkah yang tepat. Manakah dari pernyataan berikut yang paling tepat menggambarkan penggunaan logika dalam computational thinking?",
+    "options": {
+      "A": "Logika digunakan untuk menganalisis setiap langkah dari algoritma, memastikan bahwa hasil akhir mencapai solusi yang diinginkan.",
+      "B": "Logika tidak berkaitan dengan algoritma, melainkan lebih ke pemikiran kreatif dalam menemukan solusi.",
+      "C": "Logika hanya digunakan dalam tahap akhir pemecahan masalah untuk memvalidasi hasil.",
+      "D": "Logika dan intuisi harus digunakan secara bersamaan tanpa harus memisahkan keduanya dalam proses pemecahan masalah."
+    },
+    "correct_answer": "A",
+    "explanation": "Jawaban A benar karena penggunaan logika dalam computational thinking sangat penting untuk menganalisis dan merumuskan algoritma sehingga proses pemecahan masalah dapat diorganisir dengan baik untuk mencapai solusi akhir yang efisien."
+  },
+  {
+    "id": "38285705-9716-413c-ad3c-fec7bb0990c7",
+    "type": "multi",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "mudah",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:44.582885+00:00",
+    "question": "Dalam konteks pemecahan masalah kompleks, prinsip-prinsip logika berikut ini penting untuk dipahami. Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Logika digunakan untuk menyusun argumen yang valid.",
+      "B": "Semua masalah dapat diselesaikan dengan algoritma linier.",
+      "C": "Pemisahan masalah menjadi sub-masalah yang lebih kecil adalah teknik yang efektif.",
+      "D": "Fokus pada solusi tunggal selalu lebih baik daripada mempertimbangkan beberapa alternatif.",
+      "E": "Analisis risiko dan manfaat membantu dalam memilih solusi terbaik."
+    },
+    "correct_answers": [
+      "A",
+      "C",
+      "E"
+    ],
+    "correct_answer": [
+      "A",
+      "C",
+      "E"
+    ],
+    "explanation": "Opsi A benar karena logika membantu dalam penyusunan argumen yang sah. Opsi C benar karena memecahkan masalah kompleks menjadi sub-masalah yang lebih kecil memudahkan proses pemecahan. Opsi E juga benar karena analisis risiko dan manfaat sangat penting dalam perumusan keputusan. Opsi B dan D salah karena tidak semua masalah dapat diselesaikan dengan algoritma linier, dan mempertimbangkan beberapa alternatif sering kali menghasilkan solusi yang lebih baik."
+  },
+  {
+    "id": "c23c6ea3-6261-481f-9600-9b3f6fb16a69",
+    "type": "multi",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "mudah",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:48.265929+00:00",
+    "question": "Dalam konteks Computational Thinking, yang termasuk fondasi logika untuk memecahkan masalah kompleks adalah? Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Mengidentifikasi pola dalam data",
+      "B": "Mengandalkan intuisi tanpa analisis",
+      "C": "Mendeskripsikan solusi secara algoritmis",
+      "D": "Mengabaikan proses pengujian solusi",
+      "E": "Menggunakan pemecahan masalah terstruktur"
+    },
+    "correct_answers": [
+      "A",
+      "C",
+      "E"
+    ],
+    "correct_answer": [
+      "A",
+      "C",
+      "E"
+    ],
+    "explanation": "Opsi A, C, dan E benar karena mengidentifikasi pola, mendeskripsikan solusi secara algoritmis, dan menggunakan pemecahan masalah terstruktur adalah aspek penting dari logika dalam Computational Thinking. Opsi B dan D salah karena tidak menerapkan analisis dan pengujian, yang merupakan esensi dari menyelesaikan masalah secara efektif."
+  },
+  {
+    "id": "d5976bc6-1326-490d-bd80-9cec6b9820e5",
+    "type": "multi",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "mudah",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:51.083577+00:00",
+    "question": "Dalam memecahkan masalah kompleks, logika berperan penting. Pilih SEMUA jawaban yang benar.",
+    "options": {
+      "A": "Logika membantu dalam mengidentifikasi langkah-langkah yang sistematis.",
+      "B": "Logika tidak berhubungan dengan proses pemecahan masalah.",
+      "C": "Logika memfasilitasi analisis dan penalaran dalam mencari solusi.",
+      "D": "Pembelajaran logika hanya berguna dalam bidang matematika.",
+      "E": "Logika memungkinkan kita untuk membuat keputusan berdasarkan bukti."
+    },
+    "correct_answers": [
+      "A",
+      "C",
+      "E"
+    ],
+    "correct_answer": [
+      "A",
+      "C",
+      "E"
+    ],
+    "explanation": "Opsi A, C, dan E benar karena logika memang membantu dalam mengidentifikasi langkah sistematis, memfasilitasi analisis, dan memungkinkan pengambilan keputusan berbasis bukti. Opsi B salah karena logika sangat berhubungan dengan pemecahan masalah. Opsi D salah karena pembelajaran logika juga penting dalam berbagai bidang, bukan hanya matematika."
+  },
+  {
+    "id": "545fd72c-4c67-4b1b-a32f-3b50073733f0",
+    "type": "truefalse",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "mudah",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:53.617112+00:00",
+    "question": "Logika adalah alat penting dalam menyusun algoritma untuk memecahkan masalah kompleks.",
+    "options": {
+      "Benar": "Benar",
+      "Salah": "Salah"
+    },
+    "correct_answer": "Benar",
+    "explanation": "Pernyataan ini benar karena logika memberikan fondasi dalam proses berpikir sistematis yang diperlukan untuk merumuskan algoritma. Dalam Computational Thinking, penggunaan logika memungkinkan pemecahan masalah secara terstruktur dan efisien."
+  },
+  {
+    "id": "3fbdb2dd-6389-4ffd-9740-c3d4d445bdb6",
+    "type": "truefalse",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "sulit",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:04:56.595036+00:00",
+    "question": "Logika proposisional adalah alat dasar yang tidak diperlukan dalam Computational Thinking karena semua masalah kompleks dapat diselesaikan tanpa analisis logis.",
+    "options": {
+      "Benar": "Benar",
+      "Salah": "Salah"
+    },
+    "correct_answer": "Salah",
+    "explanation": "Pernyataan ini salah karena logika proposisional merupakan fondasi penting dalam Computational Thinking. Analisis logis membantu dalam memecahkan masalah kompleks dengan mengidentifikasi hubungan antar proposisi dan menyusun argumen yang valid."
+  },
+  {
+    "id": "522bd19e-70ea-460b-aaba-f59214e1f74f",
+    "type": "open",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "sulit",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:05:02.094027+00:00",
+    "question": "Sebuah perusahaan teknologi memiliki sistem yang dapat memproses data pelanggan secara efektif, namun menghadapi masalah dalam memprioritaskan permintaan pelayanan. Tim IT perusahaan tersebut merasa perlu untuk merancang algoritma berdasarkan logika untuk mengatasi permasalahan ini. Bagaimana Anda akan menggunakan fondasi logika untuk mengembangkan solusi yang sistematis dalam memprioritaskan permintaan pelayanan pelanggan, dan apa langkah-langkah yang akan Anda ambil dalam merancang algoritma tersebut?",
+    "options": null,
+    "correct_answer": "Langkah pertama adalah mendefinisikan kriteria untuk memprioritaskan permintaan, seperti urgensi, nilai pelanggan, dan waktu tunggu. Selanjutnya, saya akan membuat representasi logika dari kriteria tersebut dalam bentuk aturan menggunakan proposisi logis. Saya akan menggunakan diagram alir untuk menggambarkan alur pemrosesan dan pengambilan keputusan, yang akan memastikan bahwa setiap permintaan diproses berdasarkan kriteria yang telah ditetapkan.",
+    "explanation": "Jawaban yang benar harus mencakup penentuan kriteria untuk prioritas permintaan, penggunaan logika proposisional dalam representasi aturan, dan pembuatan diagram alir sebagai alat analisis untuk memvisualisasikan proses pembuatan keputusan."
+  },
+  {
+    "id": "49298b09-cfae-449e-967f-91a1c46698d6",
+    "type": "open",
+    "topic": "Dasar Pemikiran Komputasional",
+    "difficulty": "sedang",
+    "week_id": "2",
+    "status": "pending",
+    "created_at": "2026-04-03T17:05:05.620677+00:00",
+    "question": "Anda adalah seorang manajer produk yang menghadapi masalah dalam meningkatkan kepuasan pelanggan terhadap produk terbaru perusahaan Anda. Dalam rapat tim, Anda mengidentifikasi beberapa masalah, termasuk keterlambatan pengiriman dan kurangnya informasi produk. Bagaimana Anda menerapkan fondasi logika untuk menganalisis masalah ini dan merumuskan solusi yang efektif?",
+    "options": null,
+    "correct_answer": "Pertama, identifikasi masalah utama berdasarkan data yang tersedia, seperti laporan pengiriman dan umpan balik pelanggan. Kemudian, gunakan logika deduktif untuk menarik kesimpulan, misalnya, jika keterlambatan pengiriman adalah penyebab utama ketidakpuasan, maka perbaikan dalam proses logistik dapat meningkatkan kepuasan. Terakhir, sediakan solusi konkret yang mencakup langkah-langkah perbaikan dan pengukuran keberhasilan implementasinya.",
+    "explanation": "Jawaban yang benar harus mencakup identifikasi masalah, penggunaan logika deduktif untuk analisis, dan perumusan solusi yang spesifik. Selain itu, mahasiswa harus menunjukkan bagaimana solusi tersebut dapat diukur keberhasilannya."
+  }
+]

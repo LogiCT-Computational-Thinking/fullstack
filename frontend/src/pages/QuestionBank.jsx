@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, Check, X, Eye, Loader2, Filter, ChevronRight, MessageSquare, Edit, Save, FileText, HelpCircle, UploadCloud, GripVertical, Trash2, CheckSquare, ChevronDown, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Search, Bell, User, Check, X, Eye, Loader2, RefreshCcw, Filter, ChevronRight, MessageSquare, Edit, Save, FileText, HelpCircle, UploadCloud, GripVertical, Trash2, CheckSquare, ChevronDown, Image as ImageIcon, Sparkles } from 'lucide-react';
 import api from '../services/api';
 
 export default function QuestionBank() {
@@ -23,7 +23,10 @@ export default function QuestionBank() {
     // Generation states
     const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
     const [targetWeek, setTargetWeek] = useState(1);
+    const [genTopic, setGenTopic] = useState('');
+    const [genDescription, setGenDescription] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
 
     // Filter states
     const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -48,6 +51,20 @@ export default function QuestionBank() {
         };
         fetchCoursesList();
     }, []);
+
+    // Update generation fields when week changes
+    useEffect(() => {
+        if (courses.length > 0) {
+            const course = courses.find(c => c.week === targetWeek);
+            if (course) {
+                setGenTopic(course.title || '');
+                setGenDescription(course.description || '');
+            } else {
+                setGenTopic(`Materi Minggu ${targetWeek}`);
+                setGenDescription('');
+            }
+        }
+    }, [targetWeek, courses]);
 
     const fetchQuestions = async () => {
         setLoading(true);
@@ -108,16 +125,40 @@ export default function QuestionBank() {
     };
 
     const handleGenerateQuestions = async () => {
+        if (!genTopic.trim() || !genDescription.trim()) {
+            alert('Topik dan Deskripsi materi harus diisi untuk generate soal.');
+            return;
+        }
+
         setIsGenerating(true);
         try {
-            await api.post('/admin/qbank/generate/', { week: targetWeek });
+            await api.post('/admin/qbank/generate/', { 
+                week: targetWeek,
+                topic_name: genTopic,
+                topic_text: genDescription,
+                week_id: targetWeek.toString()
+            });
             setIsGenerateModalOpen(false);
             fetchQuestions();
         } catch (error) {
             console.error('Error generating questions:', error);
-            alert('Gagal mendaur ulang soal. Silakan coba lagi.');
+            alert('Gagal men-generate soal. Silakan coba lagi.');
         } finally {
             setIsGenerating(false);
+        }
+    };
+
+    const handleSyncQuestions = async () => {
+        setIsSyncing(true);
+        try {
+            const response = await api.post('/admin/qbank/sync/');
+            alert(response.data.message);
+            fetchQuestions();
+        } catch (error) {
+            console.error('Error syncing questions:', error);
+            alert('Gagal sinkronisasi soal.');
+        } finally {
+            setIsSyncing(false);
         }
     };
 
@@ -204,13 +245,27 @@ export default function QuestionBank() {
                 
                 <div className="flex items-center justify-between mb-6 shrink-0">
                     <h1 className="text-3xl font-bold text-gray-800">Question Bank</h1>
-                    <button 
-                        onClick={() => setIsGenerateModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2"
-                    >
-                        <Sparkles className="w-4 h-4" />
-                        Generate Questions
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={handleSyncQuestions}
+                            disabled={isSyncing}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-sm transition-all border-2 ${
+                                isSyncing 
+                                ? 'bg-gray-100 border-gray-100 text-gray-400' 
+                                : 'bg-white border-blue-600/10 text-blue-600 hover:bg-blue-50'
+                            }`}
+                        >
+                            <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                            {isSyncing ? 'Syncing...' : 'Sync with AI'}
+                        </button>
+                        <button 
+                            onClick={() => setIsGenerateModalOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Generate Questions
+                        </button>
+                    </div>
                 </div>
 
                 {/* Tabs / Filter Row */}
@@ -804,12 +859,12 @@ export default function QuestionBank() {
 
             {/* AI Generator Modal */}
             {isGenerateModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 sm:p-6">
                     <div 
                         className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-300"
                         onClick={() => !isGenerating && setIsGenerateModalOpen(false)}
                     />
-                    <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 overflow-hidden animate-in zoom-in duration-300">
+                    <div className="relative w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 max-h-[90vh] overflow-y-auto animate-in zoom-in duration-300 scrollbar-hide">
                         <div className="p-8 pb-4 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900">Auto Generate Questions</h3>
                             <button 
@@ -825,9 +880,9 @@ export default function QuestionBank() {
                                 AI akan secara otomatis membuat 10 soal baru (6 MCQ + 4 Open Question) untuk materi di minggu yang Anda pilih.
                             </p>
 
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div>
-                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3">Pilih Minggu (Week)</label>
+                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-3">1. Pilih Minggu (Week)</label>
                                     <div className="grid grid-cols-4 gap-2">
                                         {[...Array(14)].map((_, i) => (
                                             <button
@@ -843,6 +898,29 @@ export default function QuestionBank() {
                                             </button>
                                         ))}
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">2. Topik Materi</label>
+                                    <input 
+                                        type="text"
+                                        value={genTopic}
+                                        onChange={(e) => setGenTopic(e.target.value)}
+                                        placeholder="Contoh: Abstraksi dalam Berpikir"
+                                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 transition-all"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">3. Deskripsi / Materi Detail</label>
+                                    <textarea 
+                                        value={genDescription}
+                                        onChange={(e) => setGenDescription(e.target.value)}
+                                        placeholder="Masukkan penjelasan detail materi minggu ini..."
+                                        className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-medium text-gray-700 outline-none focus:border-blue-500 transition-all min-h-[120px] resize-none"
+                                        rows={4}
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-1 font-medium">Minimal 50 karakter untuk hasil yang optimal.</p>
                                 </div>
 
                                 <button

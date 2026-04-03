@@ -7,7 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model"""
     password = serializers.CharField(write_only=True, required=False)
     archetype_info = serializers.SerializerMethodField()
-    cognitive_style = serializers.CharField(required=False, write_only=True)
+    cognitive_style = serializers.CharField(required=False, write_only=True, allow_null=True, allow_blank=True)
 
     def get_archetype_info(self, obj):
         archetype = obj.archetype_info
@@ -44,8 +44,8 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Create user with hashed password"""
         cog_style = validated_data.pop('cognitive_style', None)
-        if cog_style:
-            validated_data['preferences'] = cog_style
+        if 'cognitive_style' in self.initial_data: # Check if it was provided in request
+             validated_data['preferences'] = cog_style
             
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
@@ -54,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         """Update user with hashed password if provided"""
         cog_style = validated_data.pop('cognitive_style', None)
-        if cog_style:
+        if 'cognitive_style' in self.initial_data: # Check if it was provided in request
             validated_data['preferences'] = cog_style
 
         if 'password' in validated_data:
