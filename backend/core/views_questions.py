@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsTeacherOrAdmin
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 import requests
@@ -13,11 +14,11 @@ from .authentication import CustomJWTAuthentication
 
 logger = logging.getLogger(__name__)
 
-LLM_ENGINE_URL = "http://localhost:8001"
+LLM_ENGINE_URL = "http://127.0.0.1:8001"
 
 @api_view(['POST'])
 @authentication_classes([CustomJWTAuthentication])
-@permission_classes([IsAdminUser])
+@permission_classes([IsTeacherOrAdmin])
 def generate_questions_view(request):
     """
     POST: Calls LLM Engine to generate 10 questions for a specific topic/week.
@@ -64,11 +65,12 @@ def generate_questions_view(request):
         }
         
         logger.info(f"Calling LLM Engine with payload: {payload}")
+        print(f"DEBUG: Payload to LLM Engine: {payload}") # Terminal visible print
         
         response = requests.post(
             f"{LLM_ENGINE_URL}/questions/generate",
             json=payload,
-            timeout=120 # Increased timeout for generation
+            timeout=600 # Extended timeout for 10 questions batch
         )
         response.raise_for_status()
         data = response.json()
@@ -145,8 +147,15 @@ def generate_questions_view(request):
         }, status=status.HTTP_201_CREATED)
 
     except requests.RequestException as e:
-        logger.error(f"Error calling LLM Engine: {str(e)}")
-        return Response({'error': 'Failed to communicate with LLM Engine.'}, status=status.HTTP_502_BAD_GATEWAY)
+        error_msg = str(e)
+        if hasattr(e, 'response') and e.response is not None:
+            try:
+                error_msg = f"{e.response.status_code} - {e.response.json().get('detail', e.response.text)}"
+            except:
+                error_msg = f"{e.response.status_code} - {e.response.text}"
+        
+        logger.error(f"Error calling LLM Engine: {error_msg}")
+        return Response({'error': f'Failed to communicate with LLM Engine: {error_msg}'}, status=status.HTTP_502_BAD_GATEWAY)
     except Exception as e:
         logger.error(f"Error saving generated questions: {str(e)}")
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -221,7 +230,7 @@ def get_live_questions(request):
 
 @api_view(['POST'])
 @authentication_classes([CustomJWTAuthentication])
-@permission_classes([IsAdminUser])
+@permission_classes([IsTeacherOrAdmin])
 def sync_questions_view(request):
     """
     POST: Syncs all questions from LLM Engine to Django Database.

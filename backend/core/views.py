@@ -1206,12 +1206,11 @@ def get_course_quiz(request, course_pk):
     try:
         course = Course.objects.get(pk=course_pk)
         quiz = Quiz.objects.get(course=course)
-        questions = QuizQuestion.objects.filter(quiz=quiz, status='APPROVED').order_by('id')
+        questions = QuizQuestion.objects.filter(quiz=quiz, status='APPROVED').order_by('?')[:5]
         
-        # Jika tidak ada yang approved, coba ambil semua if admin/teacher, 
-        # tapi untuk student hanya yang APPROVED.
+        # Jika tidak ada yang approved, coba ambil semua if admin/teacher (max 5)
         if not questions.exists() and request.user.role in ['admin', 'teacher']:
-             questions = QuizQuestion.objects.filter(quiz=quiz).order_by('id')
+             questions = QuizQuestion.objects.filter(quiz=quiz).order_by('?')[:5]
 
         serializer = QuizQuestionSerializer(questions, many=True)
         return Response({
@@ -1255,11 +1254,12 @@ def submit_quiz_answers(request, course_pk):
     time_taken = serializer.validated_data.get('time_taken', 0)
     user_responses = serializer.validated_data.get('responses', [])
     
-    # Calculate score
-    questions = QuizQuestion.objects.filter(quiz=quiz)
-    total_questions = questions.count()
+    # Calculate score based on SUBMITTED questions
+    total_questions = len(user_responses)
     if total_questions == 0:
-        return Response({"error": "Quiz has no questions"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "No answers submitted"}, status=status.HTTP_400_BAD_REQUEST)
+
+    all_quiz_questions = QuizQuestion.objects.filter(quiz=quiz)
 
     correct_count = 0
     responses_to_save = []
@@ -1269,7 +1269,7 @@ def submit_quiz_answers(request, course_pk):
         user_ans = resp.get('answer', '')
         
         try:
-            question = questions.get(id=q_id)
+            question = all_quiz_questions.get(id=q_id)
             is_correct = str(user_ans).strip().lower() == str(question.correctAns).strip().lower()
             if is_correct:
                 correct_count += 1
@@ -1309,12 +1309,17 @@ def submit_quiz_answers(request, course_pk):
     qresult.calculate_points()
     qresult.save()
 
-    # Format response for frontend
+    # Format response for frontend (Showing only what was answered)
     formatted_questions = []
-    for q in questions:
-        # Find user response for this question
-        resp = next((r for r in user_responses if r.get('question_id') == q.id), None)
-        user_ans = resp.get('answer', '') if resp else None
+    # Fetch questions in the order they were submitted to maintain experience
+    for resp in user_responses:
+        q_id = resp.get('question_id')
+        try:
+            q = all_quiz_questions.get(id=q_id)
+        except QuizQuestion.DoesNotExist:
+            continue
+            
+        user_ans = resp.get('answer', '')
         
         is_correct = False
         if user_ans is not None:
@@ -1373,23 +1378,22 @@ def get_quiz_result(request, course_pk):
     except QuizResult.DoesNotExist:
         return Response({"error": "No result found for this quiz"}, status=status.HTTP_404_NOT_FOUND)
 
-    questions = QuizQuestion.objects.filter(quiz=quiz)
-    total_questions = questions.count()
-    user_responses = QuizResponse.objects.filter(user=request.user, quiz=quiz)
+    user_responses = QuizResponse.objects.filter(user=request.user, quiz=quiz).select_related('question')
+    total_questions = user_responses.count()
 
     formatted_questions = []
-    for q in questions:
-        resp = user_responses.filter(question=q).first()
-        user_ans = resp.userAns if resp else None
-        is_correct = resp.is_correct if resp else False
+    for resp in user_responses:
+        q = resp.question
+        user_ans = resp.userAns
+        is_correct = resp.is_correct
         
-        status_label = 'skipped' if user_ans is None else ('correct' if is_correct else 'wrong')
+        status_label = 'correct' if is_correct else 'wrong'
         
         formatted_questions.append({
             'id': q.id,
             'text': q.question,
             'type': q.type,
-            'timeSpent': f"{resp.time_taken if resp else 0}s",
+            'timeSpent': f"{resp.time_taken}s",
             'status': status_label,
             'correctAnswer': q.correctAns,
             'userAnswer': user_ans,
@@ -1406,8 +1410,8 @@ def get_quiz_result(request, course_pk):
         'finishedAt': qresult.completed_at,
         'totalQuestions': total_questions,
         'correctCount': int(qresult.score),
-        'wrongCount': total_questions - int(qresult.score) - (total_questions - user_responses.count()),
-        'skippedCount': total_questions - user_responses.count(),
+        'wrongCount': total_questions - int(qresult.score),
+        'skippedCount': 0,
         'accuracyScore': round(qresult.percentage),
         'timeSpent': time_str,
         'questions': formatted_questions
