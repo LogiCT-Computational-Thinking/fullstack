@@ -136,7 +136,11 @@ def generate_questions_view(request):
                 option=final_options,
                 correctAns=final_correct,
                 solution=q_data.get('solution') or q_data.get('explanation', ''),
-                status='PENDING'
+                status='PENDING',
+                weight_abstraction=q_data.get('weight_abstraction', 0.25),
+                weight_pattern=q_data.get('weight_pattern', 0.25),
+                weight_algorithm=q_data.get('weight_algorithm', 0.25),
+                weight_decomposition=q_data.get('weight_decomposition', 0.25)
             )
             saved_count += 1
 
@@ -318,6 +322,10 @@ def sync_questions_view(request):
                 existing.option = final_options
                 existing.correctAns = final_correct
                 existing.solution = q_data.get('solution') or q_data.get('explanation', '')
+                existing.weight_abstraction = q_data.get('weight_abstraction', 0.25)
+                existing.weight_pattern = q_data.get('weight_pattern', 0.25)
+                existing.weight_algorithm = q_data.get('weight_algorithm', 0.25)
+                existing.weight_decomposition = q_data.get('weight_decomposition', 0.25)
                 existing.save()
                 updated_count += 1
             else:
@@ -329,7 +337,11 @@ def sync_questions_view(request):
                     option=final_options,
                     correctAns=final_correct,
                     solution=q_data.get('solution') or q_data.get('explanation', ''),
-                    status='PENDING' 
+                    status='PENDING',
+                    weight_abstraction=q_data.get('weight_abstraction', 0.25),
+                    weight_pattern=q_data.get('weight_pattern', 0.25),
+                    weight_algorithm=q_data.get('weight_algorithm', 0.25),
+                    weight_decomposition=q_data.get('weight_decomposition', 0.25)
                 )
                 synced_count += 1
                 
