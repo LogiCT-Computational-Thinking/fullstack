@@ -31,6 +31,25 @@ const formatTitle = (text) => {
     }).join(' ');
 };
 
+// Helper function to preprocess markdown (LaTeX delimiters and newlines)
+const preprocessMarkdown = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    // 1. Handle double-escaped or single-escaped LaTeX brackets
+    let processed = text
+        .replace(/\\\\\[/g, '$$$$')
+        .replace(/\\\\\]/g, '$$$$')
+        .replace(/\\\[/g, '$$$$')
+        .replace(/\\\]/g, '$$$$')
+        .replace(/\\\\\(/g, '$')
+        .replace(/\\\\\)/g, '$')
+        .replace(/\\\(/g, '$')
+        .replace(/\\\)/g, '$');
+    
+    // 2. Ensure single newlines are rendered (standard Markdown trick: add 2 spaces at end of line)
+    // but don't break existing double newlines/paragraphs
+    return processed.replace(/\n(?!\n)/g, '  \n');
+};
+
 export default function Exercise() {
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -321,13 +340,7 @@ export default function Exercise() {
                     <div className="mt-10">
                         <h3 className="px-4 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em] mb-4">Your chats</h3>
                         <div className="space-y-1">
-                            {sessions.length === 0 ? (
-                                <div className="px-4 py-3 space-y-3">
-                                    <p className="text-xs text-gray-300 font-medium italic">Lorem ipsum dolor sit amet</p>
-                                    <p className="text-xs text-gray-300 font-medium italic">Lorem ipsum dolor sit amet</p>
-                                    <p className="text-xs text-gray-300 font-medium italic">Lorem ipsum dolor sit amet</p>
-                                </div>
-                            ) : sessions.map((session) => {
+                            {sessions.length === 0 ? null : sessions.map((session) => {
                                 let previewText = "New Chat";
                                 if (session.messages && session.messages.length > 0) {
                                     const firstUserMsg = session.messages.find(m => m.role === 'user');
@@ -421,18 +434,23 @@ export default function Exercise() {
                                         ? 'max-w-[85%] bg-[#F6F6F6] px-6 py-4 rounded-[0.5rem]' 
                                         : 'w-full bg-transparent py-4 text-gray-900 border-none'
                                     }`}>
-                                        <div className={`text-[15px] leading-relaxed markdown-body prose prose-sm max-w-none 
-                                            ${msg.role === 'user' ? 'text-gray-700' : 'prose-p:mb-4'}
+                                        <div className={`text-[15px] leading-relaxed prose prose-sm max-w-none 
+                                            ${msg.role === 'user' ? 'text-gray-700' : 'text-gray-900'}
                                             ${msg.role === 'assistant' ? 
-                                                'prose-headings:text-[#1e2a5e] prose-headings:font-bold ' +
-                                                'prose-blockquote:border-l-4 prose-blockquote:border-[#9fa9d3] prose-blockquote:bg-[#f6f7fb] prose-blockquote:rounded-r-lg prose-blockquote:py-1 prose-blockquote:px-4 ' +
+                                                'prose-p:mb-6 prose-p:leading-7 ' +
+                                                'prose-li:mb-2 prose-ul:mb-6 prose-ol:mb-6 ' +
+                                                'prose-headings:mb-4 prose-headings:mt-8 prose-headings:text-[#1e2a5e] prose-headings:font-bold ' +
+                                                'prose-blockquote:border-l-4 prose-blockquote:border-[#9fa9d3] prose-blockquote:bg-[#f6f7fb] prose-blockquote:rounded-r-lg prose-blockquote:py-2 prose-blockquote:px-5 prose-blockquote:mb-6 ' +
                                                 'prose-code:bg-[#f3f4f6] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none ' +
-                                                'prose-pre:bg-[#f3f4f6] prose-pre:border prose-pre:border-gray-200 ' +
+                                                'prose-pre:bg-[#f3f4f6] prose-pre:border prose-pre:border-gray-200 prose-pre:mb-6 ' +
                                                 'prose-th:bg-[#f1f2f7] prose-th:px-3 prose-th:py-2 prose-td:border prose-td:border-gray-200 ' +
                                                 'prose-strong:text-[#1b255a]' : ''}`}
                                         >
-                                            <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                                                {msg.content}
+                                            <ReactMarkdown 
+                                                remarkPlugins={[remarkMath]} 
+                                                rehypePlugins={[rehypeKatex]}
+                                            >
+                                                {preprocessMarkdown(msg.content)}
                                             </ReactMarkdown>
                                         </div>
 
@@ -444,7 +462,7 @@ export default function Exercise() {
                                                 </span>
                                                 <div className="text-[15px] font-bold text-[#1e2a5e] leading-relaxed markdown-body prose prose-sm max-w-none prose-p:m-0">
                                                     <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                                                        {msg.followup}
+                                                        {preprocessMarkdown(msg.followup)}
                                                     </ReactMarkdown>
                                                 </div>
                                             </div>
@@ -453,8 +471,22 @@ export default function Exercise() {
                                 </div>
                             ))}
                             {isLoading && (
-                                <div className="w-full flex justify-start animate-pulse">
-                                    <div className="bg-gray-50 h-16 w-full max-w-[400px] rounded-2xl rounded-tl-sm"></div>
+                                <div className="w-full flex justify-start animate-in fade-in slide-in-from-left-2 duration-500">
+                                    <div className="flex items-center gap-3 py-4">
+                                        <div className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center">
+                                            <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[13px] font-bold text-blue-600/70 tracking-wide uppercase">
+                                                LogiAI is thinking
+                                            </span>
+                                            <div className="flex gap-1">
+                                                <div className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                                <div className="w-1 h-1 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                                <div className="w-1 h-1 bg-blue-400 rounded-full animate-bounce"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                             <div ref={messagesEndRef} />
