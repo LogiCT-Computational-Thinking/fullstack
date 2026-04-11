@@ -81,6 +81,7 @@ export default function AdminMaterials() {
     const [matLoading, setMatLoading] = useState(false);
     const [matSearch, setMatSearch] = useState('');
     const [visibility, setVisibility] = useState(true);
+    const [quizVisibility, setQuizVisibility] = useState(true);
 
     // Add Content form state
     const [addForm, setAddForm] = useState({ title: '', description: '', order: 1 });
@@ -188,6 +189,7 @@ export default function AdminMaterials() {
             const res = await api.get(`/admin/courses/${editTarget.id}/materials/`);
             setMaterials(res.data);
             setVisibility(editTarget.is_active);
+            setQuizVisibility(editTarget.quiz_is_active);
         } catch {
             showToast('error', 'Gagal memuat materi.');
         } finally {
@@ -286,6 +288,31 @@ export default function AdminMaterials() {
             fetchCourses();
         } catch {
             showToast('error', 'Gagal mengubah visibilitas.');
+        }
+    };
+
+    // ── Toggle quiz visibility — ask for confirmation ──────────────────────────────
+    const confirmToggleQuizVisibility = () => {
+        setFeedback({
+            type: 'warning',
+            title: 'Change Quiz Visibility?',
+            subtitle: quizVisibility
+                ? 'Quiz "Asah Otak" will be hidden from students.'
+                : 'Quiz "Asah Otak" will be visible to students.',
+            primaryLabel: 'Confirm',
+            secondaryLabel: 'Cancel',
+            onPrimary: () => { closeFeedback(); executeToggleQuizVisibility(); },
+            onSecondary: closeFeedback,
+        });
+    };
+
+    const executeToggleQuizVisibility = async () => {
+        try {
+            await api.patch(`/admin/courses/${editTarget.id}/toggle-quiz/`);
+            setQuizVisibility(v => !v);
+            fetchCourses();
+        } catch {
+            showToast('error', 'Gagal mengubah visibilitas kuis.');
         }
     };
 
@@ -609,7 +636,7 @@ export default function AdminMaterials() {
                                     ))}
                                 </div>
 
-                                {/* Visibility Toggle */}
+                                {/* Course Visibility Toggle */}
                                 <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                                     <span className="text-[13px] font-black text-gray-600 flex items-center gap-2">
                                         {visibility ? <Eye className="w-4 h-4 text-green-500" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
@@ -618,6 +645,18 @@ export default function AdminMaterials() {
                                     <button onClick={confirmToggleVisibility}
                                         className={`relative w-12 h-6 rounded-full transition-all duration-300 ${visibility ? 'bg-green-400' : 'bg-gray-200'}`}>
                                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${visibility ? 'left-7' : 'left-1'}`} />
+                                    </button>
+                                </div>
+
+                                {/* Quiz Visibility Toggle */}
+                                <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100">
+                                    <span className="text-[13px] font-black text-gray-600 flex items-center gap-2">
+                                        {quizVisibility ? <Eye className="w-4 h-4 text-purple-500" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
+                                        Quiz Visibility
+                                    </span>
+                                    <button onClick={confirmToggleQuizVisibility}
+                                        className={`relative w-12 h-6 rounded-full transition-all duration-300 ${quizVisibility ? 'bg-purple-400' : 'bg-gray-200'}`}>
+                                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${quizVisibility ? 'left-7' : 'left-1'}`} />
                                     </button>
                                 </div>
                             </div>
@@ -711,7 +750,14 @@ export default function AdminMaterials() {
                                     <h3 className="text-[19px] font-black text-gray-900 leading-tight mb-2 pr-10">{course.title}</h3>
                                     <div className="flex items-center gap-2 text-gray-400 font-bold text-[12.5px] mb-auto">
                                         <BookOpen className="w-4 h-4" strokeWidth={3} />
-                                        <span>{course.materials?.length || 0} Modules</span>
+                                        <span>
+                                            {(() => {
+                                                const total = course.materials?.length || 0;
+                                                const active = course.materials?.filter(m => m.is_active).length || 0;
+                                                const hidden = total - active;
+                                                return hidden > 0 ? `${active} Viewable, ${hidden} Hidden` : `${total} Modules`;
+                                            })()}
+                                        </span>
                                     </div>
                                     <div className="mt-5 flex items-center justify-between">
                                         <button onClick={() => openEdit(course)}

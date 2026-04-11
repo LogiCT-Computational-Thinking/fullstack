@@ -76,6 +76,10 @@ export default function Quiz() {
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  // Persistence & Timer
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [startedAtBackend, setStartedAtBackend] = useState(null);
   const [startTime] = useState(Date.now());
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [timesPerQuestion, setTimesPerQuestion] = useState({});
@@ -89,7 +93,26 @@ export default function Quiz() {
     const fetchQuiz = async () => {
       try {
         const res = await api.get(`/courses/${courseId}/quiz/`);
-        setQuestions(res.data.questions || []);
+        const qs = res.data.questions || [];
+        setQuestions(qs);
+        setTimeLeft(res.data.remaining_time);
+        setIsSubmitted(res.data.is_submitted);
+        setStartedAtBackend(res.data.started_at);
+
+        // Pre-fill answers from backend
+        const initialAnswers = {};
+        qs.forEach(q => {
+          if (q.user_answer) {
+            // Respect multi-select string format (comma separated)
+            if (q.type.includes('multi_select')) {
+              initialAnswers[q.id] = q.user_answer.split(',');
+            } else {
+              initialAnswers[q.id] = q.user_answer;
+            }
+          }
+        });
+        setSelectedAnswers(initialAnswers);
+
       } catch (err) {
         console.error('Failed to fetch quiz:', err);
       } finally {
@@ -98,6 +121,25 @@ export default function Quiz() {
     };
     fetchQuiz();
   }, [courseId]);
+
+  // Timer Effect
+  useEffect(() => {
+    if (timeLeft === null || timeLeft <= 0 || isSubmitted) return;
+
+    const timerId = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerId);
+          // Auto submit when time runs out? 
+          // For now just keep at 0 or trigger handleNext at last index
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, [timeLeft, isSubmitted]);
 
   // ── Loading ──────────────────────────────────────────────────────────────────
   if (loading) {
@@ -131,16 +173,31 @@ export default function Quiz() {
   const currentQuestion = questions[currentIdx];
   const currentAnswer = selectedAnswers[currentQuestion.id];
 
-  const handleSelect = (value) => {
+  const handleSelect = async (value) => {
+    let newVal;
     if (currentQuestion.type.includes('multi_select')) {
       const prev = Array.isArray(currentAnswer) ? currentAnswer : [];
       if (prev.includes(value)) {
-        setSelectedAnswers({ ...selectedAnswers, [currentQuestion.id]: prev.filter(v => v !== value) });
+        newVal = prev.filter(v => v !== value);
       } else {
-        setSelectedAnswers({ ...selectedAnswers, [currentQuestion.id]: [...prev, value] });
+        newVal = [...prev, value];
       }
     } else {
-      setSelectedAnswers({ ...selectedAnswers, [currentQuestion.id]: value });
+      newVal = value;
+    }
+
+    // Update locally
+    setSelectedAnswers({ ...selectedAnswers, [currentQuestion.id]: newVal });
+
+    // Save to backend (Persistence)
+    try {
+      await api.post(`/courses/${courseId}/quiz-save-answer/`, {
+        question_id: currentQuestion.id,
+        answer: Array.isArray(newVal) ? newVal.join(',') : newVal,
+        time_taken: timesPerQuestion[currentQuestion.id] || 0
+      });
+    } catch (err) {
+      console.error("Failed to save draft:", err);
     }
   };
 
@@ -158,7 +215,9 @@ export default function Quiz() {
     } else {
       setSubmitting(true);
       try {
-        const totalDuration = Math.floor((Date.now() - startTime) / 1000);
+        // Calculate total duration based on the actual start time from backend
+        const startTimeBackend = new Date(startedAtBackend).getTime();
+        const totalDuration = Math.floor((Date.now() - startTimeBackend) / 1000);
         // Build responses with real time_taken
         const payload = {
           time_taken: totalDuration,
@@ -221,7 +280,7 @@ export default function Quiz() {
           </div>
 
           {/* Segmented Progress Bar — narrower, gaps between segments */}
-          <div className="w-full flex items-center gap-2">
+          <div className="w-full flex items-center gap-4">
             <div className="flex-1 flex gap-1.5">
               {Array.from({ length: questions.length }).map((_, i) => (
                 <div
@@ -238,7 +297,17 @@ export default function Quiz() {
                 />
               ))}
             </div>
-            <span className="text-sm font-bold text-gray-500 ml-2 min-w-[36px] text-right">
+            
+            {/* Timer Display */}
+            {timeLeft !== null && (
+              <div className="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-500 rounded-full border border-red-100 min-w-[80px] justify-center">
+                <span className="text-xs font-bold font-mono">
+                  {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+                </span>
+              </div>
+            )}
+
+            <span className="text-sm font-bold text-gray-500 min-w-[36px] text-right">
               {Math.round(((currentIdx) / questions.length) * 100)}%
             </span>
           </div>
@@ -326,15 +395,19 @@ export default function Quiz() {
 // ─── Render Options ────────────────────────────────────────────────────────────
 
 function renderOptions(question, currentAnswer, onSelect) {
+  const options = question.option || question.options || [];
+
   /* ── Multiple Choice ── */
   if (question.type === 'multiple_choice' || question.type === 'multiple_choice_image') {
-    return question.option.map((opt, i) => {
-      const isSelected = currentAnswer === opt;
+    return options.map((opt, i) => {
+      const optText = typeof opt === 'object' ? opt.text : opt;
+      const isSelected = currentAnswer === optText;
+      
       return (
         <button
           key={i}
-          onClick={() => onSelect(opt)}
-          className="w-full text-left transition-all duration-150 active:scale-[0.99]"
+          onClick={() => onSelect(optText)}
+          className="w-full text-left transition-all duration-150 active:scale-[0.99] group"
           style={{
             padding: '14px 22px',
             borderRadius: 999,
@@ -345,9 +418,28 @@ function renderOptions(question, currentAnswer, onSelect) {
             fontSize: 15,
             fontFamily: "'Outfit', sans-serif",
             cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12
           }}
         >
-          {opt}
+          <span style={{ 
+            color: isSelected ? '#06b6d4' : '#94a3b8', 
+            fontWeight: 800,
+            fontSize: 13,
+            minWidth: 20
+          }}>
+            {String.fromCharCode(65 + i)}.
+          </span>
+          <span className="flex-1">{optText}</span>
+          {typeof opt === 'object' && opt.image && (
+            <img 
+              src={opt.image} 
+              alt={`Option ${i}`} 
+              className="w-12 h-12 rounded-lg object-cover ml-2"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          )}
         </button>
       );
     });
@@ -356,13 +448,15 @@ function renderOptions(question, currentAnswer, onSelect) {
   /* ── Multi Select ── */
   if (question.type.includes('multi_select')) {
     const answers = Array.isArray(currentAnswer) ? currentAnswer : [];
-    return question.option.map((opt, i) => {
-      const isSelected = answers.includes(opt);
+    return options.map((opt, i) => {
+      const optText = typeof opt === 'object' ? opt.text : opt;
+      const isSelected = answers.includes(optText);
+      
       return (
         <button
           key={i}
-          onClick={() => onSelect(opt)}
-          className="w-full text-left flex items-center justify-between transition-all duration-150 active:scale-[0.99]"
+          onClick={() => onSelect(optText)}
+          className="w-full text-left flex items-center justify-between transition-all duration-150 active:scale-[0.99] group"
           style={{
             padding: '14px 22px',
             borderRadius: 999,
@@ -375,7 +469,25 @@ function renderOptions(question, currentAnswer, onSelect) {
             cursor: 'pointer',
           }}
         >
-          <span>{opt}</span>
+          <div className="flex items-center gap-12 flex-1">
+            <span style={{ 
+              color: isSelected ? '#06b6d4' : '#94a3b8', 
+              fontWeight: 800,
+              fontSize: 13,
+              minWidth: 20
+            }}>
+              {String.fromCharCode(65 + i)}.
+            </span>
+            <span>{optText}</span>
+            {typeof opt === 'object' && opt.image && (
+              <img 
+                src={opt.image} 
+                alt={`Option ${i}`} 
+                className="w-12 h-12 rounded-lg object-cover ml-2"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            )}
+          </div>
           <div style={{
             width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
             border: `2px solid ${isSelected ? '#06b6d4' : '#cbd5e1'}`,
@@ -392,8 +504,8 @@ function renderOptions(question, currentAnswer, onSelect) {
 
   /* ── True / False ── */
   if (question.type === 'true_false') {
-    const isTrue = currentAnswer === 'TRUE';
-    const isFalse = currentAnswer === 'FALSE';
+    const isTrue = String(currentAnswer).toUpperCase() === 'TRUE';
+    const isFalse = String(currentAnswer).toUpperCase() === 'FALSE';
     return (
       <div style={{ maxWidth: 480, margin: '8px auto 0', width: '100%' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

@@ -31,7 +31,7 @@ export default function AdminLogin() {
                 return;
             }
 
-            navigate('/admin/materials');
+            navigate('/admin/dashboard');
         } catch (err) {
             setError(err.error || 'Login gagal. Periksa kembali email dan password.');
         } finally {
@@ -46,7 +46,7 @@ export default function AdminLogin() {
 
         try {
             await googleAdminLogin(credentialResponse.credential);
-            navigate('/admin/materials');
+            navigate('/admin/dashboard');
         } catch (err) {
             const msg = err.error || err.detail || err.message || 'Google login gagal. Coba lagi.';
             setError(typeof msg === 'string' ? msg : JSON.stringify(msg));

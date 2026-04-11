@@ -31,6 +31,7 @@ urlpatterns = [
     
     # Profiling endpoints
     path('profiling/questions/', views.get_profiling_questions, name='profiling-questions'),
+    path('profiling/save-draft/', views.save_profiling_draft, name='profiling-save-draft'),
     path('profiling/cognitive-submit/', views.submit_cognitive_answers, name='cognitive-submit'),
     path('profiling/submit/', views.submit_profiling_answers, name='profiling-submit'),
     path('profiling/upload-csv/', views.bulk_upload_questions, name='profiling-upload-csv'),
@@ -48,6 +49,7 @@ urlpatterns = [
     path('materials/<int:material_pk>/complete/', views.mark_material_complete, name='mark-material-complete'),
     path('courses/', views.get_courses_view, name='get-courses'),
     path('courses/<int:course_pk>/quiz/', views.get_course_quiz, name='get-course-quiz'),
+    path('courses/<int:course_pk>/quiz-save-answer/', views.save_quiz_answer, name='save-quiz-answer'),
     path('courses/<int:course_pk>/quiz-submit/', views.submit_quiz_answers, name='submit-quiz-answers'),
     path('courses/<int:course_pk>/quiz-result/', views.get_quiz_result, name='quiz-result'),
     path('courses/<int:course_pk>/quiz-complete/', views.mark_quiz_complete, name='mark-quiz-complete'),
@@ -63,6 +65,7 @@ urlpatterns = [
     path('admin/courses/', views.admin_manage_courses, name='admin-courses'),
     path('admin/courses/<int:pk>/delete/', views.admin_delete_course, name='admin-delete-course'),
     path('admin/courses/<int:pk>/toggle/', views.admin_toggle_course, name='admin-toggle-course'),
+    path('admin/courses/<int:course_pk>/toggle-quiz/', views.admin_toggle_quiz, name='admin-toggle-quiz'),
     path('admin/courses/<int:course_pk>/materials/', views.admin_upload_material_to_course, name='admin-upload-material'),
 
     # Update file on existing material (inline upload)

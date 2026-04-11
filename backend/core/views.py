@@ -663,37 +663,81 @@ def reset_password_view(request):
 @permission_classes([IsAuthenticated])
 def get_profiling_questions(request):
     """
-    Get randomized profiling questions (21 total: 6 pedagogy, 15 cognitive)
+    Get randomized profiling questions (pinned for the session)
+    Returns questions + saved state (step, cognitive_answers, pedagogic_answers)
     """
-    # 1. Select 1 random question for each level (1-6) of Pedagogy
-    pedagogy_questions = []
-    missing_levels = []
-    for level in range(1, 7):
-        q = PretestQuestion.objects.filter(
-            category='PROFILING_PEDAGOGY', 
-            level=level
-        ).order_by('?').first()
-        if q:
-            pedagogy_questions.append(q)
-        else:
-            missing_levels.append(level)
-            
-    if missing_levels:
-        print(f"Warning: Missing pedagogy questions for levels: {missing_levels}")
+    from .models import ProfilingAttempt, PretestQuestion
+    from .serializers import PretestQuestionSerializer
+    
+    attempt, created = ProfilingAttempt.objects.get_or_create(user=request.user)
+    
+    if created or attempt.questions.count() == 0:
+        # 1. Select 1 random question for each level (1-6) of Pedagogy
+        pedagogy_questions = []
+        for level in range(1, 7):
+            q = PretestQuestion.objects.filter(
+                category='PROFILING_PEDAGOGY', 
+                level=level
+            ).order_by('?').first()
+            if q:
+                pedagogy_questions.append(q)
 
-    # 2. Select 5 random questions for each Cognitive category
-    cognitive_tp = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_TP').order_by('?')[:5])
-    cognitive_ga = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_GA').order_by('?')[:5])
-    cognitive_ir = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_IR').order_by('?')[:5])
-    
-    # Combine all questions
-    cognitive_questions = cognitive_tp + cognitive_ga + cognitive_ir
-    random.shuffle(cognitive_questions)
-    
-    all_questions = pedagogy_questions + cognitive_questions
-    
+        # 2. Select 5 random questions for each Cognitive category
+        cognitive_tp = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_TP').order_by('?')[:5])
+        cognitive_ga = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_GA').order_by('?')[:5])
+        cognitive_ir = list(PretestQuestion.objects.filter(category='PROFILING_COGNITIVE_IR').order_by('?')[:5])
+        
+        # Combine all questions
+        cognitive_questions = cognitive_tp + cognitive_ga + cognitive_ir
+        random.shuffle(cognitive_questions)
+        
+        all_questions = pedagogy_questions + cognitive_questions
+        
+        # Save to pinned attempt
+        attempt.questions.set(all_questions)
+        attempt.save()
+    else:
+        # Pinned questions already exist
+        all_questions = list(attempt.questions.all())
+
     serializer = PretestQuestionSerializer(all_questions, many=True)
-    return Response(serializer.data)
+    return Response({
+        "questions": serializer.data,
+        "saved_state": {
+            "step": attempt.step,
+            "form_data": attempt.form_data,
+            "cognitive_answers": attempt.cognitive_answers,
+            "pedagogic_answers": attempt.pedagogic_answers
+        }
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_profiling_draft(request):
+    """
+    Saves a draft of the profiling quiz (step, answers).
+    POST /api/profiling/save-draft/
+    """
+    from .models import ProfilingAttempt
+    attempt, _ = ProfilingAttempt.objects.get_or_create(user=request.user)
+    
+    step = request.data.get('step')
+    form_data = request.data.get('form_data')
+    cog_ans = request.data.get('cognitive_answers')
+    ped_ans = request.data.get('pedagogic_answers')
+    
+    if step is not None:
+        attempt.step = step
+    if form_data is not None:
+        attempt.form_data = form_data
+    if cog_ans is not None:
+        attempt.cognitive_answers = cog_ans
+    if ped_ans is not None:
+        attempt.pedagogic_answers = ped_ans
+        
+    attempt.save()
+    return Response({"status": "saved"})
 
 
 @api_view(['POST'])
@@ -889,6 +933,10 @@ def submit_profiling_answers(request):
     pretest.result = result_code
     pretest.score = float(final_level) # Just as a reference
     pretest.save()
+    
+    # Cleanup profiling attempt on success
+    from .models import ProfilingAttempt
+    ProfilingAttempt.objects.filter(user=user).delete()
     
     return Response({
         'message': 'Profiling completed successfully',
@@ -1095,9 +1143,9 @@ def get_student_classes(request):
 @permission_classes([IsAuthenticated])
 def get_materials_view(request):
     """
-    Get all educational materials ordered by week
+    Get all active educational materials ordered by week
     """
-    materials = Material.objects.all().order_by('course__week', 'order')
+    materials = Material.objects.filter(is_active=True).order_by('course__week', 'order')
     serializer = MaterialSerializer(materials, many=True)
     return Response(serializer.data)
 
@@ -1111,12 +1159,16 @@ def get_courses_view(request):
     Returns all ACTIVE courses with nested materials + real progress.
     Progress = (completed materials + completed quiz) / (total materials + 1).
     """
-    from .models import Course, MaterialProgress, QuizResult
+    from .models import Course, MaterialProgress, QuizResult, Material
     from .serializers import CourseWithMaterialsSerializer
+    from django.db.models import Prefetch
 
-    # Optimize query: prefetch materials, select_related quiz
+    # Optimize query: filter active courses, prefetch ONLY active materials, select_related quiz
     courses = list(
-        Course.objects.prefetch_related('materials')
+        Course.objects.filter(is_active=True)
+        .prefetch_related(
+            Prefetch('materials', queryset=Material.objects.filter(is_active=True).order_by('order'))
+        )
         .select_related('quiz')
         .order_by('week', 'id')
     )
@@ -1165,7 +1217,7 @@ def mark_quiz_complete(request, course_pk):
     from .models import Course, Quiz, QuizResult
 
     try:
-        course = Course.objects.get(pk=course_pk)
+        course = Course.objects.get(pk=course_pk, is_active=True)
     except Course.DoesNotExist:
         return Response({'error': 'Course not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1198,31 +1250,94 @@ def mark_quiz_complete(request, course_pk):
 def get_course_quiz(request, course_pk):
     """
     GET /api/courses/<course_pk>/quiz/
-    Returns all questions for the quiz associated with this course.
+    Returns pinned questions for the quiz attempt, including progress and remaining time.
     """
-    from .models import Course, Quiz, QuizQuestion
+    from .models import Course, Quiz, QuizQuestion, QuizAttempt, QuizResponse
     from .serializers import QuizQuestionSerializer
+    from django.utils import timezone
 
     try:
-        course = Course.objects.get(pk=course_pk)
+        course = Course.objects.get(pk=course_pk, is_active=True)
         quiz = Quiz.objects.get(course=course)
-        questions = QuizQuestion.objects.filter(quiz=quiz, status='APPROVED').order_by('?')[:5]
         
-        # Jika tidak ada yang approved, coba ambil semua if admin/teacher (max 5)
-        if not questions.exists() and request.user.role in ['admin', 'teacher']:
-             questions = QuizQuestion.objects.filter(quiz=quiz).order_by('?')[:5]
-
+        # 1. Get or create attempt
+        attempt, created = QuizAttempt.objects.get_or_create(user=request.user, quiz=quiz)
+        
+        # 2. If it's a new attempt, pick 5 random questions
+        if created:
+            questions_pool = QuizQuestion.objects.filter(quiz=quiz, status='APPROVED').order_by('?')
+            if not questions_pool.exists() and request.user.role in ['admin', 'teacher']:
+                questions_pool = QuizQuestion.objects.filter(quiz=quiz).order_by('?')
+            
+            selected_questions = questions_pool[:5]
+            attempt.questions.set(selected_questions)
+        
+        # 3. Get existing responses (draft progress)
+        existing_responses = QuizResponse.objects.filter(user=request.user, quiz=quiz)
+        responses_dict = {r.question_id: r.userAns for r in existing_responses}
+        
+        # 4. Calculate remaining time
+        now = timezone.now()
+        elapsed = (now - attempt.started_at).total_seconds()
+        remaining_time = max(0, quiz.time_limit - elapsed)
+        
+        # 5. Serialize questions and inject user answers
+        questions = attempt.questions.all()
         serializer = QuizQuestionSerializer(questions, many=True)
+        
+        # Add 'user_answer' to each question data
+        questions_data = []
+        for q_data in serializer.data:
+            q_data['user_answer'] = responses_dict.get(q_data['id'], '')
+            questions_data.append(q_data)
+
         return Response({
             "course": course.title,
             "deadline": quiz.deadline,
             "time_limit": quiz.time_limit,
-            "questions": serializer.data
+            "remaining_time": int(remaining_time),
+            "started_at": attempt.started_at,
+            "is_submitted": attempt.is_submitted,
+            "questions": questions_data
         })
     except Course.DoesNotExist:
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
     except Quiz.DoesNotExist:
         return Response({"error": "Quiz not found for this course"}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def save_quiz_answer(request, course_pk):
+    """
+    POST /api/courses/<course_pk>/quiz-save-answer/
+    Saves a draft answer for a question in a quiz attempt.
+    """
+    from .models import Course, Quiz, QuizQuestion, QuizResponse
+    
+    q_id = request.data.get('question_id')
+    user_ans = request.data.get('answer', '')
+    time_taken = request.data.get('time_taken', 0)
+
+    try:
+        course = Course.objects.get(pk=course_pk, is_active=True)
+        quiz = Quiz.objects.get(course=course)
+        question = QuizQuestion.objects.get(pk=q_id, quiz=quiz)
+        
+        # Update or create response
+        response, created = QuizResponse.objects.update_or_create(
+            user=request.user,
+            quiz=quiz,
+            question=question,
+            defaults={
+                'userAns': user_ans,
+                'time_taken': time_taken
+            }
+        )
+        return Response({"status": "saved", "question_id": q_id})
+    except (Course.DoesNotExist, Quiz.DoesNotExist, QuizQuestion.DoesNotExist):
+        return Response({"error": "Resource not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
@@ -1236,7 +1351,7 @@ def submit_quiz_answers(request, course_pk):
     from .models import Course, Quiz, QuizQuestion, QuizResult, QuizResponse
     
     try:
-        course = Course.objects.get(pk=course_pk)
+        course = Course.objects.get(pk=course_pk, is_active=True)
         quiz = Quiz.objects.get(course=course)
         
         # Prevent multiple submissions (Only once policy)
@@ -1309,6 +1424,14 @@ def submit_quiz_answers(request, course_pk):
     qresult.calculate_points()
     qresult.save()
 
+    # Mark the attempt as submitted
+    try:
+        attempt = QuizAttempt.objects.get(user=request.user, quiz=quiz)
+        attempt.is_submitted = True
+        attempt.save()
+    except QuizAttempt.DoesNotExist:
+        pass
+
     # Format response for frontend (Showing only what was answered)
     formatted_questions = []
     # Fetch questions in the order they were submitted to maintain experience
@@ -1368,7 +1491,7 @@ def get_quiz_result(request, course_pk):
     from .models import Course, Quiz, QuizQuestion, QuizResult, QuizResponse
     
     try:
-        course = Course.objects.get(pk=course_pk)
+        course = Course.objects.get(pk=course_pk, is_active=True)
         quiz = Quiz.objects.get(course=course)
     except (Course.DoesNotExist, Quiz.DoesNotExist):
         return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
@@ -1454,9 +1577,9 @@ def mark_material_complete(request, material_pk):
     from .models import Material, MaterialProgress
 
     try:
-        material = Material.objects.get(pk=material_pk)
+        material = Material.objects.get(pk=material_pk, is_active=True, course__is_active=True)
     except Material.DoesNotExist:
-        return Response({'error': 'Material not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Material not found or inactive'}, status=status.HTTP_404_NOT_FOUND)
 
     progress_obj, created = MaterialProgress.objects.get_or_create(
         user=request.user,
@@ -1551,6 +1674,34 @@ def admin_toggle_course(request, pk):
         "title": course.title,
         "is_active": course.is_active,
         "message": f"Course {'diaktifkan' if course.is_active else 'dinonaktifkan'}"
+    })
+
+
+@api_view(['PATCH'])
+@authentication_classes([CustomJWTAuthentication])
+@permission_classes([IsAuthenticated])
+def admin_toggle_quiz(request, course_pk):
+    """
+    PATCH /api/admin/courses/<course_pk>/toggle-quiz/
+    Toggle is_active status of the quiz related to the course.
+    """
+    if request.user.role not in ['teacher', 'admin']:
+        return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+
+    from .models import Quiz, Course
+    try:
+        course = Course.objects.get(pk=course_pk)
+        quiz, created = Quiz.objects.get_or_create(course=course)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    quiz.is_active = not quiz.is_active
+    quiz.save()
+    return Response({
+        "id": quiz.id,
+        "course_id": course.id,
+        "is_active": quiz.is_active,
+        "message": f"Quiz {'diaktifkan' if quiz.is_active else 'dinonaktifkan'}"
     })
 
 

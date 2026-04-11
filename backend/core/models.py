@@ -224,6 +224,7 @@ class Quiz(models.Model):
     course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name='quiz')
     deadline = models.DateTimeField(null=True, blank=True, help_text="Batas waktu pengerjaan quiz")
     time_limit = models.IntegerField(default=1800, help_text="Batas waktu dalam detik (default 30 menit)")
+    is_active = models.BooleanField(default=True, help_text="Jika False, quiz tidak bisa diakses student")
     createdDate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -307,6 +308,38 @@ class QuizResponse(models.Model):
 
     def __str__(self):
         return f"Response by {self.user.name} - {self.quiz.course.title}"
+
+
+class QuizAttempt(models.Model):
+    """
+    Tracks a user's active attempt on a quiz.
+    Ensures questions and timer persist across refreshes.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='quiz_attempts')
+    quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE, related_name='attempts')
+    # The 5 random questions pinned for this user
+    questions = models.ManyToManyField(QuizQuestion, related_name='attempts')
+    started_at = models.DateTimeField(auto_now_add=True)
+    is_submitted = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'quiz')
+
+    def __str__(self):
+        return f"Attempt by {self.user.name} on {self.quiz.course.title}"
+
+
+class ProfilingAttempt(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profiling_attempt')
+    questions = models.ManyToManyField(PretestQuestion, related_name='profiling_attempts')
+    step = models.IntegerField(default=0)
+    form_data = models.JSONField(default=dict, blank=True)
+    cognitive_answers = models.JSONField(default=dict, blank=True)
+    pedagogic_answers = models.JSONField(default=dict, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Profiling Attempt for {self.user.name}"
 
 
 class QuizResult(models.Model):

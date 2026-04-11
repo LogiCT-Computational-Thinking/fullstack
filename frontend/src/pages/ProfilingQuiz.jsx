@@ -68,71 +68,47 @@ export default function ProfilingQuiz() {
 
 
 
-    // Load saved state from localStorage once user is available
+    // NEW: Save state to backend
+    const saveDraft = async (updates = {}) => {
+        if (!user || !user.email) return;
+        
+        const payload = {
+            step: updates.step !== undefined ? updates.step : step,
+            form_data: updates.formData || formData,
+            cognitive_answers: updates.cognitiveAnswers || cognitiveAnswers,
+            pedagogic_answers: updates.pedagogicAnswers || pedagogicAnswers
+        };
+
+        try {
+            await api.post('/profiling/save-draft/', payload);
+        } catch (err) {
+            console.error("Failed to save profiling draft to server:", err);
+        }
+    };
+
+    // Load saved state from localStorage and server
     useEffect(() => {
         if (user && user.email && !hasLoadedRef.current) {
             hasLoadedRef.current = true;
 
             // === GUARD: If user has already completed profiling ===
-            // Clear any stale localStorage progress and show the result modal directly
             if (user.archetype_info) {
-                // Bersihkan state quiz lama yang mungkin tersisa
                 localStorage.removeItem(`profiling_quiz_state_${user.email}`);
-                // Tampilkan modal hasil profiling
                 setProfilingResult(user.archetype_info);
                 setShowResultModal(true);
-                fetchQuestions(user); // tetap fetch agar tidak error jika modal ditutup
+                fetchQuestions(user); 
                 return;
             }
 
-            const saved = localStorage.getItem(`profiling_quiz_state_${user.email}`);
-
-            // Initial names from user profile
-            const { first, last } = getNameParts(user);
-
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    if (parsed.step !== undefined) setStep(parsed.step);
-
-                    // Combine saved data with autofill if names are missing in saved data
-                    if (parsed.formData) {
-                        setFormData(prev => ({
-                            ...prev,
-                            ...parsed.formData,
-                            // If saved data has empty names, use the ones from user account
-                            firstName: parsed.formData.firstName || first || prev.firstName,
-                            lastName: parsed.formData.lastName || last || prev.lastName
-                        }));
-                    }
-                    if (parsed.cognitiveAnswers) setCognitiveAnswers(parsed.cognitiveAnswers);
-                    if (parsed.pedagogicAnswers) setPedagogicAnswers(parsed.pedagogicAnswers);
-
-                    // Also restore questions if they exist in storage
-                    if (parsed.cognitiveQuestions) setCognitiveQuestions(parsed.cognitiveQuestions);
-                    if (parsed.pedagogicQuestions) setPedagogicQuestions(parsed.pedagogicQuestions);
-                } catch (e) {
-                    console.error("Failed to parse saved quiz state", e);
-                }
-            } else {
-                // If no saved state, just do initial autofill
-                setFormData(prev => ({
-                    ...prev,
-                    firstName: first,
-                    lastName: last
-                }));
-            }
-
-            // After attempting to load from storage, fetch questions if they aren't already set
+            // After checking basic user info, fetch questions and saved state
             fetchQuestions(user);
         }
     }, [user]);
 
-
-
-    // Save state to localStorage whenever it changes
+    // Internal hook to auto-save whenever answers, step or formData change
     useEffect(() => {
-        if (user && user.email) {
+        if (user && user.email && hasLoadedRef.current) {
+            // Save to localStorage (as backup)
             const stateToSave = {
                 step,
                 formData,
@@ -142,47 +118,50 @@ export default function ProfilingQuiz() {
                 pedagogicQuestions
             };
             localStorage.setItem(`profiling_quiz_state_${user.email}`, JSON.stringify(stateToSave));
+
+            // Also save to server (Draft)
+            saveDraft();
         }
-    }, [user, step, formData, cognitiveAnswers, pedagogicAnswers, cognitiveQuestions, pedagogicQuestions]);
+    }, [step, formData, cognitiveAnswers, pedagogicAnswers]);
 
 
     const fetchQuestions = async (currentUser) => {
-        // If we already have questions (e.g. from a previous state restore), don't fetch again
-        if (cognitiveQuestions.length > 0 && pedagogicQuestions.length > 0) {
-            setIsLoading(false);
-            return;
-        }
-
         setIsLoading(true);
         try {
-            // Use the passed user or fall back to context user
-            const activeUser = currentUser || user;
-
-            // Try to recover from localStorage
-            if (activeUser && activeUser.email) {
-                const saved = localStorage.getItem(`profiling_quiz_state_${activeUser.email}`);
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (parsed.cognitiveQuestions?.length > 0 && parsed.pedagogicQuestions?.length > 0) {
-                        setCognitiveQuestions(parsed.cognitiveQuestions);
-                        setPedagogicQuestions(parsed.pedagogicQuestions);
-                        setIsLoading(false);
-                        return;
-                    }
-                }
-            }
-
-            // Fetch from API if nothing found in storage
             const response = await api.get('/profiling/questions/');
-            const allQuestions = response.data;
+            const { questions, saved_state } = response.data;
 
-            const cog = allQuestions.filter(q => q.category.startsWith('PROFILING_COGNITIVE'));
-            const ped = allQuestions
+            const cog = questions.filter(q => q.category.startsWith('PROFILING_COGNITIVE'));
+            const ped = questions
                 .filter(q => q.category === 'PROFILING_PEDAGOGY')
                 .sort((a, b) => (a.level || 0) - (b.level || 0));
 
             setCognitiveQuestions(cog);
             setPedagogicQuestions(ped);
+
+            // Restore from server if available
+            if (saved_state) {
+                if (saved_state.step !== undefined) setStep(saved_state.step);
+                if (saved_state.form_data) {
+                    setFormData(prev => ({
+                        ...prev,
+                        ...saved_state.form_data
+                    }));
+                }
+                if (saved_state.cognitive_answers) setCognitiveAnswers(saved_state.cognitive_answers);
+                if (saved_state.pedagogic_answers) setPedagogicAnswers(saved_state.pedagogic_answers);
+            }
+
+            // Fallback: If server is empty but student info exists in context, pre-fill formData
+            const activeUser = currentUser || user;
+            if (activeUser && !saved_state) {
+                const { first, last } = getNameParts(activeUser);
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: prev.firstName || first,
+                    lastName: prev.lastName || last
+                }));
+            }
         } catch (error) {
             console.error('Failed to fetch questions:', error);
         } finally {

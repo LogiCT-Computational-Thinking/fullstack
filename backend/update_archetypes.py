@@ -8,7 +8,7 @@ ARCHETYPES_DATA = [
     {
         "code": "PAR",
         "name": "Architect",
-        "tactics": ["Teliti", "Terstruktur"],
+        "tactics": ["Picture", "Analytic", "Reflective"],
         "description": "“Aku lihat detailnya dulu, baru aku susun semuanya jadi rencana.”",
         "short": "Melihat detail kecil dalam visual dan menyusun rencana dengan presisi.",
         "long": "Architect adalah tipe yang sangat teliti ketika berhadapan dengan informasi visual. Mereka tidak hanya melihat gambar secara sekilas, tetapi benar-benar memperhatikan setiap detail kecil yang ada. Setelah memahami bagian-bagiannya, mereka akan menyusunnya menjadi struktur atau rencana yang jelas dan terarah.\n\nTipe ini cenderung berhati-hati dan tidak terburu-buru dalam mengambil keputusan. Mereka lebih suka memastikan semuanya masuk akal sebelum melangkah. Dalam proses belajar, mereka unggul saat diberikan diagram, flowchart, atau visual yang kompleks selama mereka punya waktu untuk menganalisisnya secara mendalam.",
@@ -30,7 +30,7 @@ ARCHETYPES_DATA = [
     {
         "code": "PAI",
         "name": "Creator",
-        "tactics": ["Eksploratif", "Adaptif"],
+        "tactics": ["Picture", "Analytic", "Impulsive"],
         "description": "“Langsung coba aja, nanti sambil jalan aku pahami.”",
         "short": "Menyukai visual dan belajar dengan langsung mencoba secara hands-on.",
         "long": "Creator adalah tipe yang belajar paling cepat saat langsung terjun. Mereka tertarik pada visual, tetapi bukan untuk dianalisis lama melainkan untuk segera dijadikan bahan eksperimen. Mereka memahami detail sambil melakukan, bukan sebelum memulai.\n\nTipe ini cenderung spontan dan tidak takut salah. Justru dari trial and error, mereka membangun pemahaman yang kuat. Dalam pembelajaran, mereka cocok dengan aktivitas seperti simulasi, prototyping, atau latihan interaktif yang memungkinkan eksplorasi langsung.",
@@ -52,7 +52,7 @@ ARCHETYPES_DATA = [
     {
         "code": "TAR",
         "name": "Scholar",
-        "tactics": ["Analitis", "Sabar"],
+        "tactics": ["Text", "Analytic", "Reflective"],
         "description": "“Aku perlu baca dan pahami semuanya dulu sebelum lanjut.”",
         "short": "Mendalami teks secara detail dan memproses informasi dengan hati-hati.",
         "long": "Scholar adalah tipe yang sangat nyaman dengan teks dan informasi tertulis. Mereka membaca dengan teliti, memperhatikan setiap kata, dan berusaha memahami makna secara menyeluruh sebelum bergerak ke bagian berikutnya.\n\nMereka tidak terburu-buru, karena bagi mereka pemahaman yang dalam lebih penting daripada kecepatan. Tipe ini sangat kuat dalam analisis konseptual, teori, dan materi yang membutuhkan ketelitian tinggi. Mereka berkembang baik dalam lingkungan belajar yang terstruktur, jelas, dan memberikan waktu untuk refleksi.",
@@ -74,7 +74,7 @@ ARCHETYPES_DATA = [
     {
         "code": "PGR",
         "name": "Explorer",
-        "tactics": ["Strategis", "Konektif"],
+        "tactics": ["Picture", "Global", "Reflective"],
         "description": "“Aku lihat gambaran besarnya dulu, baru aku pahami pelan-pelan.”",
         "short": "Melihat gambaran besar melalui visual dan memahami secara bertahap.",
         "long": "Explorer adalah tipe yang fokus pada gambaran besar. Mereka menyukai visual seperti peta, diagram, atau overview karena membantu mereka memahami konteks secara menyeluruh.\n\nMereka tidak langsung masuk ke detail, melainkan membangun pemahaman secara perlahan dari big picture ke bagian-bagian kecil. Tipe ini reflektif, sehingga mereka butuh waktu untuk menghubungkan berbagai informasi sebelum merasa yakin. Dalam belajar, mereka cocok dengan materi yang dimulai dari overview sebelum masuk ke detail.",
@@ -96,7 +96,7 @@ ARCHETYPES_DATA = [
     {
         "code": "PGI",
         "name": "Artist",
-        "tactics": ["Intuitif", "Kreatif"],
+        "tactics": ["Picture", "Global", "Impulsive"],
         "description": "“Aku langsung nangkep feel-nya, sisanya bisa nyusul.”",
         "short": "Menangkap gambaran visual secara cepat dan merespons secara spontan.",
         "long": "Artist adalah tipe yang intuitif dan cepat dalam memahami visual. Mereka tidak butuh banyak penjelasan detail; cukup melihat gambaran umum, mereka sudah bisa “menangkap” arah atau tujuan.\n\nMereka cenderung impulsif dan mengandalkan insting dalam mengambil keputusan. Dalam belajar, mereka lebih suka pendekatan yang visual, kreatif, dan tidak terlalu kaku. Tipe ini berkembang dalam lingkungan yang memberi kebebasan eksplorasi dan tidak terlalu menuntut urutan yang kaku.",
@@ -118,7 +118,7 @@ ARCHETYPES_DATA = [
     {
         "code": "TAI",
         "name": "Editor",
-        "tactics": ["Efisien", "Praktis"],
+        "tactics": ["Text", "Analytic", "Impulsive"],
         "description": "“Aku cari poin pentingnya, langsung ambil keputusan.”",
         "short": "Memindai teks untuk fakta penting dan mengambil keputusan dengan cepat.",
         "long": "Editor adalah tipe yang efisien dalam memproses teks. Mereka tidak membaca semuanya secara mendalam, tetapi fokus mencari informasi kunci yang relevan. Setelah menemukan apa yang dibutuhkan, mereka langsung bertindak.\n\nTipe ini cepat, praktis, and goal-oriented. Mereka cocok untuk situasi yang membutuhkan pengambilan keputusan cepat berbasis informasi. Dalam pembelajaran, mereka lebih suka materi yang to the point, seperti bullet points, highlight, atau ringkasan.",
@@ -140,7 +140,7 @@ ARCHETYPES_DATA = [
     {
         "code": "TGI",
         "name": "Scout",
-        "tactics": ["Gesit", "Adaptif"],
+        "tactics": ["Text", "Global", "Impulsive"],
         "description": "“Aku butuh tahu intinya aja, biar bisa langsung jalan.”",
         "short": "Menangkap ide utama dari teks dan bergerak cepat tanpa mendalami detail.",
         "long": "Scout adalah tipe yang fokus pada inti informasi. Mereka membaca secara cepat untuk memahami “apa yang sedang terjadi” tanpa terlalu memikirkan detail atau proses di baliknya.\n\nMereka sangat cepat dalam orientasi dan adaptasi, tetapi tidak selalu mendalami informasi secara mendalam. Dalam belajar, mereka cocok dengan overview, summary, atau headline yang memberi gambaran cepat sebelum mereka bergerak ke tindakan berikutnya.",
@@ -162,7 +162,7 @@ ARCHETYPES_DATA = [
     {
         "code": "TGR",
         "name": "Strategist",
-        "tactics": ["Strategis", "Kritis"],
+        "tactics": ["Text", "Global", "Reflective"],
         "description": "“Aku pahami konteksnya dulu, baru aku tentukan langkah terbaik.”",
         "short": "Memahami makna di balik teks dan mempertimbangkan berbagai opsi sebelum bertindak.",
         "long": "Strategist adalah tipe yang membaca teks dengan fokus pada makna yang lebih dalam. Mereka tidak hanya memahami apa yang tertulis, tetapi juga mencoba membaca konteks, implikasi, dan kemungkinan yang ada.\n\nMereka reflektif dan cenderung mempertimbangkan berbagai sudut pandang sebelum mengambil keputusan. Dalam belajar, mereka cocok dengan materi yang mengajak berpikir kritis, analisis kasus, dan eksplorasi ide secara menyeluruh.",

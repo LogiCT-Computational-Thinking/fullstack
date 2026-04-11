@@ -158,13 +158,21 @@ class CourseWithMaterialsSerializer(serializers.ModelSerializer):
     """Serializer for Course model with nested materials"""
     materials = MaterialSerializer(many=True, read_only=True)
     materials_count = serializers.SerializerMethodField()
+    quiz_is_active = serializers.SerializerMethodField()
 
     def get_materials_count(self, obj):
         return obj.materials.count()
 
+    def get_quiz_is_active(self, obj):
+        try:
+            # Mengambil status aktif dari quiz yang terkait
+            return obj.quiz.is_active
+        except Exception:
+            return False
+
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'week', 'thumbnail', 'metadata', 'is_active', 'materials', 'materials_count']
+        fields = ['id', 'title', 'description', 'week', 'thumbnail', 'metadata', 'is_active', 'materials', 'materials_count', 'quiz_is_active']
 
 
 

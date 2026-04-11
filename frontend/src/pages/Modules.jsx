@@ -697,25 +697,25 @@ function CourseModal({ course, onClose }) {
 
                     {/* Quiz button */}
                     <button
-                        disabled={isLocked}
-                        onClick={() => !isLocked && navigate(`/dashboard/quiz/${course.id}`, { state: { courseTitle: course.title, courseWeek: course.week } })}
+                        disabled={isLocked || (course.quiz_is_active === false)}
+                        onClick={() => !(isLocked || (course.quiz_is_active === false)) && navigate(`/dashboard/quiz/${course.id}`, { state: { courseTitle: course.title, courseWeek: course.week } })}
                         className={`group flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full
-                            ${isLocked
+                            ${(isLocked || (course.quiz_is_active === false))
                                 ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
                                 : 'border-purple-100 bg-purple-50/50 hover:border-purple-400 hover:bg-purple-50 cursor-pointer active:scale-[.99]'
                             }`}
                     >
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors
-                            ${isLocked ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-500 group-hover:bg-purple-500 group-hover:text-white'}`}>
+                            ${(isLocked || (course.quiz_is_active === false)) ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-500 group-hover:bg-purple-500 group-hover:text-white'}`}>
                             <Brain className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
-                            <p className={`text-sm font-bold ${isLocked ? 'text-gray-400' : 'text-gray-800 group-hover:text-purple-800'}`}>
+                            <p className={`text-sm font-bold ${(isLocked || (course.quiz_is_active === false)) ? 'text-gray-400' : 'text-gray-800 group-hover:text-purple-800'}`}>
                                 Quiz Asah Otak
                             </p>
                             <p className="text-xs text-gray-400 mt-0.5">Diskusi & latihan soal bersama AI Tutor</p>
                         </div>
-                        {isLocked
+                        {(isLocked || (course.quiz_is_active === false))
                             ? <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" />
                             : <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-400 flex-shrink-0 transition-colors" />
                         }
@@ -786,9 +786,12 @@ export default function Modules() {
         setLoading(true);
         try {
             const res = await api.get('/courses/');
-            const enriched = res.data.map((course) => ({
+            // Filter out inactive courses completely
+            const activeCourses = res.data.filter(course => course.is_active);
+            
+            const enriched = activeCourses.map((course) => ({
                 ...course,
-                status: !course.is_active ? 'locked' : (course.progress === 100 ? 'finished' : 'active'),
+                status: course.progress === 100 ? 'finished' : 'active',
                 modules: course.materials_count ?? course.materials?.length ?? 0,
                 duration: 60,
                 is_pinned: false,

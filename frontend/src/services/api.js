@@ -32,6 +32,14 @@ api.interceptors.response.use(
 
     // 1. Handle Token Expired (401)
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Don't auto-redirect or refresh for login/google auth (standard login failures)
+      const authEndpoints = ['/auth/login/', '/auth/google/', '/auth/register/'];
+      const isAuthRequest = authEndpoints.some(endpoint => originalRequest.url?.includes(endpoint));
+      
+      if (isAuthRequest) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       try {
@@ -55,7 +63,15 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, logout user
         localStorage.clear();
-        window.location.href = '/login';
+        
+        // Redirect logic based on current path
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith('/admin')) {
+          window.location.href = '/admin/login';
+        } else {
+          window.location.href = '/login';
+        }
+        
         return Promise.reject(refreshError);
       }
     }

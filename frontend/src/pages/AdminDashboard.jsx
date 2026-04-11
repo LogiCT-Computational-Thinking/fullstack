@@ -10,6 +10,25 @@ import {
     PieChart, Pie, Sector
 } from 'recharts';
 
+// Import Custom Icons
+import userIcon from '../assets/dashboard/boxicons_user.png';
+import adminIcon from '../assets/dashboard/Group 13637.png';
+import courseIcon from '../assets/dashboard/fluent_class-20-regular.png';
+import questionIcon from '../assets/dashboard/ri_question-answer-line.png';
+import activeIcon from '../assets/dashboard/mdi_account-online-outline.png';
+
+// Recent Activity Icons
+import recentHeaderIcon from '../assets/logo/mdi_recent.png';
+import actAdminIcon from '../assets/logo/Group 13515.png';
+import actAddedIcon from '../assets/logo/Group 13516.png';
+import actEditIcon from '../assets/logo/Group 13517.png';
+import actDeleteIcon from '../assets/logo/Group 13518.png';
+
+// Chart & Score Icons
+import userActivityIcon from '../assets/logo/Vector.png';
+import cognitiveDistributionIcon from '../assets/logo/mdi_recent.png';
+import topScoreHeaderIcon from '../assets/logo/mdi_account-online-outline.png';
+
 const AdminDashboard = () => {
     const [stats, setStats] = useState({
         total_users: 0,
@@ -69,37 +88,27 @@ const AdminDashboard = () => {
             {/* Top Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                 {[
-                    { label: 'Total Users', value: stats.total_users?.toLocaleString() || '0', type: 'users' },
-                    { label: 'Total Admins', value: stats.total_admins?.toLocaleString() || '0', type: 'admins' },
-                    { label: 'Total Course', value: stats.total_courses?.toLocaleString() || '0', type: 'courses' },
-                    { label: 'Questions Generated', value: stats.total_questions?.toLocaleString() || '0', type: 'questions' },
-                    { label: 'Active Users Today', value: stats.active_today?.toLocaleString() || '0', type: 'active' },
+                    { label: 'Total Users', value: stats.total_users?.toLocaleString() || '0', type: 'users', icon: userIcon, color: 'bg-slate-50' },
+                    { label: 'Total Admins', value: stats.total_admins?.toLocaleString() || '0', type: 'admins', icon: adminIcon, color: 'bg-red-50' },
+                    { label: 'Total Course', value: stats.total_courses?.toLocaleString() || '0', type: 'courses', icon: courseIcon, color: 'bg-emerald-50' },
+                    { label: 'Questions Generated', value: stats.total_questions?.toLocaleString() || '0', type: 'questions', icon: questionIcon, color: 'bg-purple-50' },
+                    { label: 'Active Users Today', value: stats.active_today?.toLocaleString() || '0', type: 'active', icon: activeIcon, color: 'bg-blue-50' },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] flex flex-col justify-between relative overflow-hidden group hover:shadow-lg transition-all min-h-[140px]">
                         <div className="flex flex-col h-full items-start">
-                            <span className="text-[11px] font-bold text-gray-400 tracking-tight mb-auto">{stat.label}</span>
+                            <span className="text-[11px] font-bold text-gray-400 tracking-tight mb-auto uppercase">{stat.label}</span>
                             <span className="text-[40px] font-bold text-gray-700 leading-none mb-2 tabular-nums tracking-tighter">{stat.value}</span>
                         </div>
 
-                        {/* Custom Icons Matching the Image */}
-                        <div className="absolute bottom-[-10px] right-[-10px] opacity-60 group-hover:opacity-80 group-hover:scale-110 transition-all origin-bottom-right pointer-events-none">
-                            {stat.type === 'users' && <User className="w-24 h-24 text-slate-300" strokeWidth={3} />}
-                            {stat.type === 'admins' && (
-                                <div className="relative">
-                                    <User className="w-24 h-24 text-red-300" strokeWidth={3} />
-                                    <div className="absolute bottom-4 right-2 w-14 h-14 flex items-center justify-center bg-white/40 backdrop-blur-[1px] rounded-full p-1 border-4 border-white">
-                                        <SettingsIcon className="w-12 h-12 text-red-300 animate-[spin_8s_linear_infinite]" strokeWidth={3} />
-                                    </div>
-                                </div>
-                            )}
-                            {stat.type === 'courses' && <Bookmark className="w-24 h-24 text-emerald-300" strokeWidth={3} />}
-                            {stat.type === 'questions' && <MessageSquare className="w-24 h-24 text-purple-300" strokeWidth={3} />}
-                            {stat.type === 'active' && (
-                                <div className="relative">
-                                    <User className="w-24 h-24 text-blue-300" strokeWidth={3} />
-                                    <div className="absolute bottom-5 right-5 w-4 h-4 bg-blue-300 rounded-full border-2 border-white shadow-sm"></div>
-                                </div>
-                            )}
+                        {/* Custom Icons Using PNG Assets - Normal Visibility, No BG */}
+                        <div className="absolute bottom-2 right-2 transition-all origin-bottom-right pointer-events-none">
+                            <div className="w-24 h-24 flex items-center justify-center p-0">
+                                <img 
+                                    src={stat.icon} 
+                                    alt={stat.label} 
+                                    className="w-16 h-16 object-contain"
+                                />
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -110,8 +119,8 @@ const AdminDashboard = () => {
                 {/* User Activity Chart */}
                 <div className="lg:col-span-5 bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm flex flex-col">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-blue-500" />
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                            <img src={userActivityIcon} alt="User Activity" className="w-6 h-6 object-contain" />
                         </div>
                         <h2 className="text-[14px] font-black text-gray-800 uppercase tracking-widest">User Activity This Week</h2>
                     </div>
@@ -169,8 +178,8 @@ const AdminDashboard = () => {
                 <div className="lg:col-span-7 bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-8">
                     <div className="flex-1 flex flex-col">
                         <div className="flex items-center gap-3 mb-10">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                                <Activity className="w-5 h-5 text-blue-500" />
+                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                                <img src={cognitiveDistributionIcon} alt="Cognitive Style" className="w-7 h-7 object-contain" />
                             </div>
                             <h2 className="text-[20px] font-black text-gray-800 tracking-tight">Cognitive Style Distribution</h2>
                         </div>
@@ -326,8 +335,8 @@ const AdminDashboard = () => {
                 {/* Top Score */}
                 <div className="lg:col-span-5 bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm flex flex-col">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-blue-500" />
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                            <img src={topScoreHeaderIcon} alt="Top Score" className="w-7 h-7 object-contain" />
                         </div>
                         <h2 className="text-[14px] font-black text-gray-800 uppercase tracking-widest">Top Score</h2>
                     </div>
@@ -359,33 +368,44 @@ const AdminDashboard = () => {
                 {/* Recent Activities */}
                 <div className="lg:col-span-7 bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-blue-500" />
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center">
+                            <img src={recentHeaderIcon} alt="Recent" className="w-7 h-7 object-contain" />
                         </div>
                         <h2 className="text-[20px] font-black text-gray-800 tracking-tight">Recent Activities</h2>
                     </div>
 
                     <div className="flex flex-col">
-                        {recentActivities.map((act, i) => (
-                            <div key={i} className={`flex items-center justify-between py-5 ${i !== recentActivities.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-11 h-11 rounded-full flex items-center justify-center text-white ${act.action.includes('Admin') ? 'bg-blue-500' :
-                                            act.action.includes('Added') ? 'bg-green-500' :
-                                                act.action.includes('Edit') ? 'bg-purple-600' :
-                                                    'bg-red-500'
-                                        }`}>
-                                        <act.icon className="w-5 h-5" strokeWidth={2.5} />
+                        {recentActivities.map((act, i) => {
+                            // Determine PNG Icon based on action text
+                            let PngIcon = actAdminIcon;
+
+                            if (act.action.includes('Admin')) {
+                                PngIcon = actAdminIcon;
+                            } else if (act.action.includes('Added')) {
+                                PngIcon = actAddedIcon;
+                            } else if (act.action.includes('Edit')) {
+                                PngIcon = actEditIcon;
+                            } else if (act.action.includes('Deleted')) {
+                                PngIcon = actDeleteIcon;
+                            }
+
+                            return (
+                                <div key={i} className={`flex items-center justify-between py-5 ${i !== recentActivities.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-11 h-11 flex items-center justify-center">
+                                            <img src={PngIcon} alt="Activity" className="w-full h-full object-contain" />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[17px] font-black text-gray-900">{act.action}</span>
+                                            <span className="text-[17px] font-medium text-gray-700">{act.detail}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[17px] font-black text-gray-900">{act.action}</span>
-                                        <span className="text-[17px] font-medium text-gray-700">{act.detail}</span>
-                                    </div>
+                                    <span className="text-[13px] text-gray-400 font-bold whitespace-nowrap">
+                                        {act.time}
+                                    </span>
                                 </div>
-                                <span className="text-[13px] text-gray-400 font-bold whitespace-nowrap">
-                                    {act.time}
-                                </span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>
