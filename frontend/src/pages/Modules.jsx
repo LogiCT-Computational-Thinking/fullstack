@@ -692,34 +692,51 @@ function CourseModal({ course, onClose }) {
                         </div>
                     </div>
 
-                    {/* Quiz section header */}
-                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Quiz</h4>
-
                     {/* Quiz button */}
-                    <button
-                        disabled={isLocked || (course.quiz_is_active === false)}
-                        onClick={() => !(isLocked || (course.quiz_is_active === false)) && navigate(`/dashboard/quiz/${course.id}`, { state: { courseTitle: course.title, courseWeek: course.week } })}
-                        className={`group flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full
-                            ${(isLocked || (course.quiz_is_active === false))
-                                ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
-                                : 'border-purple-100 bg-purple-50/50 hover:border-purple-400 hover:bg-purple-50 cursor-pointer active:scale-[.99]'
-                            }`}
-                    >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors
-                            ${(isLocked || (course.quiz_is_active === false)) ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-500 group-hover:bg-purple-500 group-hover:text-white'}`}>
-                            <Brain className="w-5 h-5" />
-                        </div>
-                        <div className="flex-1">
-                            <p className={`text-sm font-bold ${(isLocked || (course.quiz_is_active === false)) ? 'text-gray-400' : 'text-gray-800 group-hover:text-purple-800'}`}>
-                                Quiz Asah Otak
-                            </p>
-                            <p className="text-xs text-gray-400 mt-0.5">Diskusi & latihan soal bersama AI Tutor</p>
-                        </div>
-                        {(isLocked || (course.quiz_is_active === false))
-                            ? <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" />
-                            : <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-400 flex-shrink-0 transition-colors" />
-                        }
-                    </button>
+                    {(() => {
+                        const quizInfo = course.quiz_info;
+                        const quizIsInactive = quizInfo?.is_active === false;
+                        
+                        // Jika kuis tidak aktif, jangan tampilkan sama sekali ke student
+                        if (quizIsInactive) return null;
+
+                        const quizNotStarted = quizInfo?.start_date && new Date(quizInfo.start_date) > new Date();
+                        const quizDisabled = isLocked || quizNotStarted;
+                        
+                        return (
+                            <div className="flex flex-col gap-2">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-1">Quiz</h4>
+                                <button
+                                    disabled={quizDisabled}
+                                    onClick={() => !quizDisabled && navigate(`/dashboard/quiz/${course.id}`, { state: { courseTitle: course.title, courseWeek: course.week } })}
+                                    className={`group flex items-center gap-4 p-4 rounded-2xl border-2 text-left transition-all duration-200 w-full
+                                        ${quizDisabled
+                                            ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
+                                            : 'border-purple-100 bg-purple-50/50 hover:border-purple-400 hover:bg-purple-50 cursor-pointer active:scale-[.99]'
+                                        }`}
+                                >
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors
+                                        ${quizDisabled ? 'bg-gray-100 text-gray-400' : 'bg-purple-100 text-purple-500 group-hover:bg-purple-500 group-hover:text-white'}`}>
+                                        <Brain className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className={`text-sm font-bold ${quizDisabled ? 'text-gray-400' : 'text-gray-800 group-hover:text-purple-800'}`}>
+                                            Quiz Asah Otak
+                                        </p>
+                                        <p className="text-xs text-gray-400 mt-0.5">
+                                            {quizNotStarted 
+                                                ? `Dimulai pada ${new Date(quizInfo.start_date).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`
+                                                : 'Diskusi & latihan soal bersama AI Tutor'}
+                                        </p>
+                                    </div>
+                                    {quizDisabled
+                                        ? <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                                        : <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-purple-400 flex-shrink-0 transition-colors" />
+                                    }
+                                </button>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* Sticky footer */}

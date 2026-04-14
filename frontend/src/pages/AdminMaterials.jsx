@@ -3,7 +3,7 @@ import {
     Plus, Search, BookOpen, Loader2,
     CheckCircle2, AlertCircle, X, FileText,
     Upload, Trash2, Eye, EyeOff, FilePlus2, Settings2,
-    AlertTriangle
+    AlertTriangle, Clock
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -82,6 +82,10 @@ export default function AdminMaterials() {
     const [matSearch, setMatSearch] = useState('');
     const [visibility, setVisibility] = useState(true);
     const [quizVisibility, setQuizVisibility] = useState(true);
+    const [allowLateSubmission, setAllowLateSubmission] = useState(false);
+    const [quizStartDate, setQuizStartDate] = useState('');
+    const [quizDeadline, setQuizDeadline] = useState('');
+    const [isSavingQuizSettings, setIsSavingQuizSettings] = useState(false);
 
     // Add Content form state
     const [addForm, setAddForm] = useState({ title: '', description: '', order: 1 });
@@ -189,11 +193,46 @@ export default function AdminMaterials() {
             const res = await api.get(`/admin/courses/${editTarget.id}/materials/`);
             setMaterials(res.data);
             setVisibility(editTarget.is_active);
-            setQuizVisibility(editTarget.quiz_is_active);
+            
+            // Get quiz info from editTarget if available from the initial fetch
+            // usually it's in the course list.
+            const quiz = editTarget.quiz_info || {};
+            setQuizVisibility(quiz.is_active ?? true);
+            setAllowLateSubmission(quiz.allow_late_submission ?? false);
+            
+            // Format dates for datetime-local input (YYYY-MM-DDThh:mm) in Local Time (WIB)
+            const fmtDate = (d) => {
+                if (!d) return '';
+                const date = new Date(d);
+                // Adjust to local timezone to prevent UTC shifting in the input field
+                const offset = date.getTimezoneOffset() * 60000;
+                const localISODate = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+                return localISODate;
+            };
+            setQuizStartDate(fmtDate(quiz.start_date));
+            setQuizDeadline(fmtDate(quiz.deadline));
         } catch {
             showToast('error', 'Gagal memuat materi.');
         } finally {
             setMatLoading(false);
+        }
+    };
+
+    const handleSaveQuizSettings = async () => {
+        setIsSavingQuizSettings(true);
+        try {
+            await api.patch(`/admin/courses/${editTarget.id}/toggle-quiz/`, {
+                is_active: quizVisibility,
+                allow_late_submission: allowLateSubmission,
+                start_date: quizStartDate || null,
+                deadline: quizDeadline || null
+            });
+            showToast('success', 'Pengaturan kuis berhasil disimpan.');
+            fetchCourses();
+        } catch {
+            showToast('error', 'Gagal menyimpan pengaturan kuis.');
+        } finally {
+            setIsSavingQuizSettings(false);
         }
     };
 
@@ -647,6 +686,34 @@ export default function AdminMaterials() {
                                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${visibility ? 'left-7' : 'left-1'}`} />
                                     </button>
                                 </div>
+                                
+                                {/* Quiz Section Header */}
+                                <div className="flex items-center gap-2 mt-6 mb-2">
+                                    <div className="flex-1 h-px bg-gray-100"></div>
+                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-2">Quiz Scheduling</span>
+                                    <div className="flex-1 h-px bg-gray-100"></div>
+                                </div>
+                                {/* Quiz Dates Settings */}
+                                <div className="grid grid-cols-2 gap-3 mt-2">
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Start Date</label>
+                                        <input 
+                                            type="datetime-local" 
+                                            value={quizStartDate}
+                                            onChange={(e) => setQuizStartDate(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-100 rounded-xl text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-purple-50"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Deadline</label>
+                                        <input 
+                                            type="datetime-local" 
+                                            value={quizDeadline}
+                                            onChange={(e) => setQuizDeadline(e.target.value)}
+                                            className="w-full px-3 py-2 border border-gray-100 rounded-xl text-[11px] font-semibold focus:outline-none focus:ring-2 focus:ring-purple-50"
+                                        />
+                                    </div>
+                                </div>
 
                                 {/* Quiz Visibility Toggle */}
                                 <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100">
@@ -654,11 +721,32 @@ export default function AdminMaterials() {
                                         {quizVisibility ? <Eye className="w-4 h-4 text-purple-500" /> : <EyeOff className="w-4 h-4 text-gray-400" />}
                                         Quiz Visibility
                                     </span>
-                                    <button onClick={confirmToggleQuizVisibility}
+                                    <button onClick={() => setQuizVisibility(!quizVisibility)}
                                         className={`relative w-12 h-6 rounded-full transition-all duration-300 ${quizVisibility ? 'bg-purple-400' : 'bg-gray-200'}`}>
                                         <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${quizVisibility ? 'left-7' : 'left-1'}`} />
                                     </button>
                                 </div>
+                                
+                                {/* Allow Late Submission Toggle */}
+                                <div className="flex items-center justify-between pt-3 mt-1 border-t border-gray-100">
+                                    <span className="text-[13px] font-black text-gray-600 flex items-center gap-2">
+                                        <Clock className={`w-4 h-4 ${allowLateSubmission ? 'text-orange-500' : 'text-gray-400'}`} />
+                                        Allow Late Submission
+                                    </span>
+                                    <button onClick={() => setAllowLateSubmission(!allowLateSubmission)}
+                                        className={`relative w-12 h-6 rounded-full transition-all duration-300 ${allowLateSubmission ? 'bg-orange-400' : 'bg-gray-200'}`}>
+                                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${allowLateSubmission ? 'left-7' : 'left-1'}`} />
+                                    </button>
+                                </div>
+
+                                 <button 
+                                    onClick={handleSaveQuizSettings}
+                                    disabled={isSavingQuizSettings}
+                                    className="w-full mt-2 py-2.5 bg-purple-600 text-white text-[12px] font-black rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-md shadow-purple-100"
+                                 >
+                                     {isSavingQuizSettings ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                     Simpan Pengaturan Kuis
+                                 </button>
                             </div>
 
                             <div className="px-6 py-4 border-t border-gray-100">

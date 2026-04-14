@@ -158,21 +158,38 @@ class CourseWithMaterialsSerializer(serializers.ModelSerializer):
     """Serializer for Course model with nested materials"""
     materials = MaterialSerializer(many=True, read_only=True)
     materials_count = serializers.SerializerMethodField()
-    quiz_is_active = serializers.SerializerMethodField()
+    quiz_info = serializers.SerializerMethodField()
 
     def get_materials_count(self, obj):
         return obj.materials.count()
 
-    def get_quiz_is_active(self, obj):
+    def get_quiz_info(self):
+        # We need to handle this differently because get_quiz_info only takes 'obj' usually
+        pass
+
+    def get_quiz_info(self, obj):
         try:
-            # Mengambil status aktif dari quiz yang terkait
-            return obj.quiz.is_active
+            quiz = obj.quiz
+            return {
+                "id": quiz.id,
+                "is_active": quiz.is_active,
+                "start_date": quiz.start_date,
+                "deadline": quiz.deadline,
+                "time_limit": quiz.time_limit
+            }
         except Exception:
-            return False
+            # Create a quiz if it doesn't exist? (Optional, but safe for display)
+            return {
+                "id": None,
+                "is_active": False,
+                "start_date": None,
+                "deadline": None,
+                "time_limit": 1800
+            }
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'week', 'thumbnail', 'metadata', 'is_active', 'materials', 'materials_count', 'quiz_is_active']
+        fields = ['id', 'title', 'description', 'week', 'thumbnail', 'metadata', 'is_active', 'materials', 'materials_count', 'quiz_info']
 
 
 

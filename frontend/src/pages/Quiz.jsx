@@ -112,9 +112,17 @@ export default function Quiz() {
           }
         });
         setSelectedAnswers(initialAnswers);
-
+        
+        // If already submitted, redirect to results immediately
+        if (res.data.is_submitted) {
+          navigate(`/dashboard/quiz/${courseId}/result`);
+        }
       } catch (err) {
         console.error('Failed to fetch quiz:', err);
+        if (err.response?.status === 403) {
+          alert(err.response.data.error || 'Akses kuis ditolak');
+          navigate('/dashboard/modules');
+        }
       } finally {
         setLoading(false);
       }
@@ -217,16 +225,20 @@ export default function Quiz() {
       try {
         // Calculate total duration based on the actual start time from backend
         const startTimeBackend = new Date(startedAtBackend).getTime();
-        const totalDuration = Math.floor((Date.now() - startTimeBackend) / 1000);
-        // Build responses with real time_taken
+        const now = Date.now();
+        const totalDuration = Math.floor((now - startTimeBackend) / 1000);
+
+        // Build responses with robust time_taken calculation
         const payload = {
           time_taken: totalDuration,
           responses: questions.map((q) => {
             const ans = selectedAnswers[q.id];
+            const isCurrent = q.id === questions[currentIdx].id;
+            const savedTime = timesPerQuestion[q.id] || 0;
             return {
               question_id: q.id,
-              answer: Array.isArray(ans) ? ans.join(',') : (ans || ''),
-              time_taken: timesPerQuestion[q.id] || 0 + (q.id === questions[currentIdx].id ? timeSpent : 0)
+              answer: Array.isArray(ans) ? ans.join(',') : (ans ?? ''),
+              time_taken: isCurrent ? savedTime + timeSpent : savedTime
             };
           })
         };
@@ -234,13 +246,20 @@ export default function Quiz() {
         navigate(`/dashboard/quiz/${courseId}/result`, { state: { resultData: res.data } });
       } catch (err) {
         console.error('Failed to submit quiz:', err);
+        const errorMsg = err.response?.data?.error || 'Failed to submit quiz. Please try again.';
+        alert(errorMsg);
       } finally {
         setSubmitting(false);
       }
     }
   };
 
-  const isAnswered = currentAnswer && (!Array.isArray(currentAnswer) || currentAnswer.length > 0);
+  const isAnswered = (
+    currentAnswer !== undefined && 
+    currentAnswer !== null && 
+    currentAnswer !== '' &&
+    (!Array.isArray(currentAnswer) || currentAnswer.length > 0)
+  );
 
   return (
     /* ── PAGE: white background ── */

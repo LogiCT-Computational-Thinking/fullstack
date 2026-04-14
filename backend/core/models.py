@@ -222,9 +222,11 @@ class PedagogyLevel(models.Model):
 # =========================================================
 class Quiz(models.Model):
     course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name='quiz')
+    start_date = models.DateTimeField(null=True, blank=True, help_text="Kapan quiz mulai bisa diakses")
     deadline = models.DateTimeField(null=True, blank=True, help_text="Batas waktu pengerjaan quiz")
     time_limit = models.IntegerField(default=1800, help_text="Batas waktu dalam detik (default 30 menit)")
     is_active = models.BooleanField(default=True, help_text="Jika False, quiz tidak bisa diakses student")
+    allow_late_submission = models.BooleanField(default=False, help_text="Jika True, student masih bisa mengerjakan setelah deadline")
     createdDate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -370,7 +372,7 @@ class QuizResult(models.Model):
 
         # Bonus Deadline (Semakin awal dari deadline, semakin tinggi)
         deadline_bonus = 0
-        if self.quiz.deadline:
+        if self.quiz.deadline and self.completed_at:
             time_diff = (self.quiz.deadline - self.completed_at).total_seconds()
             if time_diff > 0:
                 deadline_bonus = time_diff * 0.0001 # 1 poin per jam kira-kira

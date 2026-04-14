@@ -112,19 +112,24 @@ function useTimeRemaining(targetDate) {
     const calc = () => {
         const now = new Date();
         let end;
+        let isLate = false;
         
         if (targetDate) {
             end = new Date(targetDate);
         } else {
+            // Default: ke hari Minggu pukul 23:59:59 WIB
             end = new Date(now);
             const dayOfWeek = now.getDay();
-            const daysUntilSunday = dayOfWeek === 0 ? 7 : 7 - dayOfWeek;
+            const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
             end.setDate(now.getDate() + daysUntilSunday);
             end.setHours(23, 59, 59, 999);
         }
 
-        const diff = end - now;
-        if (diff <= 0) return "Selesai / Deadline Lewat";
+        let diff = end - now;
+        if (diff < 0) {
+            isLate = true;
+            diff = Math.abs(diff);
+        }
 
         const d = Math.floor(diff / 86400000);
         const h = Math.floor((diff % 86400000) / 3600000);
@@ -134,15 +139,17 @@ function useTimeRemaining(targetDate) {
         if (d > 0) res += `${d} hari `;
         if (h > 0 || d > 0) res += `${h} jam `;
         res += `${m} menit`;
-        return res;
+        
+        return { 
+            text: isLate ? `Terlambat: ${res}` : `Sisa waktu: ${res}`,
+            isLate 
+        };
     };
 
     const [time, setTime] = useState(calc());
 
     useEffect(() => {
-        // Update immediately when targetDate changes
         setTime(calc());
-        
         const t = setInterval(() => setTime(calc()), 60000);
         return () => clearInterval(t);
     }, [targetDate]);
@@ -168,6 +175,7 @@ export default function QuizIntro() {
     const [loadingLastWeek, setLoadingLastWeek] = useState(true);
     const [currentResult, setCurrentResult] = useState(null);
     const [quizMeta, setQuizMeta] = useState(null);
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const timeLeft = useTimeRemaining(quizMeta?.deadline);
 
@@ -189,12 +197,8 @@ export default function QuizIntro() {
                 }
 
                 // Fetch Quiz Meta (Deadline, etc)
-                try {
-                    const quizRes = await api.get(`/courses/${courseId}/quiz/`);
-                    setQuizMeta(quizRes.data);
-                } catch (err) {
-                    console.log('No quiz meta found.');
-                }
+                const quizRes = await api.get(`/courses/${courseId}/quiz/`);
+                setQuizMeta(quizRes.data);
 
                 // Fetch Courses to find week and last week
                 const coursesRes = await api.get('/courses/');
@@ -225,6 +229,10 @@ export default function QuizIntro() {
                 }
             } catch (err) {
                 console.error('Failed to fetch data:', err);
+                if (err.response?.status === 403) {
+                    alert(err.response.data.error || 'Akses kuis ditolak.');
+                    navigate('/dashboard/modules');
+                }
             } finally {
                 setLoadingLeaderboard(false);
                 setLoadingLastWeek(false);
@@ -254,8 +262,13 @@ export default function QuizIntro() {
         if (currentResult) {
             navigate(`/dashboard/quiz/${courseId}/result`);
         } else {
-            navigate(`/quiz/${courseId}`, { state: { courseTitle, courseWeek } });
+            setShowConfirm(true);
         }
+    };
+
+    const confirmStart = () => {
+        setShowConfirm(false);
+        navigate(`/quiz/${courseId}`, { state: { courseTitle, courseWeek } });
     };
 
     // Shared font
@@ -342,13 +355,13 @@ export default function QuizIntro() {
                                 }}>
                                     <div style={{
                                         width: 32, height: 32, borderRadius: 8,
-                                        background: '#ccfbf1',
+                                        background: timeLeft.isLate ? '#fee2e2' : '#ccfbf1',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}>
-                                        <Clock style={{ width: 16, height: 16, color: '#0d9488' }} />
+                                        <Clock style={{ width: 16, height: 16, color: timeLeft.isLate ? '#ef4444' : '#0d9488' }} />
                                     </div>
-                                    <span style={{ fontSize: 13.5, fontWeight: 500, color: 'black' }}>
-                                        Waktu tersisa dalam minggu ini: {timeLeft}
+                                    <span style={{ fontSize: 13.5, fontWeight: 700, color: timeLeft.isLate ? '#ef4444' : 'black' }}>
+                                        {!quizMeta ? 'Menghitung waktu...' : timeLeft.text}
                                     </span>
                                 </div>
                             </div>
@@ -621,6 +634,95 @@ export default function QuizIntro() {
                     </div>
                 </div>
             </div>
+
+            {/* ── Confirmation Modal ── */}
+            {showConfirm && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 1000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: 20
+                }}>
+                    {/* Backdrop */}
+                    <div 
+                        onClick={() => setShowConfirm(false)}
+                        style={{
+                            position: 'absolute', inset: 0,
+                            background: 'rgba(15, 23, 42, 0.45)', // Slate-900 with low opacity
+                            backdropFilter: 'blur(8px)',
+                        }} 
+                    />
+
+                    {/* Modal Box */}
+                    <div style={{
+                        position: 'relative',
+                        width: '100%', maxWidth: 440,
+                        background: '#fff',
+                        borderRadius: 28,
+                        padding: 32,
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        textAlign: 'center',
+                        animation: 'modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                        fontFamily: font
+                    }}>
+                        <div style={{
+                            width: 64, height: 64, borderRadius: 20,
+                            background: '#FEF2F2',
+                            color: '#EF4444',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            margin: '0 auto 20px',
+                        }}>
+                            <Brain size={32} />
+                        </div>
+
+                        <h3 style={{ fontSize: 20, fontWeight: 900, color: '#0F172A', marginBottom: 12 }}>
+                            Siap Memulai Kuis?
+                        </h3>
+                        
+                        <div style={{ fontSize: 14.5, color: '#475569', lineHeight: 1.6, marginBottom: 28 }}>
+                            <p style={{ margin: '0 0 10px' }}>
+                                Kuis ini <strong style={{color: '#0F172A'}}>hanya dapat dikerjakan satu kali</strong>.
+                            </p>
+                            <p style={{ margin: 0 }}>
+                                Setelah dimulai, penghitung waktu akan <strong style={{color: '#0F172A'}}>terus berjalan</strong> meskipun Anda menutup halaman atau keluar dari sistem.
+                            </p>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button 
+                                onClick={() => setShowConfirm(false)}
+                                style={{
+                                    flex: 1, padding: '12px 16px',
+                                    background: '#F1F5F9', border: 'none', borderRadius: 16,
+                                    fontSize: 14, fontWeight: 800, color: '#475569',
+                                    cursor: 'pointer', transition: 'all 0.2s',
+                                }}
+                            >
+                                Batalkan
+                            </button>
+                            <button 
+                                onClick={confirmStart}
+                                style={{
+                                    flex: 1, padding: '12px 16px',
+                                    background: 'linear-gradient(to right, #143467, #0399A0)',
+                                    border: 'none', borderRadius: 16,
+                                    fontSize: 14, fontWeight: 800, color: '#fff',
+                                    cursor: 'pointer', transition: 'all 0.2s',
+                                    boxShadow: '0 4px 12px rgba(20, 52, 103, 0.2)',
+                                }}
+                            >
+                                Mulai Sekarang
+                            </button>
+                        </div>
+                    </div>
+
+                    <style>{`
+                        @keyframes modalScaleIn {
+                            from { opacity: 0; transform: scale(0.9) translateY(10px); }
+                            to   { opacity: 1; transform: scale(1)   translateY(0); }
+                        }
+                    `}</style>
+                </div>
+            )}
         </div>
     );
 }

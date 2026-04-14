@@ -65,7 +65,7 @@ urlpatterns = [
     path('admin/courses/', views.admin_manage_courses, name='admin-courses'),
     path('admin/courses/<int:pk>/delete/', views.admin_delete_course, name='admin-delete-course'),
     path('admin/courses/<int:pk>/toggle/', views.admin_toggle_course, name='admin-toggle-course'),
-    path('admin/courses/<int:course_pk>/toggle-quiz/', views.admin_toggle_quiz, name='admin-toggle-quiz'),
+    path('admin/courses/<int:course_pk>/toggle-quiz/', views.admin_update_quiz_settings, name='admin-toggle-quiz'),
     path('admin/courses/<int:course_pk>/materials/', views.admin_upload_material_to_course, name='admin-upload-material'),
 
     # Update file on existing material (inline upload)

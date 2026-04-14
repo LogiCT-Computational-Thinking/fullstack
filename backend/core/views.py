@@ -1259,12 +1259,23 @@ def get_course_quiz(request, course_pk):
     try:
         course = Course.objects.get(pk=course_pk, is_active=True)
         quiz = Quiz.objects.get(course=course)
+
+        # Access check for students
+        if request.user.role not in ['admin', 'teacher']:
+            now = timezone.now()
+            if not quiz.is_active:
+                return Response({'error': 'Kuis ini sedang dinonaktifkan.'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.start_date and now < quiz.start_date:
+                local_start = timezone.localtime(quiz.start_date)
+                return Response({'error': f'Kuis ini belum dimulai. Silakan kembali pada {local_start.strftime("%d %b %Y %H:%M")} WIB'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.deadline and now > quiz.deadline and not quiz.allow_late_submission:
+                return Response({'error': 'Batas waktu pengerjaan kuis ini telah berakhir.'}, status=status.HTTP_403_FORBIDDEN)
         
         # 1. Get or create attempt
         attempt, created = QuizAttempt.objects.get_or_create(user=request.user, quiz=quiz)
         
-        # 2. If it's a new attempt, pick 5 random questions
-        if created:
+        # 2. If it's a new attempt OR existing attempt has no questions, pick 5 random questions
+        if created or attempt.questions.count() == 0:
             questions_pool = QuizQuestion.objects.filter(quiz=quiz, status='APPROVED').order_by('?')
             if not questions_pool.exists() and request.user.role in ['admin', 'teacher']:
                 questions_pool = QuizQuestion.objects.filter(quiz=quiz).order_by('?')
@@ -1323,6 +1334,17 @@ def save_quiz_answer(request, course_pk):
     try:
         course = Course.objects.get(pk=course_pk, is_active=True)
         quiz = Quiz.objects.get(course=course)
+
+        # Access check for students
+        if request.user.role not in ['admin', 'teacher']:
+            now = timezone.now()
+            if not quiz.is_active:
+                return Response({'error': 'Kuis ini sedang dinonaktifkan.'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.start_date and now < quiz.start_date:
+                local_start = timezone.localtime(quiz.start_date)
+                return Response({'error': f'Kuis ini belum dimulai. Silakan kembali pada {local_start.strftime("%d %b %Y %H:%M")} WIB'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.deadline and now > quiz.deadline and not quiz.allow_late_submission:
+                return Response({'error': 'Batas waktu pengerjaan kuis ini telah berakhir.'}, status=status.HTTP_403_FORBIDDEN)
         question = QuizQuestion.objects.get(pk=q_id, quiz=quiz)
         
         # Update or create response
@@ -1348,11 +1370,22 @@ def submit_quiz_answers(request, course_pk):
     POST /api/courses/<course_pk>/quiz-submit/
     Submit answers for a quiz, calculate score, and update leaderboard points.
     """
-    from .models import Course, Quiz, QuizQuestion, QuizResult, QuizResponse
+    from .models import Course, Quiz, QuizQuestion, QuizResult, QuizResponse, QuizAttempt
     
     try:
         course = Course.objects.get(pk=course_pk, is_active=True)
         quiz = Quiz.objects.get(course=course)
+
+        # Access check for students
+        if request.user.role not in ['admin', 'teacher']:
+            now = timezone.now()
+            if not quiz.is_active:
+                return Response({'error': 'Kuis ini sedang dinonaktifkan.'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.start_date and now < quiz.start_date:
+                local_start = timezone.localtime(quiz.start_date)
+                return Response({'error': f'Kuis ini belum dimulai. Silakan kembali pada {local_start.strftime("%d %b %Y %H:%M")} WIB'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.deadline and now > quiz.deadline and not quiz.allow_late_submission:
+                return Response({'error': 'Batas waktu pengerjaan kuis ini telah berakhir.'}, status=status.HTTP_403_FORBIDDEN)
         
         # Prevent multiple submissions (Only once policy)
         if QuizResult.objects.filter(user=request.user, quiz=quiz).exists():
@@ -1493,6 +1526,17 @@ def get_quiz_result(request, course_pk):
     try:
         course = Course.objects.get(pk=course_pk, is_active=True)
         quiz = Quiz.objects.get(course=course)
+
+        # Access check for students
+        if request.user.role not in ['admin', 'teacher']:
+            now = timezone.now()
+            if not quiz.is_active:
+                return Response({'error': 'Kuis ini sedang dinonaktifkan.'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.start_date and now < quiz.start_date:
+                local_start = timezone.localtime(quiz.start_date)
+                return Response({'error': f'Kuis ini belum dimulai. Silakan kembali pada {local_start.strftime("%d %b %Y %H:%M")} WIB'}, status=status.HTTP_403_FORBIDDEN)
+            if quiz.deadline and now > quiz.deadline and not quiz.allow_late_submission:
+                return Response({'error': 'Batas waktu pengerjaan kuis ini telah berakhir.'}, status=status.HTTP_403_FORBIDDEN)
     except (Course.DoesNotExist, Quiz.DoesNotExist):
         return Response({"error": "Quiz not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -1680,10 +1724,10 @@ def admin_toggle_course(request, pk):
 @api_view(['PATCH'])
 @authentication_classes([CustomJWTAuthentication])
 @permission_classes([IsAuthenticated])
-def admin_toggle_quiz(request, course_pk):
+def admin_update_quiz_settings(request, course_pk):
     """
     PATCH /api/admin/courses/<course_pk>/toggle-quiz/
-    Toggle is_active status of the quiz related to the course.
+    Update quiz settings (is_active, start_date, deadline).
     """
     if request.user.role not in ['teacher', 'admin']:
         return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
@@ -1695,13 +1739,35 @@ def admin_toggle_quiz(request, course_pk):
     except Course.DoesNotExist:
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    quiz.is_active = not quiz.is_active
+    # Handle explicit changes from request.data
+    if 'is_active' in request.data:
+        quiz.is_active = request.data['is_active']
+    elif not request.data:
+        # Fallback for simple toggle call without body
+        quiz.is_active = not quiz.is_active
+
+    if 'start_date' in request.data:
+        quiz.start_date = request.data['start_date'] or None
+    if 'deadline' in request.data:
+        quiz.deadline = request.data['deadline'] or None
+    
+    if 'allow_late_submission' in request.data:
+        quiz.allow_late_submission = request.data['allow_late_submission']
+    if 'time_limit' in request.data:
+        try:
+            quiz.time_limit = int(request.data['time_limit'])
+        except (ValueError, TypeError):
+            pass
+
     quiz.save()
     return Response({
         "id": quiz.id,
         "course_id": course.id,
         "is_active": quiz.is_active,
-        "message": f"Quiz {'diaktifkan' if quiz.is_active else 'dinonaktifkan'}"
+        "start_date": quiz.start_date,
+        "deadline": quiz.deadline,
+        "time_limit": quiz.time_limit,
+        "message": "Pengaturan kuis berhasil diperbarui"
     })
 
 
