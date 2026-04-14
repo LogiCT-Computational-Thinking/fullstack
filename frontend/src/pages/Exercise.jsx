@@ -44,7 +44,7 @@ const preprocessMarkdown = (text) => {
         .replace(/\\\\\)/g, '$')
         .replace(/\\\(/g, '$')
         .replace(/\\\)/g, '$');
-    
+
     // 2. Ensure single newlines are rendered (standard Markdown trick: add 2 spaces at end of line)
     // but don't break existing double newlines/paragraphs
     return processed.replace(/\n(?!\n)/g, '  \n');
@@ -52,7 +52,7 @@ const preprocessMarkdown = (text) => {
 
 export default function Exercise() {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, updateProfile } = useAuth();
 
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState([]);
@@ -82,13 +82,19 @@ export default function Exercise() {
         fetchSessions();
     }, []);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = (behavior = 'smooth') => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior });
+        }
     };
 
+    // Scroll to bottom when messages change or loading state changes
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        const timer = setTimeout(() => {
+            scrollToBottom('smooth');
+        }, 100);
+        return () => clearTimeout(timer);
+    }, [messages, isLoading]);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -203,6 +209,16 @@ export default function Exercise() {
                 setMessages(prev => [...prev, asstPayload]);
                 await historyService.addMessage(activeSessionId, 'assistant', asstPayload);
 
+                // --- INTEGRASI RL: Update Preference Mahasiswa ---
+                if (evalData.rl?.next_cognitive) {
+                    const newPref = evalData.rl.next_cognitive;
+                    // Hanya update jika berbeda dengan preference saat ini
+                    if (newPref !== user?.preferences) {
+                        console.log(`[RL] Updating learning preference to: ${newPref}`);
+                        await updateProfile({ preferences: newPref });
+                    }
+                }
+
             } else {
                 // ======= NORMAL CHAT MODE =======
                 const data = await llmService.chat(userMsg, sessionIdStr, cognitive);
@@ -237,6 +253,12 @@ export default function Exercise() {
                 // Add tutor response to UI
                 setMessages(prev => [...prev, asstPayload]);
                 await historyService.addMessage(activeSessionId, 'assistant', asstPayload);
+
+                // --- INTEGRASI RL: Update Preference Mahasiswa (Chat Mode) ---
+                if (data.cognitive && data.cognitive !== user?.preferences) {
+                    console.log(`[RL Explorer] Agent selected new cognitive style: ${data.cognitive}`);
+                    await updateProfile({ preferences: data.cognitive });
+                }
             }
 
         } catch (error) {
@@ -337,10 +359,15 @@ export default function Exercise() {
                     {/* Spacer Gap */}
                     <div className="h-8" />
 
-                    <div className="mt-10">
+                    <div className="mt-10 overflow-hidden">
                         <h3 className="px-4 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em] mb-4">Your chats</h3>
                         <div className="space-y-1">
-                            {sessions.length === 0 ? null : sessions.map((session) => {
+                            {(!sessions || sessions.length === 0) ? (
+                                <div className="px-4 py-8 text-center bg-gray-50/50 rounded-2xl border border-dashed border-gray-100 mx-2">
+                                    <MessageSquare className="w-5 h-5 text-gray-300 mx-auto mb-2" />
+                                    <p className="text-[10px] font-bold text-gray-400">No chat history yet</p>
+                                </div>
+                            ) : sessions.map((session) => {
                                 let previewText = "New Chat";
                                 if (session.messages && session.messages.length > 0) {
                                     const firstUserMsg = session.messages.find(m => m.role === 'user');
@@ -351,8 +378,8 @@ export default function Exercise() {
                                         key={session.id}
                                         onClick={() => loadSessionDetail(session.id)}
                                         className={`w-full text-left px-4 py-3 text-sm font-bold truncate rounded-xl transition-all ${currentSessionId === session.id
-                                                ? 'bg-blue-50 text-blue-600'
-                                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                                            ? 'bg-blue-50 text-blue-600'
+                                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                             }`}
                                     >
                                         {previewText}
@@ -386,7 +413,7 @@ export default function Exercise() {
                     <h2 className="text-xl font-bold text-gray-800">Exercise</h2>
                 </div>
 
-                <div className="flex-1 flex flex-col items-center overflow-y-auto px-6 pb-40 scrollbar-hide">
+                <div className="flex-1 flex flex-col items-center overflow-y-auto px-6 pb-40 relative">
                     {messages.length === 0 ? (
                         <div className="w-full max-w-[800px] mt-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
                             {/* Greeting */}
@@ -426,17 +453,16 @@ export default function Exercise() {
                         </div>
                     ) : (
                         /* Chat Messages */
-                        <div className="w-full max-w-[800px] mt-4 space-y-8 animate-in fade-in duration-500 pb-10">
+                        <div className="w-full max-w-[800px] mt-4 space-y-8 pb-10">
                             {messages.map((msg, idx) => (
                                 <div key={idx} className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`${
-                                        msg.role === 'user' 
-                                        ? 'max-w-[85%] bg-[#F6F6F6] px-6 py-4 rounded-[0.5rem]' 
-                                        : 'w-full bg-transparent py-4 text-gray-900 border-none'
-                                    }`}>
+                                    <div className={`${msg.role === 'user'
+                                            ? 'max-w-[85%] bg-[#F6F6F6] px-6 py-4 rounded-[0.5rem]'
+                                            : 'w-full bg-transparent py-4 text-gray-900 border-none'
+                                        }`}>
                                         <div className={`text-[15px] leading-relaxed prose prose-sm max-w-none 
                                             ${msg.role === 'user' ? 'text-gray-700' : 'text-gray-900'}
-                                            ${msg.role === 'assistant' ? 
+                                            ${msg.role === 'assistant' ?
                                                 'prose-p:mb-6 prose-p:leading-7 ' +
                                                 'prose-li:mb-2 prose-ul:mb-6 prose-ol:mb-6 ' +
                                                 'prose-headings:mb-4 prose-headings:mt-8 prose-headings:text-[#1e2a5e] prose-headings:font-bold ' +
@@ -446,8 +472,8 @@ export default function Exercise() {
                                                 'prose-th:bg-[#f1f2f7] prose-th:px-3 prose-th:py-2 prose-td:border prose-td:border-gray-200 ' +
                                                 'prose-strong:text-[#1b255a]' : ''}`}
                                         >
-                                            <ReactMarkdown 
-                                                remarkPlugins={[remarkMath]} 
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkMath]}
                                                 rehypePlugins={[rehypeKatex]}
                                             >
                                                 {preprocessMarkdown(msg.content)}
@@ -521,8 +547,8 @@ export default function Exercise() {
                                     onClick={handleSend}
                                     disabled={!input.trim() || isLoading}
                                     className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center transition-all mb-0.5 mr-0.5 ${input.trim() && !isLoading
-                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 active:scale-95'
-                                            : 'bg-gray-100 text-gray-300'
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 active:scale-95'
+                                        : 'bg-gray-100 text-gray-300'
                                         }`}
                                 >
                                     <Send className="w-5 h-5" />

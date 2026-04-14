@@ -2,8 +2,10 @@
 app/services/session.py
 ────────────────────────
 In-memory per-session chat history using LangChain's ChatMessageHistory.
+Handles writing conversation logs to JSON and CSV in history_logs/.
 
-Also handles writing conversation logs to JSON and CSV.
+Stores optional RL fields (rl_selected, rl_phase) alongside each interaction
+so conversation logs carry full context for the RAG evaluator.
 """
 
 import csv
@@ -11,17 +13,17 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from langchain_community.chat_message_histories import ChatMessageHistory
 
 from app.core.config import get_settings
 
-logger = logging.getLogger(__name__)
+logger    = logging.getLogger(__name__)
 _settings = get_settings()
 
-_session_store: Dict[str, ChatMessageHistory] = {}
-_conversation_log: List[Dict[str, Any]] = []
+_session_store:     Dict[str, ChatMessageHistory] = {}
+_conversation_log:  List[Dict[str, Any]]          = []
 
 _HISTORY_BASE = "conversation_log"
 
@@ -43,9 +45,9 @@ def format_history(history: ChatMessageHistory, max_chars: int = None) -> str:
 
     lines: List[str] = []
     for msg in history.messages:
-        role = getattr(msg, "type", "unknown")
+        role    = getattr(msg, "type", "unknown")
         content = getattr(msg, "content", "")
-        prefix = (
+        prefix  = (
             "[Mahasiswa]" if role == "human"
             else "[Tutor]"  if role == "ai"
             else "[Riwayat]"
@@ -57,19 +59,23 @@ def format_history(history: ChatMessageHistory, max_chars: int = None) -> str:
 
 
 def log_interaction(
-    session_id: str,
-    cognitive: str,
-    user_message: str,
-    reply: str,
+    session_id:        str,
+    cognitive:         str,
+    user_message:      str,
+    reply:             str,
     followup_question: str,
+    rl_selected:       Optional[bool] = None,
+    rl_phase:          Optional[str]  = None,
 ) -> None:
     """Append an interaction to the in-memory log and flush to disk."""
     entry: Dict[str, Any] = {
-        "timestamp": datetime.now().isoformat(),
-        "session_id": session_id,
-        "cognitive": cognitive,
-        "user_message": user_message,
-        "reply": reply,
+        "timestamp":        datetime.now().isoformat(),
+        "session_id":       session_id,
+        "cognitive":        cognitive,
+        "rl_selected":      rl_selected,
+        "rl_phase":         rl_phase,
+        "user_message":     user_message,
+        "reply":            reply,
         "followup_question": followup_question,
     }
     _conversation_log.append(entry)

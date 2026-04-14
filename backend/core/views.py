@@ -1457,6 +1457,45 @@ def submit_quiz_answers(request, course_pk):
     qresult.calculate_points()
     qresult.save()
 
+    # ── Reinforcement Learning (RL) Integration (Asah Otak) ───────────────
+    # We call the existing /evaluate endpoint for each question response
+    # to maintain compatibility with the LLM team's RL Engine.
+    try:
+        current_cognitive = request.user.preferences or "3TGR"
+        final_recommended_cognitive = None
+        
+        for r in responses_to_save:
+            eval_payload = {
+                "answer": r.userAns or "",
+                "correct_answer": r.question.correctAns or "",
+                "active_question": r.question.question or "",
+                "wrong_count": 0, # Quiz is first-try evaluation
+                "cognitive": current_cognitive,
+                "session_id": f"student-{request.user.id}",
+                "t_answer_seconds": float(r.time_taken),
+                "category": "Penggalang"
+            }
+
+            # Call official /evaluate endpoint
+            rl_url = f"{settings.LLM_ENGINE_URL}/evaluate"
+            rl_res = requests.post(rl_url, json=eval_payload, timeout=15)
+            
+            if rl_res.status_code == 200:
+                rl_data = rl_res.json()
+                # Get recommendation from the 'rl' block
+                rl_info = rl_data.get("rl")
+                if rl_info and rl_info.get("next_cognitive"):
+                    final_recommended_cognitive = rl_info.get("next_cognitive")
+
+        # Update user profile with the final recommendation after processing all questions
+        if final_recommended_cognitive and final_recommended_cognitive != current_cognitive:
+            request.user.preferences = final_recommended_cognitive
+            request.user.save()
+            logger.info(f"[RL] Style updated via individual evaluation for {request.user.email}: {current_cognitive} -> {final_recommended_cognitive}")
+            
+    except Exception as e:
+        logger.error(f"[RL] Error during individual quiz evaluation: {str(e)}")
+
     # Mark the attempt as submitted
     try:
         attempt = QuizAttempt.objects.get(user=request.user, quiz=quiz)

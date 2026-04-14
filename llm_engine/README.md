@@ -1,240 +1,230 @@
-# CSIPBLLM — Personalized Learning System for Computational Thinking
+# CSIPBLLM — Combined RAG + RL Personalized Learning System
 
-> **Pengembangan Sistem Pembelajaran Terpersonalisasi Mata Kuliah CT Menggunakan Chatbot Berbasis LLM dan RAG**
-
-An adaptive AI tutor powered by **FastAPI**, **OpenAI GPT**, **FAISS**, and **RAG** that personalises explanations and evaluations based on a student's cognitive profile across **48 cognitive type combinations**.
+**v5.0.0** — RAG-based tutoring + RL Contextual Bandit adaptive pedagogy.
 
 ---
 
-## 📁 Project Structure
-
-```
-pls-ct/
-├── main.py                        # Uvicorn entry-point
-├── requirements.txt
-├── .env.example                   # Copy to .env and fill in secrets
-├── .gitignore
-│
-├── app/                           # Application package
-│   ├── main.py                    # FastAPI app factory (create_app)
-│   ├── core/
-│   │   ├── config.py              # Centralised settings (pydantic-settings)
-│   │   ├── cognitive.py           # 48 cognitive types + label helpers
-│   │   └── prompts.py             # All LLM prompt templates
-│   ├── models/
-│   │   └── schemas.py             # Pydantic request / response schemas
-│   ├── services/
-│   │   ├── llm.py                 # OpenAI chat + embedding wrapper
-│   │   ├── rag.py                 # FAISS vector indexing + retrieval
-│   │   ├── session.py             # Per-session history + conversation log
-│   │   └── tutor.py               # Core tutoring business logic
-│   ├── api/
-│   │   └── routes/
-│   │       ├── reference.py       # GET /cognitive-types
-│   │       ├── tutor.py           # POST /chat, POST /evaluate
-│   │       └── history.py         # GET /history, GET /download-history
-│   └── utils/
-│       ├── latex.py               # LaTeX → MathJax normaliser
-│       └── code_detector.py       # Heuristic code-snippet detector
-│
-├── evaluation/                    # RAG evaluation suite
-│   ├── metrics.py                 # Pure metric functions (Precision@K, etc.)
-│   ├── faithfulness.py            # Faithfulness + hallucination detection
-│   ├── test_cases.py              # Static 20-case test dataset
-│   └── runner.py                  # Full evaluation orchestrator + reporting
-│
-├── scripts/
-│   └── run_evaluation.py          # CLI runner for the evaluation suite
-│
-├── tests/
-│   └── test_core.py               # Unit tests (no API calls needed)
-│
-├── static/
-│   ├── index.html                 # Frontend UI
-│   ├── css/style.css
-│   └── js/script.js
-│
-├── materials/                     # RAG knowledge base
-│   ├── {CODE}.txt                 # e.g. 3TGI.txt — per cognitive type
-│   └── *.md / *.txt               # Shared topic files (global fallback)
-│
-└── logs/
-    ├── history/                   # Auto-saved conversation logs (JSON + CSV)
-    └── eval_results/              # Evaluation reports (JSON + CSV + TXT)
-```
-
----
-
-## ✨ Features
-
-- 🧠 **48 Cognitive Types** — Every response is tailored to the student's learning profile (level, practical/theoretical, analytical/global, individual/relational)
-- 📚 **Always-On RAG** — Retrieves relevant chunks from per-type + global material files before every LLM call
-- 🤖 **Adaptive Evaluation** — Detects correct/incorrect answers and provides scaffolded hints that increase in detail with each wrong attempt
-- 🔁 **Follow-up Question Generator** — Automatically generates a new technical case-study question after each explanation or evaluation
-- 🧮 **LaTeX Normalisation** — Standardises all math notation to MathJax-compatible `\(...\)` / `\[...\]`
-- 💾 **Conversation Logging** — All sessions saved automatically to JSON + CSV
-- 🌐 **Web UI** — Built-in frontend with MathJax, Markdown rendering, and download buttons
-
----
-
-## ⚙️ Requirements
-
-- Python 3.10+
-- An **OpenAI API key** (`gpt-3.5-turbo` + `text-embedding-3-small`)
-- Optional: `faiss-cpu` for fast vector search (NumPy fallback otherwise)
-
----
-
-## 🚀 Quick Start
-
-### 1. Clone & install
+## Quick Start
 
 ```bash
+# 1. Clone & install
 git clone https://github.com/ajisakarsyi/pls-ct.git
 cd pls-ct
 pip install -r requirements.txt
-```
 
-### 2. Configure environment
-
-```bash
-cp .env.example .env
-# Edit .env and set OPENAI_API_KEY
-```
-
-### 3. Run the server
-
-```bash
+# 2. Run the server
 python main.py
 # or
 uvicorn app.main:app --reload
+
+# 3. Open browser
+# UI   → http://localhost:8000
+# Docs → http://localhost:8000/docs
 ```
 
-Open **http://127.0.0.1:8000** in your browser.
-
-Interactive API docs: **http://127.0.0.1:8000/docs**
+No `.env` file needed — API key and config are in `app/core/config.py`.
 
 ---
 
-## 🧠 Cognitive Type System
-
-Each student is assigned a 4-character code:
+## Architecture
 
 ```
-{Level}{PT}{AG}{IR}
+Student sends /chat  (no cognitive field — cold start)
+  └─► RL Agent selects LT via ε-greedy exploration-exploitation
+       └─► RAG retrieves relevant materials for that cognitive type
+            └─► LLM generates personalised explanation + follow-up question
+
+Student answers /evaluate
+  └─► LLM strictly evaluates correctness (two-step)
+       └─► Intermediate wrong answer → scaffolded hint, NO RL update
+            └─► Resolved answer (correct or 5th attempt):
+                 └─► RL records reward, updates Q-table (M/P/E + MLR weights)
+                      └─► Mastery level promoted on correct answer
 ```
 
-| Dimension | Options | Meaning |
-|---|---|---|
-| **Level** | `1` – `6` | Bloom's Taxonomy level |
-| **PT** | `P` / `T` | Praktis / Teoretis |
-| **AG** | `A` / `G` | Analitis / Global |
-| **IR** | `I` / `R` | Individual / Relasional |
+**Reward function:** `rt = β₀ + α·ΔP + β·ΔM + γ·E`
 
-**Example:** `3TGR` → Level 3, Theoretical, Global, Relational
-
-48 unique profiles (6 × 2 × 2 × 2).  Full list: `GET /cognitive-types`
+| Component | Description |
+|-----------|-------------|
+| `ΔP` | Change in performance (correctness rate) |
+| `ΔM` | Change in mastery score (levels 1–6) |
+| `E` | Engagement score — **zero on wrong answers** |
+| `α β γ` | Weights refitted by MLR every 10 resolved questions |
 
 ---
 
-## 📡 API Reference
+## Cold Start
 
-### `POST /chat`
+The system no longer requires the student to choose a Learning Type upfront. The RL agent starts with `ε=0.50` and discovers the best LT through interaction.
 
-```json
-{ "message": "Apa itu algoritma?", "cognitive": "2TAR", "session_id": "s1" }
-```
+**Do not send a `cognitive` field in `/chat` or `/evaluate` requests.** The agent selects the LT automatically from question 1 and returns its choice in the response.
 
-Response: `reply`, `followup_question`, `cognitive`, `session_id`
+---
 
-### `POST /evaluate`
+## API Endpoints
 
+### Tutor
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/chat` | Send a question — RL selects LT, RAG retrieves context, LLM replies |
+| `POST` | `/evaluate` | Evaluate student answer, update RL on resolved questions only |
+
+**`POST /chat` — request:**
 ```json
 {
-  "answer": "32/3",
-  "correct_answer": "…tutor explanation…",
-  "active_question": "Berapa luas area di bawah f(x)?",
-  "wrong_count": 0,
-  "cognitive": "2TAR",
-  "session_id": "s1"
+  "message":    "Apa itu algoritma?",
+  "session_id": "student-001",
+  "category":   "Penggalang"
 }
 ```
 
-Response: `is_correct`, `feedback`, `hint_level`, `followup_question`, `cognitive`, `session_id`
-
-**Scaffolding levels:**
-
-| `wrong_count` | Level |
-|---|---|
-| 0 | Evaluasi Awal — brief direction |
-| 1 | Petunjuk Terarah — specific pointer |
-| 2 | Dukungan Remedial — step-by-step with examples |
-| 3+ | Panduan Langkah-demi-Langkah — full re-explanation |
-
-### `GET /cognitive-types`
-### `GET /history?format=json|text`
-### `GET /download-history?format=json|csv`
-
----
-
-## 🔬 Running the Evaluation Suite
-
-```bash
-python scripts/run_evaluation.py
-# or with a custom server URL:
-python scripts/run_evaluation.py --base-url http://localhost:8000
+**`POST /chat` — response (key fields):**
+```json
+{
+  "reply":             "...",
+  "followup_question": "...",
+  "cognitive":         "2PAR",
+  "rl_selected_lt":    "PAR",
+  "rl_epsilon":        0.431,
+  "rl_q_values":       { "PAR": 0.082, "TAR": 0.071, "...": "..." },
+  "rl_phase":          { "phase": "free", "global_question_count": 4 }
+}
 ```
 
-Results are saved to `logs/eval_results/`. Metrics computed:
-
-| Category | Metrics |
-|---|---|
-| Retrieval | Precision@K, Recall@K, MeanSim, Coverage, Source Diversity |
-| Generation | Faithfulness score, Hallucination risk |
-| Answer Quality | Boolean accuracy via `/evaluate` |
-| Offline Stats | Interaction count, session distribution, reply length stats |
-
----
-
-## 🧪 Running Unit Tests
-
-```bash
-pip install pytest
-pytest tests/
+**`POST /evaluate` — request:**
+```json
+{
+  "answer":          "Algoritma adalah urutan langkah-langkah...",
+  "correct_answer":  "<the reply field from /chat>",
+  "active_question": "<the followup_question from /chat>",
+  "wrong_count":     0,
+  "session_id":      "student-001",
+  "category":        "Penggalang"
+}
 ```
 
-The tests in `tests/test_core.py` cover all pure utility functions and require **no live API calls**.
+> Increment `wrong_count` by 1 per failed attempt. RL only updates on resolved questions (`is_correct=true` or `wrong_count >= 4`).
+
+**`POST /evaluate` — response (key fields):**
+```json
+{
+  "is_correct":        true,
+  "feedback":          "...",
+  "hint_level":        "Evaluasi Awal",
+  "followup_question": "...",
+  "cognitive":         "2PAR",
+  "rl": {
+    "mastery_level":  2,
+    "mastery_label":  "Pemahaman dasar",
+    "reward":         0.1823,
+    "next_cognitive": "3PAR"
+  },
+  "lt_change": { "changed": false, "current_lt": "PAR" }
+}
+```
+
+### RL
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/rl/coldstart/{id}` | Initialise cold-start session — returns Q-values and plot URL |
+| `GET` | `/rl/recommend/{id}` | Greedy best LT — no side effects |
+| `GET` | `/rl/select/{id}` | ε-greedy select (advances counter) |
+| `GET` | `/rl/phase/{id}` | Seeding vs free phase status |
+| `GET` | `/rl/summary/{id}` | Full session analytics |
+| `GET` | `/rl/changes/{id}` | LT recommendation change log |
+| `GET` | `/rl/log/{id}` | Step-by-step reward/M/P/E log |
+| `GET` | `/rl/plots/{id}` | All 8 plots as base64 PNGs |
+| `GET` | `/rl/plots/{id}/single_line` | Single-line reward chart coloured by LT (auto-saved every 10 Q) |
+| `GET` | `/rl/evaluate/{id}` | Run all 3 evaluation techniques |
+| `GET` | `/rl/evaluate/{id}/kt_auc` | Knowledge Tracing AUC only |
+| `GET` | `/rl/evaluate/{id}/reward_decomposition` | MLR weight stability + component contribution |
+| `GET` | `/rl/evaluate/{id}/ope_dr` | Offline Policy Evaluation — doubly robust |
+| `GET` | `/rl/sessions` | List all active sessions |
+| `POST` | `/rl/refit` | Force MLR weight refit |
+| `DELETE` | `/rl/session/{id}` | Delete a session |
+
+### Reference / History
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/cognitive-types` | All 48 valid cognitive codes |
+| `GET` | `/history` | Conversation log |
+| `GET` | `/download-history` | Download log as JSON or TXT |
 
 ---
 
-## 🛠️ Configuration
+## Configuration
 
-All settings live in `app/core/config.py` and are loaded from `.env`:
+All settings in `app/core/config.py` and `pedagogy_selector.py`.
 
-| Variable | Default | Description |
-|---|---|---|
-| `OPENAI_API_KEY` | — | Your OpenAI API key |
-| `OPENAI_API_BASE` | `https://api.openai.com/v1` | Custom OpenAI-compatible base URL |
-| `CHAT_MODEL` | `gpt-3.5-turbo` | Chat completions model |
-| `EMBEDDING_MODEL` | `text-embedding-3-small` | Embedding model |
-| `HOST` | `127.0.0.1` | Server host |
-| `PORT` | `8000` | Server port |
-
----
-
-## 📦 Dependencies
-
-| Package | Purpose |
-|---|---|
-| `fastapi` + `uvicorn` | Web framework and server |
-| `openai` | GPT chat + embeddings |
-| `faiss-cpu` | Vector similarity search |
-| `numpy` | Embedding math / NumPy fallback |
-| `langchain` + `langchain-community` | Session memory |
-| `pydantic` + `pydantic-settings` | Validation + config |
+| Setting | Default | Notes |
+|---------|---------|-------|
+| `openai_api_key` | `sk-...` | ChatAnywhere proxy key |
+| `openai_api_base` | `https://api.chatanywhere.org/v1` | Swap for `https://api.openai.com/v1` for direct OpenAI |
+| `chat_model` | `gpt-3.5-turbo` | Upgrade to `gpt-4o` for better quality |
+| `EPSILON_INIT` | `0.50` | Starting exploration rate |
+| `EPSILON_DECAY` | `0.97` | Per-question decay |
+| `EPSILON_MIN` | `0.05` | Minimum exploration floor |
+| `N_MAX` | `5` | Max wrong attempts before answer is revealed |
+| `MLR_REFIT_EVERY` | `10` | Refit α/β/γ every N resolved questions |
 
 ---
 
-## 📄 License
+## Built-in Evaluation
 
-This project is part of an undergraduate research thesis at IPB University. For academic use.
+Three research-backed techniques available via `/rl/evaluate/{session_id}` after sufficient session data.
+
+| Technique | Metric | Source |
+|-----------|--------|--------|
+| Knowledge Tracing AUC | AUC-ROC of `mastery_score` predicting correctness on held-out questions. ≥ 0.72 beats BKT baseline. | Liu et al., NeurIPS 2022 |
+| Reward Decomposition | Weight stability of α/β/γ across MLR refits; which component dominates reward. | Septon et al., AAMAS 2023 |
+| OPE Doubly Robust | Estimates whether pure-exploit (ε=0) would earn more than current ε-greedy. | Zhan et al., KDD 2021 |
+
+---
+
+## Project Structure
+
+```
+pls-ct-combined/
+├── main.py                    # Entry point
+├── app/
+│   ├── main.py                # FastAPI factory
+│   ├── core/
+│   │   ├── config.py          # All settings (key, model, paths) — edit here
+│   │   ├── cognitive.py       # 48 cognitive type codes
+│   │   └── prompts.py         # LLM prompt templates
+│   ├── models/schemas.py      # Pydantic request/response models
+│   ├── services/
+│   │   ├── llm.py             # OpenAI chat + embedding wrapper
+│   │   ├── rag.py             # FAISS/NumPy RAG retrieval
+│   │   ├── session.py         # Chat history + conversation logs
+│   │   ├── tutor.py           # Tutoring logic
+│   │   └── rl.py              # RL service (registry, selection, recording, plots)
+│   ├── api/routes/
+│   │   ├── tutor.py           # POST /chat, POST /evaluate
+│   │   ├── rl.py              # GET /rl/*
+│   │   ├── history.py         # GET /history
+│   │   └── reference.py       # GET /cognitive-types
+│   └── utils/
+│       ├── latex.py           # LaTeX normalisation
+│       └── code_detector.py   # Code snippet detection
+├── pedagogy_selector.py       # RL agent + SessionRegistry
+├── rl_metrics.py              # M/P/E metrics + MLR
+├── simulate_rl/               # CLI simulator package
+│   ├── profiles.py            # Student profiles + StudentSimulator
+│   ├── runners.py             # run_session, run_simulation, run_story, ...
+│   ├── plots.py               # All matplotlib plot functions
+│   └── terminal.py            # Terminal output helpers
+├── simulate_rl.py             # Backward-compat shim
+├── evaluation/
+│   └── evaluator.py           # KT AUC, Reward Decomposition, OPE-DR
+├── rag_evaluator.py           # RAG evaluation suite
+├── materials/                 # 48 cognitive-type + shared topic files
+├── static/                    # Frontend
+├── history_logs/              # Conversation logs
+├── rl_logs/                   # RL step logs per session
+├── rl_plots/                  # Auto-saved reward plots per session
+└── requirements.txt
+```

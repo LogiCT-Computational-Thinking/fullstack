@@ -15,7 +15,7 @@ router = APIRouter(tags=["Reference"])
 @router.get(
     "/cognitive-types",
     response_model=CognitiveTypesResponse,
-    summary="List all valid cognitive type codes",
+    summary="Daftar semua 48 kode tipe kognitif yang valid",
 )
 def list_cognitive_types() -> CognitiveTypesResponse:
     return CognitiveTypesResponse(

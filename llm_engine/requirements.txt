@@ -1,12 +1,25 @@
+# CSIPBLLM — Combined RAG + RL + Question Bank requirements
+
+# ── Web framework ──────────────────────────────────────────────────────────
 fastapi
 uvicorn[standard]
-requests
 pydantic
-pydantic-settings
-numpy
 python-multipart
+
+# ── LLM / Embeddings ──────────────────────────────────────────────────────
+openai
+requests               # Ollama fallback calls
+
+# ── RAG ───────────────────────────────────────────────────────────────────
 faiss-cpu
+numpy
+
+# ── Session history ────────────────────────────────────────────────────────
 langchain
 langchain-community
-langchain-ollama
-openai
+
+# ── RL / Simulation plots ─────────────────────────────────────────────────
+matplotlib
+scipy
+pandas
+scikit-learn
