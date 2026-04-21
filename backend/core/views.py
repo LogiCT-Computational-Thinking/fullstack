@@ -1,4 +1,4 @@
-import os, csv, json, io
+import os, csv, json, io, logging, requests
 from django.shortcuts import render
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .authentication import CustomJWTAuthentication
 from django.contrib.auth.hashers import check_password, make_password
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
 from django.conf import settings
 
 from .models import User, QuizQuestion, PretestQuestion, Pretest, PretestResponse, Material
@@ -39,6 +39,8 @@ from datetime import timedelta
 from django.http import FileResponse, Http404
 from django.views.decorators.clickjacking import xframe_options_exempt
 import mimetypes
+ 
+logger = logging.getLogger(__name__)
 
 
 # ─── Serve Media File (iframe-friendly) ──────────────────────────────────────
@@ -215,7 +217,7 @@ def google_auth_view(request):
         print("Verifying Google token...")
         idinfo = id_token.verify_oauth2_token(
             token, 
-            requests.Request(), 
+            google_requests.Request(), 
             settings.GOOGLE_OAUTH_CLIENT_ID,
             clock_skew_in_seconds=10  # Allow 10 seconds clock skew tolerance
         )
@@ -303,7 +305,7 @@ def google_admin_auth_view(request):
         # 1. Verifikasi token Google
         idinfo = id_token.verify_oauth2_token(
             token,
-            requests.Request(),
+            google_requests.Request(),
             settings.GOOGLE_OAUTH_CLIENT_ID,
             clock_skew_in_seconds=10
         )
@@ -1458,43 +1460,46 @@ def submit_quiz_answers(request, course_pk):
     qresult.save()
 
     # ── Reinforcement Learning (RL) Integration (Asah Otak) ───────────────
-    # We call the existing /evaluate endpoint for each question response
-    # to maintain compatibility with the LLM team's RL Engine.
-    try:
-        current_cognitive = request.user.preferences or "3TGR"
-        final_recommended_cognitive = None
-        
-        for r in responses_to_save:
-            eval_payload = {
-                "answer": r.userAns or "",
-                "correct_answer": r.question.correctAns or "",
-                "active_question": r.question.question or "",
-                "wrong_count": 0, # Quiz is first-try evaluation
-                "cognitive": current_cognitive,
-                "session_id": f"student-{request.user.id}",
-                "t_answer_seconds": float(r.time_taken),
-                "category": "Penggalang"
-            }
+    # Run RL evaluation in the background so the response is returned immediately.
+    import threading
 
-            # Call official /evaluate endpoint
-            rl_url = f"{settings.LLM_ENGINE_URL}/evaluate"
-            rl_res = requests.post(rl_url, json=eval_payload, timeout=15)
-            
-            if rl_res.status_code == 200:
-                rl_data = rl_res.json()
-                # Get recommendation from the 'rl' block
-                rl_info = rl_data.get("rl")
-                if rl_info and rl_info.get("next_cognitive"):
-                    final_recommended_cognitive = rl_info.get("next_cognitive")
+    def run_rl_evaluation(user, responses):
+        try:
+            current_cognitive = user.preferences or "3TGR"
+            final_recommended_cognitive = None
 
-        # Update user profile with the final recommendation after processing all questions
-        if final_recommended_cognitive and final_recommended_cognitive != current_cognitive:
-            request.user.preferences = final_recommended_cognitive
-            request.user.save()
-            logger.info(f"[RL] Style updated via individual evaluation for {request.user.email}: {current_cognitive} -> {final_recommended_cognitive}")
-            
-    except Exception as e:
-        logger.error(f"[RL] Error during individual quiz evaluation: {str(e)}")
+            for r in responses:
+                eval_payload = {
+                    "answer": r.userAns or "",
+                    "correct_answer": r.question.correctAns or "",
+                    "active_question": r.question.question or "",
+                    "wrong_count": 0,
+                    "cognitive": current_cognitive,
+                    "session_id": f"student-{user.id}",
+                    "t_answer_seconds": float(r.time_taken),
+                    "category": "Penggalang"
+                }
+
+                rl_url = f"{settings.LLM_ENGINE_URL}/evaluate"
+                rl_res = requests.post(rl_url, json=eval_payload, timeout=10)
+
+                if rl_res.status_code == 200:
+                    rl_data = rl_res.json()
+                    rl_info = rl_data.get("rl")
+                    if rl_info and rl_info.get("next_cognitive"):
+                        final_recommended_cognitive = rl_info.get("next_cognitive")
+
+            if final_recommended_cognitive and final_recommended_cognitive != current_cognitive:
+                user.preferences = final_recommended_cognitive
+                user.save()
+                logger.info(f"[RL] Style updated for {user.email}: {current_cognitive} -> {final_recommended_cognitive}")
+
+        except Exception as e:
+            logger.error(f"[RL] Background evaluation error: {str(e)}")
+
+    rl_thread = threading.Thread(target=run_rl_evaluation, args=(request.user, responses_to_save), daemon=True)
+    rl_thread.start()
+
 
     # Mark the attempt as submitted
     try:

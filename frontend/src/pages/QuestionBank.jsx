@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, User, Check, X, Eye, Loader2, RefreshCcw, Filter, ChevronRight, MessageSquare, Edit, Save, FileText, HelpCircle, UploadCloud, GripVertical, Trash2, CheckSquare, ChevronDown, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Search, Bell, User, Check, X, XCircle, Eye, Loader2, RefreshCcw, Filter, ChevronRight, MessageSquare, Edit, Save, FileText, HelpCircle, UploadCloud, GripVertical, Trash2, CheckSquare, ChevronDown, Image as ImageIcon, Sparkles } from 'lucide-react';
+import useEscapeKey from '../hooks/useEscapeKey';
 import api from '../services/api';
 
 export default function QuestionBank() {
@@ -9,6 +10,7 @@ export default function QuestionBank() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedQuestion, setSelectedQuestion] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalError, setModalError] = useState('');
     
     // Edit states
     const [isEditMode, setIsEditMode] = useState(false);
@@ -38,6 +40,10 @@ export default function QuestionBank() {
     useEffect(() => {
         fetchQuestions();
     }, [activeTab]);
+
+    // Use escape key to close modals
+    useEscapeKey(() => setIsModalOpen(false), isModalOpen);
+    useEscapeKey(() => setIsGenerateModalOpen(false), isGenerateModalOpen);
 
     useEffect(() => {
         const fetchCoursesList = async () => {
@@ -103,6 +109,7 @@ export default function QuestionBank() {
         });
         setIsEditMode(false);
         setIsModalOpen(true);
+        setModalError('');
         setIsSolutionDropdownOpen(false);
         setShowFilterMenu(false);
     };
@@ -120,6 +127,7 @@ export default function QuestionBank() {
         });
         setIsEditMode(true);
         setIsModalOpen(true);
+        setModalError('');
         setIsSolutionDropdownOpen(false);
         setShowFilterMenu(false);
     };
@@ -163,12 +171,49 @@ export default function QuestionBank() {
     };
 
     const handleSaveEdit = async () => {
+        // 1. Validasi Field Wajib
+        setModalError('');
+        
+        if (!editForm.question.trim()) {
+            setModalError('Teks pertanyaan tidak boleh kosong.');
+            return;
+        }
+
+        if (editForm.type !== 'short_answer') {
+            if (!editForm.option || editForm.option.length === 0) {
+                setModalError('Pilihan jawaban (options) tidak boleh kosong.');
+                return;
+            }
+            // Pastikan tidak ada option yang teksnya kosong
+            const hasEmptyOption = editForm.option.some(opt => {
+                const text = typeof opt === 'object' ? opt.text : opt;
+                return !text || !text.trim();
+            });
+            if (hasEmptyOption) {
+                setModalError('Semua pilihan jawaban harus memiliki teks.');
+                return;
+            }
+        }
+
+        if (!editForm.correctAns || !editForm.correctAns.trim()) {
+            setModalError('Jawaban benar (correct answer) harus ditentukan.');
+            return;
+        }
+
         try {
             await api.patch(`/admin/qbank/${selectedQuestion.id}/`, editForm);
+            
+            // 2. Tutup modal dan bersihkan state setelah sukses
+            setIsModalOpen(false);
             setIsEditMode(false);
-            fetchQuestions(); // Refresh list after edit
+            setSelectedQuestion(null);
+            setModalError('');
+            
+            fetchQuestions(); // Refresh data di tabel
         } catch (error) {
             console.error('Error updating question:', error);
+            const serverMsg = error.response?.data?.error || 'Gagal menyimpan perubahan. Silakan coba lagi.';
+            setModalError(serverMsg);
         }
     };
 
@@ -398,6 +443,14 @@ export default function QuestionBank() {
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-5xl max-h-[92vh] overflow-y-auto relative animate-in zoom-in-95 duration-200 scrollbar-hide">
                         <div className="p-10 font-['Outfit']">
+                            {/* Error Message */}
+                            {modalError && (
+                                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                                    <XCircle className="w-5 h-5 flex-shrink-0" />
+                                    <span>{modalError}</span>
+                                </div>
+                            )}
+
                             {/* Badges Header */}
                             <div className="flex items-center gap-3 mb-8">
                                 <span className="px-5 py-2 text-[12px] font-bold text-gray-600 bg-white border border-gray-200 rounded-xl shadow-sm capitalize">

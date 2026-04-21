@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate, Routes, Route } from 'react-router-dom'
-import { ClipboardList, LogOut, Bell, User, BookOpen, Search, Settings as SettingsIcon, LayoutDashboard } from 'lucide-react'
+import { ClipboardList, LogOut, Bell, User, BookOpen, Search, LayoutDashboard, Menu, X as CloseIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import QuestionBank from '../pages/QuestionBank'
 import AdminMaterials from '../pages/AdminMaterials'
@@ -12,7 +12,9 @@ export default function AdminLayout() {
     const navigate = useNavigate();
     const { logout, user } = useAuth();
     const [showUserDropdown, setShowUserDropdown] = useState(false);
+    const [showMobileMenu, setShowMobileMenu] = useState(false);
     const dropdownRef = useRef(null);
+    const mobileMenuRef = useRef(null);
 
     const allNavItems = [
         { id: 'admin-dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
@@ -33,6 +35,9 @@ export default function AdminLayout() {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
                 setShowUserDropdown(false);
             }
+            if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+                setShowMobileMenu(false);
+            }
         }
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -47,9 +52,17 @@ export default function AdminLayout() {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Header - Matching DashboardLayout in App.jsx */}
             <header className="bg-white border-b border-gray-100 sticky top-0 z-[100] h-20 shadow-sm">
-                <div className="w-full h-full px-8 flex items-center justify-start">
+                <div className="w-full h-full px-4 sm:px-8 flex items-center justify-between lg:justify-start">
+                    {/* Hamburger Menu (Mobile Only) */}
+                    <button 
+                        onClick={() => setShowMobileMenu(!showMobileMenu)}
+                        className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-all mr-2"
+                    >
+                        {showMobileMenu ? <CloseIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                    </button>
+
                     {/* Left: Logo and Nav Items */}
-                    <div className="flex items-center gap-20 h-full">
+                    <div className="flex items-center gap-10 xl:gap-20 h-full">
                         {/* Logo */}
                         <Link to="/admin/qbank" className="flex items-center gap-3 h-full shrink-0 group transition-transform active:scale-95">
                             <div className="w-11 h-11 bg-white p-1.5 rounded-xl shadow-sm border border-gray-100 group-hover:shadow-md transition-all">
@@ -157,10 +170,64 @@ export default function AdminLayout() {
                         </div>
                     </div>
                 </div>
+
+                {/* Mobile Navigation Drawer */}
+                {showMobileMenu && (
+                    <div className="lg:hidden fixed inset-0 z-[150]">
+                        {/* Backdrop */}
+                        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setShowMobileMenu(false)} />
+                        
+                        {/* Drawer */}
+                        <div 
+                            ref={mobileMenuRef}
+                            className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl flex flex-col p-6 animate-in slide-in-from-left duration-300"
+                        >
+                            <div className="flex items-center gap-3 mb-10">
+                                <img src="/images/logo-logict.png" alt="Logo" className="w-8 h-8" />
+                                <div className="flex flex-col">
+                                    <span className="text-xl font-bold text-gray-900 font-['Outfit'] leading-none">LogiCT</span>
+                                    <span className="text-[10px] font-bold tracking-widest uppercase text-blue-500 mt-0.5">Admin Portal</span>
+                                </div>
+                            </div>
+
+                            <nav className="flex flex-col gap-2">
+                                {navItems.map((item) => {
+                                    const Icon = item.icon;
+                                    const isActive = location.pathname.startsWith(item.path);
+                                    
+                                    return (
+                                        <Link
+                                            key={item.id}
+                                            to={item.path}
+                                            onClick={() => setShowMobileMenu(false)}
+                                            className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${
+                                                isActive ? 'bg-blue-50 text-blue-600 font-bold' : 'text-gray-600 font-medium hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <Icon className="w-5 h-5" />
+                                            <span>{item.label}</span>
+                                        </Link>
+                                    );
+                                })}
+                            </nav>
+
+                            <div className="mt-auto pt-6 border-t border-gray-100">
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest px-5 mb-2">Account</p>
+                                <button 
+                                    onClick={handleLogout}
+                                    className="w-full flex items-center gap-4 px-5 py-4 text-red-600 font-bold rounded-2xl hover:bg-red-50 transition-all font-['Outfit']"
+                                >
+                                    <LogOut className="w-5 h-5" />
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 w-full px-24 pt-8">
+            <main className="flex-1 w-full px-6 md:px-12 lg:px-24 pt-8">
                 <Routes>
                     <Route index element={<AdminDashboard />} />
                     <Route path="/dashboard" element={<AdminDashboard />} />

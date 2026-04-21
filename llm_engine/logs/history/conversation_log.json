@@ -1,0 +1,10 @@
+[
+    {
+        "timestamp": "2026-04-08T13:18:04.984681",
+        "session_id": "user-15",
+        "cognitive": "3TGI",
+        "user_message": "coba jelaskan apa itu algoritma dalam ct",
+        "reply": "Algoritma merupakan sekumpulan langkah-langkah atau prosedur sistematis yang dirancang untuk menyelesaikan suatu masalah atau mencapai tujuan tertentu. Dalam konteks computer science (CT), algoritma bisa disamakan dengan resep masakan yang memberikan instruksi jelas tentang cara memasak suatu hidangan. Misalnya, jika kita ingin membangun sistem pemesanan makanan online, kita membutuhkan algoritma untuk mengelola input pemesanan, menghitung total biaya, dan mengatur pengiriman.\n\nPada dasarnya, algoritma memiliki beberapa fitur penting, seperti jelas dan terdefinisi, bersifat finit atau memiliki batasan langkah, serta efisien. Contoh yang relevan di Indonesia adalah algoritma untuk pengenalan wajah yang digunakan dalam sistem identifikasi di bandara. Algoritma ini menerima gambar wajah sebagai input, memprosesnya melalui serangkaian langkah, dan memberikan output berupa identifikasi apakah wajah tersebut terdaftar dalam database atau tidak.\n\nSelain itu, algoritma juga dapat dikategorikan berdasarkan jenis dan kompleksitasnya. Misalnya, dalam pemrograman, kita sering mendengar istilah sorting algorithms seperti Quick Sort atau Merge Sort. Di Indonesia, kita bisa mengimajinasikan algoritma-algoritma ini digunakan untuk menyortir data penjualan produk di e-commerce agar lebih mudah dianalisis dan ditampilkan kepada pengguna. Dengan pemahaman ini, mahasiswa dapat melihat algoritma sebagai fondasi penting dalam pengembangan sistem komputer yang efisien dan efektif.",
+        "followup_question": "Sebuah sistem pemesanan makanan online membutuhkan algoritma untuk memproses input pemesanan yang mencakup nama makanan, jumlah, dan alamat pengiriman. Jika pengguna memasukkan data pemesanan sebagai berikut: nama makanan \"Nasi Goreng\", jumlah 2, dan alamat \"Jl. Merdeka No. 10\", langkah pertama apa yang harus dilakukan oleh algoritma dalam memproses pemesanan tersebut?"
+    }
+]

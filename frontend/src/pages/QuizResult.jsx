@@ -510,7 +510,7 @@ export default function QuizResult() {
                     onMouseEnter={e => e.currentTarget.style.background = '#0f172a'}
                     onMouseLeave={e => e.currentTarget.style.background = '#1e293b'}
                 >
-                    Kembali ke Material
+                    Back to Material Page
                 </button>
             </div>
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import useEscapeKey from '../hooks/useEscapeKey';
 
 // Archetype styles mirroring Dashboard.jsx exactly
 const ARCHETYPE_STYLES = {
@@ -17,6 +18,9 @@ const DEFAULT_STYLE = ARCHETYPE_STYLES.PAR;
 
 export default function ProfilingResultModal({ isOpen, onClose, data, onSeeDetails }) {
     const navigate = useNavigate();
+
+    // Use escape key to close
+    useEscapeKey(onClose, isOpen);
 
     if (!isOpen) return null;
 
@@ -133,7 +137,7 @@ export default function ProfilingResultModal({ isOpen, onClose, data, onSeeDetai
                         className="w-full max-w-xs py-3.5 rounded-full font-black text-white text-[15px] shadow-lg hover:scale-105 active:scale-95 transition-all"
                         style={{ background: `linear-gradient(to right, ${style.btnFrom}, ${style.btnTo})` }}
                     >
-                        Back to Main Page
+                        More Details
                     </button>
                 </div>
             </div>

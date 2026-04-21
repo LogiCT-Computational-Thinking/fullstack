@@ -16,6 +16,7 @@ import {
     XCircle,
     AlertTriangle
 } from 'lucide-react';
+import useEscapeKey from '../hooks/useEscapeKey';
 import api from '../services/api';
 
 const AdminUserManagement = () => {
@@ -98,6 +99,10 @@ const AdminUserManagement = () => {
         fetchUsers();
         fetchClasses();
     }, [activeTab, searchQuery, currentPage]);
+
+    // Use escape key to close modals
+    useEscapeKey(() => setIsModalOpen(false), isModalOpen);
+    useEscapeKey(() => setStatusModal(prev => ({ ...prev, show: false })), statusModal.show);
 
     const showStatus = (type, title, message, onConfirm = null, confirmText = '') => {
         setStatusModal({

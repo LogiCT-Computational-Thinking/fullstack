@@ -84,6 +84,21 @@ export default function Quiz() {
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   const [timesPerQuestion, setTimesPerQuestion] = useState({});
 
+  // ── Warn before tab close / refresh ─────────────────────────────────────────
+  useEffect(() => {
+    if (loading || isSubmitted) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      // Modern browsers require returnValue to be set
+      e.returnValue = 'Kuis masih berlangsung. Yakin ingin meninggalkan halaman ini?';
+      return e.returnValue;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [loading, isSubmitted]);
+
   useEffect(() => {
     // Reset question start time on index change
     setQuestionStartTime(Date.now());

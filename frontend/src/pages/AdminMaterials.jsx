@@ -6,6 +6,7 @@ import {
     AlertTriangle, Clock
 } from 'lucide-react';
 import api from '../services/api';
+import useEscapeKey from '../hooks/useEscapeKey';
 
 // ─────────────────────────────────────────────────────────────
 // Reusable Result / Confirmation Modal
@@ -29,6 +30,8 @@ function FeedbackModal({ type, title, subtitle, primaryLabel, secondaryLabel, on
             </div>
         ),
     };
+
+    useEscapeKey(onClose || onSecondary);
 
     return (
         <div className="fixed inset-0 z-[700] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
@@ -101,6 +104,11 @@ export default function AdminMaterials() {
     const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
     useEffect(() => { fetchCourses(); }, []);
+
+    // Use escape key to close modals
+    useEscapeKey(closeFeedback, feedback !== null);
+    useEscapeKey(closeEdit, editStep !== null);
+    useEscapeKey(() => setShowAddCourse(false), showAddCourse);
 
     const fetchCourses = async () => {
         setIsLoading(true);
@@ -875,6 +883,8 @@ function AddCourseModal({ onClose, onSaved }) {
     const [form, setForm] = useState({ title: '', description: '', week: 1 });
     const [saving, setSaving] = useState(false);
     const [err, setErr] = useState('');
+
+    useEscapeKey(onClose);
 
     const save = async () => {
         if (!form.title.trim()) return setErr('Judul course harus diisi.');

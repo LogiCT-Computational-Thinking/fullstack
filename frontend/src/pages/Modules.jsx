@@ -7,6 +7,7 @@ import {
     Send, Bot, User, Sparkles, Lightbulb, RotateCcw, ArrowLeft, CheckCircle2
 } from 'lucide-react';
 import api from '../services/api';
+import useEscapeKey from '../hooks/useEscapeKey';
 
 // ─── Theme Config (sangat light, sesuai desain) ──────────────────────────────
 
@@ -348,6 +349,8 @@ function AsahOtakModal({ course, onClose }) {
 
     const now = () => new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 
+    useEscapeKey(onClose);
+
     // Pesan pembuka otomatis
     useEffect(() => {
         const welcome = {
@@ -532,6 +535,8 @@ function CourseModal({ course, onClose }) {
     if (!course) return null;
     const navigate = useNavigate();
     const [showAsahOtak, setShowAsahOtak] = useState(false);
+
+    useEscapeKey(onClose);
 
     const handleOpenMaterial = (material) => {
         const url = material.file_url
@@ -847,12 +852,8 @@ export default function Modules() {
         );
     }
 
-    // Sort by Status Group (Active -> Locked -> Finished) and then Pin priority
-    const statusWeight = { 'active': 0, 'locked': 1, 'finished': 2 };
+    // Sort by Pin priority only — status does NOT affect position (finished stays in place)
     displayed = [...displayed].sort((a, b) => {
-        if (a.status !== b.status) {
-            return statusWeight[a.status] - statusWeight[b.status];
-        }
         return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
     });
 

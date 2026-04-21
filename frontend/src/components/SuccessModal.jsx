@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import useEscapeKey from '../hooks/useEscapeKey';
 
 export default function SuccessModal({ show, onClose, title, message }) {
   useEffect(() => {
@@ -13,6 +14,9 @@ export default function SuccessModal({ show, onClose, title, message }) {
       document.body.style.overflow = 'unset';
     };
   }, [show]);
+
+  // Use escape key to close
+  useEscapeKey(onClose, show);
 
   if (!show) return null;
 
