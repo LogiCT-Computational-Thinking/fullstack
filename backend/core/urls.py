@@ -3,6 +3,7 @@ from . import views
 from . import views_chat
 from . import views_users
 from . import views_questions
+from . import views_dashboard
 
 app_name = 'core'
 
@@ -86,4 +87,7 @@ urlpatterns = [
     # AI Chat History (Exercise Sessions)
     path('exercise/sessions/', views_chat.session_list_create, name='session-list-create'),
     path('exercise/sessions/<int:pk>/', views_chat.session_detail, name='session-detail'),
+
+    # Student Dashboard Stats
+    path('student/dashboard/stats/', views_dashboard.student_dashboard_stats, name='student-dashboard-stats'),
 ]

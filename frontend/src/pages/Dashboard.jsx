@@ -5,6 +5,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip
 } from "recharts";
 import { Clock, Target, BarChart2, BookOpen, ChevronRight, Send, Brain, X } from 'lucide-react';
+import api from '../services/api';
 // Re-bundled to resolve import analysis error
 
 import { useAuth } from '../context/AuthContext';
@@ -32,6 +33,8 @@ export default function Dashboard() {
   const { user, loading } = useAuth();
   const [isMessageVisible, setIsMessageVisible] = useState(false);
   const [hoveredTrait, setHoveredTrait] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Auto-show bubble effect on first visit
   useEffect(() => {
@@ -43,6 +46,21 @@ export default function Dashboard() {
       const initialTimer = setTimeout(() => setIsMessageVisible(true), 1500);
       return () => clearTimeout(initialTimer);
     }
+  }, []);
+
+  // Fetch Dashboard Stats
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('/student/dashboard/stats/');
+        setStats(res.data);
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats:", err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   if (loading) {
@@ -79,10 +97,10 @@ export default function Dashboard() {
 
   // CT Framework Statistics (Radar - 4 Points ordered for vertical label optimization)
   const frameworkData = [
-    { subject: 'Pattern Recognition', A: user?.ct_pattern || 65 },
-    { subject: 'Algorithm', A: user?.ct_algorithm || 90 },
-    { subject: 'Decomposition', A: user?.ct_decomposition || 70 },
-    { subject: 'Abstraction', A: user?.ct_abstraction || 85 },
+    { subject: 'Pattern Recognition', A: stats?.ct_distribution?.pattern || user?.ct_pattern || 0 },
+    { subject: 'Algorithm', A: stats?.ct_distribution?.algorithm || user?.ct_algorithm || 0 },
+    { subject: 'Decomposition', A: stats?.ct_distribution?.decomposition || user?.ct_decomposition || 0 },
+    { subject: 'Abstraction', A: stats?.ct_distribution?.abstraction || user?.ct_abstraction || 0 },
   ];
 
   // Weekly CT Score (Line Chart)
@@ -151,10 +169,10 @@ export default function Dashboard() {
             {/* STATS WITH WATERMARKS */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 shrink-0">
               {[
-                { label: 'Study Duration', value: '5h 30m', icon: studyIcon, rotate: 'rotate(-9deg)', color: 'text-gray-700', bottom: '-bottom-8', size: 'w-24' },
-                { label: 'Attempt', value: '120', icon: attemptIcon, rotate: 'rotate(-10deg)', color: 'text-gray-700', bottom: '-bottom-8', size: 'w-24' },
-                { label: 'Accuracy Rate', value: '82%', icon: accuracyIcon, rotate: 'rotate(19.7deg)', color: 'text-gray-700', bottom: '-bottom-5', size: 'w-26' },
-                { label: 'Topics Completed', value: '3', icon: topicsIcon, rotate: 'rotate(-10deg)', color: 'text-gray-700', bottom: '-bottom-5', size: 'w-24' },
+                { label: 'Study Duration', value: stats?.quick_stats?.study_duration || '0m', icon: studyIcon, rotate: 'rotate(-9deg)', color: 'text-gray-700', bottom: '-bottom-8', size: 'w-24' },
+                { label: 'Attempt', value: stats?.quick_stats?.attempt || '0', icon: attemptIcon, rotate: 'rotate(-10deg)', color: 'text-gray-700', bottom: '-bottom-8', size: 'w-24' },
+                { label: 'Accuracy Rate', value: `${stats?.quick_stats?.accuracy || 0}%`, icon: accuracyIcon, rotate: 'rotate(19.7deg)', color: 'text-gray-700', bottom: '-bottom-5', size: 'w-26' },
+                { label: 'Topics Completed', value: stats?.quick_stats?.topics_completed || '0', icon: topicsIcon, rotate: 'rotate(-10deg)', color: 'text-gray-700', bottom: '-bottom-5', size: 'w-24' },
               ].map((stat, i) => (
                 <div key={i} className="bg-white p-4 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden h-28 flex flex-col justify-between group">
                   <span className="text-[10px] font-bold text-gray-400 z-10">{stat.label}</span>
@@ -371,9 +389,9 @@ export default function Dashboard() {
               {/* Stats Column (Vertical List) */}
               <div className="flex-1 flex flex-col justify-around h-full py-4">
                 {[
-                  { label: 'Overall CT Score', value: '78', color: 'border-orange-500 text-orange-600' },
-                  { label: 'Accuracy Rate', value: '82%', color: 'border-red-500 text-red-600' },
-                  { label: 'Mastery Streak', value: '14', color: 'border-pink-500 text-pink-600' },
+                  { label: 'Overall CT Score', value: stats?.overall_score || '0', color: 'border-orange-500 text-orange-600' },
+                  { label: 'Accuracy Rate', value: `${stats?.quick_stats?.accuracy || 0}%`, color: 'border-red-500 text-red-600' },
+                  { label: 'Mastery Streak', value: stats?.mastery_streak || '0', color: 'border-pink-500 text-pink-600' },
                 ].map((bubble, i) => (
                   <div key={i} className="flex items-center gap-4 group">
                     <div className={`w-14 h-14 rounded-full border-4 bg-white flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 flex-shrink-0 ${bubble.color}`}>
