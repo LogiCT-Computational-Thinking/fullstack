@@ -383,7 +383,7 @@ export default function ProfilingResult({ data }) {
 
                                         {/* Glowing Doughnut Thumb */}
                                         <div
-                                            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 z-50 transition-all duration-1000 flex items-center justify-center pointer-events-none"
+                                            className="absolute top-1/2 -translate-y-1/2 w-6 h-6 z-30 transition-all duration-1000 flex items-center justify-center pointer-events-none"
                                             style={{
                                                 left: trait.value >= 50
                                                     ? `calc(${trait.value}% - 20px)`

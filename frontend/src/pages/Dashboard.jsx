@@ -285,7 +285,7 @@ export default function Dashboard() {
                       {trait.shortLeft}
                     </span>
 
-                    <div className="flex-1 relative h-4 bg-gray-50 border border-gray-200 rounded-full flex items-center shadow-inner overflow-visible px-2">
+                    <div className="flex-1 relative h-6 bg-gray-50 border border-gray-200 rounded-full flex items-center shadow-inner overflow-visible px-2">
 
                       {/* Floating Tooltip (On Hover) */}
                       {hoveredTrait === i && (
@@ -333,15 +333,16 @@ export default function Dashboard() {
 
                       {/* Glowing Doughnut Thumb at Value (Switch Style) */}
                       <div
-                        className="absolute top-1/2 -translate-y-1/2 w-5 h-5 z-50 transition-all duration-1000 flex items-center justify-center pointer-events-none"
+                        className="absolute top-1/2 -translate-y-1/2 w-6 h-6 z-30 transition-all duration-1000 flex items-center justify-center pointer-events-none"
                         style={{
-                          left: `${trait.value}%`,
-                          transform: `translateY(-50%) translateX(-${trait.value}%)`
+                          left: trait.value >= 50 
+                            ? `calc(${trait.value}% - 20px)` 
+                            : `calc(${trait.value}% - 2px)`
                         }}
                       >
                         <div
-                          className="w-3.5 h-3.5 rounded-full bg-transparent border-[3px] border-white shadow-xl flex-shrink-0"
-                          style={{ boxShadow: `0 0 12px ${trait.dark}, inset 0 0 4px ${trait.dark}` }}
+                          className="w-5 h-5 rounded-full bg-transparent border-[3.5px] border-white shadow-xl flex-shrink-0"
+                          style={{ boxShadow: `0 0 14px ${trait.dark}, inset 0 0 5px ${trait.dark}` }}
                         ></div>
                       </div>
 

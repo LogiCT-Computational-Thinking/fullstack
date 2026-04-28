@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useSound } from '../hooks/useSound';
 import { useAuth } from '../context/AuthContext';
+import SuccessModal from '../components/SuccessModal';
 
 export default function ResetPassword() {
     const { uid, token } = useParams();
@@ -11,7 +12,7 @@ export default function ResetPassword() {
         confirm_password: ''
     });
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
+    const [showSuccess, setShowSuccess] = useState(false);
     const [error, setError] = useState('');
     const { playClick, playFocus, playSuccess, playError } = useSound();
     const { resetPassword } = useAuth();
@@ -35,7 +36,6 @@ export default function ResetPassword() {
 
         setLoading(true);
         setError('');
-        setMessage('');
 
         try {
             await resetPassword({
@@ -44,11 +44,8 @@ export default function ResetPassword() {
                 new_password: formData.new_password,
                 confirm_password: formData.confirm_password
             });
-            setMessage('Password has been reset successfully. Redirecting to login...');
             playSuccess();
-            setTimeout(() => {
-                navigate('/login');
-            }, 3000);
+            setShowSuccess(true);
         } catch (err) {
             setError(err.error || 'Failed to reset password. The link may be expired.');
             playError();
@@ -77,12 +74,7 @@ export default function ResetPassword() {
                         Set new password
                     </h1>
 
-                    {/* Status Messages */}
-                    {message && (
-                        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm">
-                            {message}
-                        </div>
-                    )}
+                    {/* Error Message */}
                     {error && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                             {error}
@@ -147,6 +139,16 @@ export default function ResetPassword() {
                     style={{ backgroundImage: 'url(/images/Burung_Thinking_1.png)' }}
                 />
             </aside>
+
+            {/* Success Modal */}
+            <SuccessModal
+                show={showSuccess}
+                onClose={() => navigate('/login')}
+                title="Password Successfully Updated"
+                message="Your password has been successfully updated. You can now log in using your new password."
+                buttonText="Back to login"
+                onButtonClick={() => navigate('/login')}
+            />
         </div>
     );
 }

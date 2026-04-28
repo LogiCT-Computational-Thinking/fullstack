@@ -89,15 +89,16 @@ function DashboardLayout() {
           {/* Left: Logo and Nav Items */}
           <div className="flex items-center gap-10 xl:gap-20 h-full">
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-3 h-full shrink-0 group transition-transform active:scale-95">
-              <div className="w-11 h-11 bg-white p-1.5 rounded-xl shadow-sm border border-gray-100 group-hover:shadow-md transition-all">
-                <img
-                  src="/images/logo-logict.png"
-                  alt="LogiCT"
-                  className="w-full h-full object-contain"
-                />
+            <Link to="/dashboard" className="flex items-center gap-2 h-10 shrink-0 group transition-transform active:scale-95">
+              <img
+                src="/images/logo-logict.png"
+                alt="LogiCT"
+                className="h-9 w-auto object-contain"
+              />
+              <div className="flex flex-col justify-center gap-0.5 mt-0.5">
+                <h1 className="text-[26px] font-black text-[#0F172A] font-['Outfit'] leading-none tracking-tight">LogiCT</h1>
+                <p className="text-[8.5px] font-black text-[#64748B] tracking-[0.14em] uppercase leading-none">Your AI Study Buddy</p>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 font-['Outfit']">LogiCT</h1>
             </Link>
 
             {/* Navigation Links */}
@@ -223,9 +224,12 @@ function DashboardLayout() {
               ref={mobileMenuRef}
               className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-2xl flex flex-col p-6 animate-in slide-in-from-left duration-300"
             >
-              <div className="flex items-center gap-3 mb-10">
-                <img src="/images/logo-logict.png" alt="Logo" className="w-8 h-8" />
-                <span className="text-xl font-bold text-gray-900 font-['Outfit']">LogiCT</span>
+              <div className="flex items-center gap-1.5 h-10 mb-10">
+                <img src="/images/logo-logict.png" alt="Logo" className="h-8 w-auto object-contain" />
+                <div className="flex flex-col justify-center gap-0.5 mt-0.5">
+                  <span className="text-[24px] font-black text-[#0F172A] font-['Outfit'] leading-none tracking-tight">LogiCT</span>
+                  <p className="text-[8px] font-black text-[#64748B] tracking-[0.14em] uppercase leading-none">Your AI Study Buddy</p>
+                </div>
               </div>
 
               <nav className="flex flex-col gap-2">

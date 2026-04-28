@@ -532,8 +532,8 @@ def forgot_password_view(request):
         
     except User.DoesNotExist:
         return Response({
-            'message': 'If your email is registered, you will receive an OTP shortly'
-        }, status=status.HTTP_200_OK)
+            'error': 'This email address is not registered in our system.'
+        }, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({
             'error': 'Failed to send OTP',
@@ -599,6 +599,10 @@ def reset_password_otp_view(request):
         if timezone.now() > user.otp_created_at + timedelta(minutes=10):
             return Response({'error': 'OTP has expired'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Check if new password is same as old password
+        if check_password(new_password, user.password):
+            return Response({'error': 'Password baru tidak boleh sama dengan password lama.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Update password
         user.password = make_password(new_password)
         user.otp = None  # Clear OTP after use
@@ -638,6 +642,10 @@ def reset_password_view(request):
                 'error': 'Invalid or expired token'
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        # Check if new password is same as old password
+        if check_password(new_password, user.password):
+            return Response({'error': 'Password baru tidak boleh sama dengan password lama.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Set new password
         user.password = make_password(new_password)
         user.save()

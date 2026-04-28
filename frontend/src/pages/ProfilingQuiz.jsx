@@ -954,7 +954,7 @@ function StepCard({ title, children, onNext, onPrev, nextLabel = "NEXT", isNextD
     return (
         <div className="w-full max-w-3xl mx-auto px-4">
             <div className="bg-white rounded-t-[40px] p-8 sm:p-12 pb-14 shadow-sm min-h-[250px] flex flex-col justify-center">
-                <h2 className="text-xl sm:text-2xl font-semibold text-[#222] mb-6 leading-tight whitespace-pre-line">{title}</h2>
+                <h2 className="text-xl sm:text-2xl font-semibold text-[#222] mb-6 leading-tight whitespace-pre-line text-left text-justify w-full">{title}</h2>
                 {children}
             </div>
             <div

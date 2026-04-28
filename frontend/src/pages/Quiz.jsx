@@ -127,7 +127,7 @@ export default function Quiz() {
           }
         });
         setSelectedAnswers(initialAnswers);
-        
+
         // If already submitted, redirect to results immediately
         if (res.data.is_submitted) {
           navigate(`/dashboard/quiz/${courseId}/result`);
@@ -270,8 +270,8 @@ export default function Quiz() {
   };
 
   const isAnswered = (
-    currentAnswer !== undefined && 
-    currentAnswer !== null && 
+    currentAnswer !== undefined &&
+    currentAnswer !== null &&
     currentAnswer !== '' &&
     (!Array.isArray(currentAnswer) || currentAnswer.length > 0)
   );
@@ -331,7 +331,7 @@ export default function Quiz() {
                 />
               ))}
             </div>
-            
+
             {/* Timer Display */}
             {timeLeft !== null && (
               <div className="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-500 rounded-full border border-red-100 min-w-[80px] justify-center">
@@ -376,7 +376,7 @@ export default function Quiz() {
           </p>
 
           {/* Question text */}
-          <h2 className="text-center text-[22px] font-semibold text-gray-900 leading-relaxed mb-3 max-w-xl mx-auto">
+          <h2 className="text-left text-justify text-[22px] font-semibold text-gray-900 leading-relaxed mb-3 w-full">
             {currentQuestion.question}
           </h2>
 
@@ -436,7 +436,7 @@ function renderOptions(question, currentAnswer, onSelect) {
     return options.map((opt, i) => {
       const optText = typeof opt === 'object' ? opt.text : opt;
       const isSelected = currentAnswer === optText;
-      
+
       return (
         <button
           key={i}
@@ -457,8 +457,8 @@ function renderOptions(question, currentAnswer, onSelect) {
             gap: 12
           }}
         >
-          <span style={{ 
-            color: isSelected ? '#06b6d4' : '#94a3b8', 
+          <span style={{
+            color: isSelected ? '#06b6d4' : '#94a3b8',
             fontWeight: 800,
             fontSize: 13,
             minWidth: 20
@@ -467,9 +467,9 @@ function renderOptions(question, currentAnswer, onSelect) {
           </span>
           <span className="flex-1">{optText}</span>
           {typeof opt === 'object' && opt.image && (
-            <img 
-              src={opt.image} 
-              alt={`Option ${i}`} 
+            <img
+              src={opt.image}
+              alt={`Option ${i}`}
               className="w-12 h-12 rounded-lg object-cover ml-2"
               onError={(e) => { e.target.style.display = 'none'; }}
             />
@@ -485,7 +485,7 @@ function renderOptions(question, currentAnswer, onSelect) {
     return options.map((opt, i) => {
       const optText = typeof opt === 'object' ? opt.text : opt;
       const isSelected = answers.includes(optText);
-      
+
       return (
         <button
           key={i}
@@ -504,8 +504,8 @@ function renderOptions(question, currentAnswer, onSelect) {
           }}
         >
           <div className="flex items-center gap-12 flex-1">
-            <span style={{ 
-              color: isSelected ? '#06b6d4' : '#94a3b8', 
+            <span style={{
+              color: isSelected ? '#06b6d4' : '#94a3b8',
               fontWeight: 800,
               fontSize: 13,
               minWidth: 20
@@ -514,9 +514,9 @@ function renderOptions(question, currentAnswer, onSelect) {
             </span>
             <span>{optText}</span>
             {typeof opt === 'object' && opt.image && (
-              <img 
-                src={opt.image} 
-                alt={`Option ${i}`} 
+              <img
+                src={opt.image}
+                alt={`Option ${i}`}
                 className="w-12 h-12 rounded-lg object-cover ml-2"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
@@ -542,71 +542,71 @@ function renderOptions(question, currentAnswer, onSelect) {
     const isFalse = String(currentAnswer).toUpperCase() === 'FALSE';
     return (
       <div style={{ maxWidth: 480, margin: '8px auto 0', width: '100%' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
-        {/* TRUE button */}
-        <button
-          onClick={() => onSelect('TRUE')}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            padding: 0,
-            borderRadius: 18,
-            border: `2px solid ${isTrue ? '#86efac' : '#e2e8f0'}`,
-            background: isTrue ? '#f0fdf4' : '#ffffff',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            transition: 'all 0.15s',
-            boxShadow: isTrue ? '0 4px 12px rgba(34,197,94,0.15)' : 'none',
-          }}
-        >
-          <div style={{
-            width: '100%', padding: '28px 0',
-            background: '#dcfce7',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Check style={{ width: 44, height: 44, color: '#16a34a', strokeWidth: 2.5 }} />
-          </div>
-          <div style={{
-            padding: '14px 0',
-            fontSize: 15, fontWeight: 800, color: '#111827',
-            letterSpacing: 1.5, fontFamily: "'Outfit', sans-serif",
-          }}>
-            TRUE
-          </div>
-        </button>
+          {/* TRUE button */}
+          <button
+            onClick={() => onSelect('TRUE')}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              padding: 0,
+              borderRadius: 18,
+              border: `2px solid ${isTrue ? '#86efac' : '#e2e8f0'}`,
+              background: isTrue ? '#f0fdf4' : '#ffffff',
+              cursor: 'pointer',
+              overflow: 'hidden',
+              transition: 'all 0.15s',
+              boxShadow: isTrue ? '0 4px 12px rgba(34,197,94,0.15)' : 'none',
+            }}
+          >
+            <div style={{
+              width: '100%', padding: '28px 0',
+              background: '#dcfce7',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Check style={{ width: 44, height: 44, color: '#16a34a', strokeWidth: 2.5 }} />
+            </div>
+            <div style={{
+              padding: '14px 0',
+              fontSize: 15, fontWeight: 800, color: '#111827',
+              letterSpacing: 1.5, fontFamily: "'Outfit', sans-serif",
+            }}>
+              TRUE
+            </div>
+          </button>
 
-        {/* FALSE button */}
-        <button
-          onClick={() => onSelect('FALSE')}
-          style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            padding: 0,
-            borderRadius: 18,
-            border: `2px solid ${isFalse ? '#fca5a5' : '#fecaca'}`,
-            background: isFalse ? '#fee2e2' : '#fff5f5',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            transition: 'all 0.15s',
-            boxShadow: isFalse ? '0 4px 12px rgba(239,68,68,0.15)' : 'none',
-          }}
-        >
-          <div style={{
-            width: '100%', padding: '28px 0',
-            background: '#fee2e2',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <X style={{ width: 44, height: 44, color: '#dc2626', strokeWidth: 2.5 }} />
-          </div>
-          <div style={{
-            padding: '14px 0',
-            fontSize: 15, fontWeight: 800, color: '#111827',
-            letterSpacing: 1.5, fontFamily: "'Outfit', sans-serif",
-          }}>
-            FALSE
-          </div>
-        </button>
+          {/* FALSE button */}
+          <button
+            onClick={() => onSelect('FALSE')}
+            style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              padding: 0,
+              borderRadius: 18,
+              border: `2px solid ${isFalse ? '#fca5a5' : '#fecaca'}`,
+              background: isFalse ? '#fee2e2' : '#fff5f5',
+              cursor: 'pointer',
+              overflow: 'hidden',
+              transition: 'all 0.15s',
+              boxShadow: isFalse ? '0 4px 12px rgba(239,68,68,0.15)' : 'none',
+            }}
+          >
+            <div style={{
+              width: '100%', padding: '28px 0',
+              background: '#fee2e2',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <X style={{ width: 44, height: 44, color: '#dc2626', strokeWidth: 2.5 }} />
+            </div>
+            <div style={{
+              padding: '14px 0',
+              fontSize: 15, fontWeight: 800, color: '#111827',
+              letterSpacing: 1.5, fontFamily: "'Outfit', sans-serif",
+            }}>
+              FALSE
+            </div>
+          </button>
 
-      </div>
+        </div>
       </div>
     );
   }

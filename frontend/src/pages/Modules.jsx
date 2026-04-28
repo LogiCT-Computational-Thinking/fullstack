@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     Search, ChevronDown, ChevronUp, Calendar, CheckSquare, LayoutGrid,
     List, Clock, Layers, MoreHorizontal, Lock, Play, Pin,
-    X, Brain, ChevronRight, FileText, Loader2, Download,
+    X, Brain, ChevronRight, ChevronLeft, FileText, Loader2, Download,
     Send, Bot, User, Sparkles, Lightbulb, RotateCcw, ArrowLeft, CheckCircle2
 } from 'lucide-react';
 import api from '../services/api';
@@ -24,7 +24,7 @@ const CARD_THEMES = [
 
 const TABS = [
     { id: 'all', label: 'All', countKey: 'all' },
-    { id: 'active', label: 'Active Materials', countKey: 'active' },
+    { id: 'active', label: 'On Progress', countKey: 'active' },
     { id: 'finished', label: 'Finished', countKey: 'finished' },
 ];
 
@@ -786,6 +786,11 @@ export default function Modules() {
         finished: false
     });
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [showItemsPerPageDropdown, setShowItemsPerPageDropdown] = useState(false);
+
     const toggleSection = (key) => {
         setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
     };
@@ -856,6 +861,17 @@ export default function Modules() {
     displayed = [...displayed].sort((a, b) => {
         return (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
     });
+
+    // Pagination Logic
+    const totalItems = displayed.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedItems = displayed.slice(startIndex, startIndex + itemsPerPage);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchQuery, filterWeek, itemsPerPage]);
 
     // Unique weeks for dropdown
     const availableWeeks = [...new Set(courses.map(c => c.week))].sort((a, b) => a - b);
@@ -965,18 +981,18 @@ export default function Modules() {
             ) : viewMode === 'list' ? (
                 <div className="flex flex-col gap-8 w-full">
                     {/* Section: Continue Learning */}
-                    {courses.filter(c => c.status === 'active').length > 0 && (
+                    {paginatedItems.filter(c => c.status === 'active').length > 0 && (
                         <div className="flex flex-col gap-4">
                             <div 
                                 className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 cursor-pointer group"
                                 onClick={() => toggleSection('active')}
                             >
-                                <h2 className="text-lg font-bold text-gray-800 transition-colors group-hover:text-blue-600">Continue Learning</h2>
+                                <h2 className="text-lg font-bold text-gray-800 transition-colors group-hover:text-blue-600">On Progress</h2>
                                 <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${collapsed.active ? '-rotate-90' : ''}`} />
                             </div>
                             {!collapsed.active && (
                                 <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    {courses
+                                    {paginatedItems
                                         .filter(c => c.status === 'active')
                                         .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
                                         .map((course, i) => (
@@ -988,7 +1004,7 @@ export default function Modules() {
                     )}
 
                     {/* Section: Locked Materials */}
-                    {courses.filter(c => c.status === 'locked').length > 0 && (
+                    {paginatedItems.filter(c => c.status === 'locked').length > 0 && (
                         <div className="flex flex-col gap-4">
                             <div 
                                 className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 cursor-pointer group"
@@ -999,7 +1015,7 @@ export default function Modules() {
                             </div>
                             {!collapsed.locked && (
                                 <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    {courses
+                                    {paginatedItems
                                         .filter(c => c.status === 'locked')
                                         .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
                                         .map((course, i) => (
@@ -1011,7 +1027,7 @@ export default function Modules() {
                     )}
 
                     {/* Section: Completed Materials */}
-                    {courses.filter(c => c.status === 'finished').length > 0 && (
+                    {paginatedItems.filter(c => c.status === 'finished').length > 0 && (
                         <div className="flex flex-col gap-4">
                             <div 
                                 className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2 cursor-pointer group"
@@ -1022,7 +1038,7 @@ export default function Modules() {
                             </div>
                             {!collapsed.finished && (
                                 <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                    {courses
+                                    {paginatedItems
                                         .filter(c => c.status === 'finished')
                                         .sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0))
                                         .map((course, i) => (
@@ -1035,7 +1051,7 @@ export default function Modules() {
                 </div>
             ) : (
                 <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full">
-                    {displayed.map(course => {
+                    {paginatedItems.map(course => {
                         const isUnlocked = course.status !== 'locked';
                         const tIdx = isUnlocked ? activeCardIdx++ : 0;
                         if (isUnlocked) {
@@ -1047,6 +1063,86 @@ export default function Modules() {
                             <LockedCard key={course.id} course={course} onClick={() => setSelectedCourse(course)} />
                         );
                     })}
+                </div>
+            )}
+
+            {/* ── Pagination Controls ── */}
+            {totalPages > 1 && (
+                <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-gray-100 pt-8">
+                    {/* Info (Left) */}
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider order-1">
+                        Page {currentPage} of {totalPages}
+                    </div>
+
+                    {/* Page Navigation (Center) */}
+                    <div className="flex items-center gap-2 order-2">
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            className={`p-2 rounded-xl border transition-all ${currentPage === 1 ? 'border-gray-50 text-gray-200 cursor-not-allowed' : 'border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-90'}`}
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: totalPages }).map((_, i) => {
+                                const page = i + 1;
+                                const isCurrent = currentPage === page;
+                                return (
+                                    <button
+                                        key={page}
+                                        onClick={() => setCurrentPage(page)}
+                                        className={`w-10 h-10 rounded-xl text-sm font-black transition-all
+                                            ${isCurrent 
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 scale-110' 
+                                                : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'}`}
+                                    >
+                                        {page}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            className={`p-2 rounded-xl border transition-all ${currentPage === totalPages ? 'border-gray-50 text-gray-200 cursor-not-allowed' : 'border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-90'}`}
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    {/* Items Per Page Selector (Right) */}
+                    <div className="flex items-center gap-3 order-3">
+                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Show</span>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowItemsPerPageDropdown(!showItemsPerPageDropdown)}
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-50 border border-gray-100 rounded-full text-xs font-black text-gray-600 hover:bg-gray-100 transition-all active:scale-95"
+                            >
+                                <span>{itemsPerPage}</span>
+                                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showItemsPerPageDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {showItemsPerPageDropdown && (
+                                <div className="absolute bottom-12 right-0 w-32 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                    {[5, 10, 15].map(val => (
+                                        <button
+                                            key={val}
+                                            onClick={() => {
+                                                setItemsPerPage(val);
+                                                setShowItemsPerPageDropdown(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-2 text-xs font-bold transition-colors hover:bg-gray-50 
+                                                ${itemsPerPage === val ? 'text-blue-600 bg-blue-50/30' : 'text-gray-500'}`}
+                                        >
+                                            {val}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
 

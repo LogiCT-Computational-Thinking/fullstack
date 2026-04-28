@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSound } from '../hooks/useSound';
 import { useAuth } from '../context/AuthContext';
+import SuccessModal from '../components/SuccessModal';
 
 export default function ForgotPassword() {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function ForgotPassword() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [showSuccess, setShowSuccess] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const { playClick, playFocus, playSuccess, playError } = useSound();
@@ -74,11 +76,13 @@ export default function ForgotPassword() {
 
         try {
             const response = await forgotPassword(email);
-            setMessage(response.message || 'OTP telah dikirim ke email Anda.');
+            setError('');
+            setMessage(response.message || 'OTP has been sent to your email.');
             playSuccess();
             setStep(2);
         } catch (err) {
-            setError(err.detail || err.error || 'Gagal mengirim OTP. Silakan coba lagi.');
+            setMessage('');
+            setError(err.detail || err.error || 'Failed to send OTP. Please try again.');
             playError();
         } finally {
             setLoading(false);
@@ -90,14 +94,17 @@ export default function ForgotPassword() {
         playClick();
         setLoading(true);
         setError('');
+        setMessage('');
 
         try {
             await verifyOTP(email, otp);
             playSuccess();
             setStep(3);
-            setMessage('OTP berhasil diverifikasi. Silakan masukkan password baru.');
+            setError('');
+            setMessage('OTP verified successfully. Please enter your new password.');
         } catch (err) {
-            setError(err.detail || err.error || 'OTP tidak valid atau kedaluwarsa.');
+            setMessage('');
+            setError(err.detail || err.error || 'Invalid or expired OTP.');
             playError();
         } finally {
             setLoading(false);
@@ -109,13 +116,15 @@ export default function ForgotPassword() {
         playClick();
 
         if (formData.new_password !== formData.confirm_password) {
-            setError('Konfirmasi password tidak cocok.');
+            setMessage('');
+            setError('Passwords do not match.');
             playError();
             return;
         }
 
         setLoading(true);
         setError('');
+        setMessage('');
 
         try {
             await resetPasswordOTP({
@@ -124,13 +133,11 @@ export default function ForgotPassword() {
                 new_password: formData.new_password,
                 confirm_password: formData.confirm_password
             });
-            setMessage('Password berhasil diperbarui! Mengalihkan ke halaman login...');
             playSuccess();
-            setTimeout(() => {
-                navigate('/login');
-            }, 3000);
+            setShowSuccess(true);
         } catch (err) {
-            setError(err.detail || err.error || 'Gagal mereset password.');
+            setMessage('');
+            setError(err.detail || err.error || 'Failed to reset password.');
             playError();
         } finally {
             setLoading(false);
@@ -161,14 +168,14 @@ export default function ForgotPassword() {
 
                     {/* Step Title */}
                     <h1 className="text-2xl sm:text-[32px] font-extrabold leading-tight mb-2 text-slate-900">
-                        {step === 1 && "Lupa Kata Sandi?"}
-                        {step === 2 && "Verifikasi OTP"}
-                        {step === 3 && "Atur Password Baru"}
+                        {step === 1 && "Forgot Password?"}
+                        {step === 2 && "Verify OTP"}
+                        {step === 3 && "Reset Password"}
                     </h1>
                     <p className="text-slate-500 mb-8 text-sm">
-                        {step === 1 && "Masukkan email Anda untuk menerima kode OTP."}
-                        {step === 2 && `Masukkan 6 digit kode yang dikirim ke ${email}.`}
-                        {step === 3 && "Silakan buat password baru yang kuat untuk akun Anda."}
+                        {step === 1 && "Enter your email address to receive an OTP code."}
+                        {step === 2 && `Enter the 6-digit code sent to ${email}.`}
+                        {step === 3 && "Create a strong new password for your account."}
                     </p>
 
                     {/* Status Messages */}
@@ -189,7 +196,7 @@ export default function ForgotPassword() {
                             <div className="mb-6 relative">
                                 <input
                                     type="email"
-                                    placeholder="Masukkan alamat email"
+                                    placeholder="Enter your email address"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     onFocus={() => playFocus()}
@@ -206,7 +213,7 @@ export default function ForgotPassword() {
                                 disabled={loading}
                                 className="w-full py-3 sm:py-3.5 px-4 bg-[#1284FD] text-white font-bold text-base rounded-[10px] border-2 border-[#1284FD] transition-colors duration-150 hover:bg-white hover:text-[#1284FD] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
                             >
-                                {loading ? 'Mengirim...' : 'Kirim OTP'}
+                                {loading ? 'Sending...' : 'Send OTP'}
                             </button>
                         </form>
                     )}
@@ -216,7 +223,7 @@ export default function ForgotPassword() {
                         <form onSubmit={handleOTPSubmit}>
                             <div className="mb-6">
                                 <label className="block text-sm font-bold text-[#1284FD] mb-4">
-                                    Kode OTP
+                                    OTP Code
                                 </label>
                                 <div className="flex justify-between gap-2 sm:gap-3">
                                     {otpArray.map((digit, index) => (
@@ -242,7 +249,7 @@ export default function ForgotPassword() {
                                 disabled={loading}
                                 className="w-full py-3 sm:py-3.5 px-4 bg-[#1284FD] text-white font-bold text-base rounded-[10px] border-2 border-[#1284FD] transition-colors duration-150 hover:bg-white hover:text-[#1284FD] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mb-4"
                             >
-                                {loading ? 'Memverifikasi...' : 'Verifikasi OTP'}
+                                {loading ? 'Verifying...' : 'Verify OTP'}
                             </button>
 
                             <button
@@ -251,7 +258,7 @@ export default function ForgotPassword() {
                                 disabled={loading}
                                 className="w-full text-sm text-[#1284FD] font-semibold hover:underline mb-6"
                             >
-                                Kirim ulang kode
+                                Resend code
                             </button>
                         </form>
                     )}
@@ -263,7 +270,7 @@ export default function ForgotPassword() {
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="new_password"
-                                    placeholder="Password baru"
+                                    placeholder="New password"
                                     value={formData.new_password}
                                     onChange={handleFormChange}
                                     onFocus={() => playFocus()}
@@ -271,7 +278,7 @@ export default function ForgotPassword() {
                                     className="w-full px-4 py-3 sm:py-3.5 pr-12 bg-white border border-gray-300 rounded-[14px] text-sm outline-none transition-all focus:border-[#1284FD] focus:shadow-[0_0_0_4px_rgba(18,132,253,0.1)] peer"
                                 />
                                 <label className="absolute left-3 -top-2.5 bg-white px-1.5 text-sm font-bold text-[#1284FD] pointer-events-none">
-                                    Password Baru
+                                    New Password
                                 </label>
                                 <button
                                     type="button"
@@ -295,7 +302,7 @@ export default function ForgotPassword() {
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
                                     name="confirm_password"
-                                    placeholder="Konfirmasi password"
+                                    placeholder="Confirm password"
                                     value={formData.confirm_password}
                                     onChange={handleFormChange}
                                     onFocus={() => playFocus()}
@@ -303,7 +310,7 @@ export default function ForgotPassword() {
                                     className="w-full px-4 py-3 sm:py-3.5 pr-12 bg-white border border-gray-300 rounded-[14px] text-sm outline-none transition-all focus:border-[#1284FD] focus:shadow-[0_0_0_4px_rgba(18,132,253,0.1)] peer"
                                 />
                                 <label className="absolute left-3 -top-2.5 bg-white px-1.5 text-sm font-bold text-[#1284FD] pointer-events-none">
-                                    Konfirmasi Password
+                                    Confirm Password
                                 </label>
                                 <button
                                     type="button"
@@ -328,7 +335,7 @@ export default function ForgotPassword() {
                                 disabled={loading}
                                 className="w-full py-3 sm:py-3.5 px-4 bg-[#1284FD] text-white font-bold text-base rounded-[10px] border-2 border-[#1284FD] transition-colors duration-150 hover:bg-white hover:text-[#1284FD] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mb-6"
                             >
-                                {loading ? 'Memproses...' : 'Perbarui Password'}
+                                {loading ? 'Processing...' : 'Update Password'}
                             </button>
                         </form>
                     )}
@@ -343,7 +350,7 @@ export default function ForgotPassword() {
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            Kembali ke Login
+                            Back to Login
                         </Link>
                     </div>
                 </div>
@@ -359,6 +366,16 @@ export default function ForgotPassword() {
                     style={{ backgroundImage: 'url(/images/Burung_Thinking_1.png)' }}
                 />
             </aside>
+
+            {/* Success Modal */}
+            <SuccessModal
+                show={showSuccess}
+                onClose={() => navigate('/login')}
+                title="Password Successfully Updated"
+                message="Your password has been successfully updated. You can now log in using your new password."
+                buttonText="Back to login"
+                onButtonClick={() => navigate('/login')}
+            />
         </div>
     );
 }

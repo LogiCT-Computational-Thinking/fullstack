@@ -14,9 +14,11 @@ export default function Register() {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'student'
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,14 @@ export default function Register() {
     e.preventDefault();
     playClick(); // Play click sound
     setError('');
+
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      playError();
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -43,7 +53,7 @@ export default function Register() {
         name: fullName,
         email: formData.email,
         password: formData.password,
-        password_confirm: formData.password,
+        password_confirm: formData.confirmPassword,
         role: formData.role
       });
       playSuccess(); // Play success sound
@@ -141,13 +151,16 @@ export default function Register() {
         <section className="flex flex-1 items-center justify-center px-6 py-8 sm:px-8 sm:py-10 lg:px-16 lg:py-14">
           <div className="w-full max-w-[420px]">
             {/* Brand */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-2.5 h-16 mb-10">
               <img
                 src="/images/logo-logict.png"
                 alt="LogiCT"
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
+                className="h-14 w-auto object-contain"
               />
-              <div className="text-[#1284FD] font-extrabold text-2xl sm:text-3xl">LogiCT</div>
+              <div className="flex flex-col justify-center gap-1 mt-1">
+                <div className="text-[42px] font-black text-[#0F172A] font-['Outfit'] leading-none tracking-tighter">LogiCT</div>
+                <p className="text-[13px] font-black text-[#64748B] tracking-[0.14em] uppercase leading-none">Your AI Study Buddy</p>
+              </div>
             </div>
 
             {/* Title */}
@@ -250,6 +263,40 @@ export default function Register() {
                 </button>
               </div>
 
+              {/* Confirm Password Field */}
+              <div className="mb-2.5 relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  onFocus={() => playFocus()}
+                  required
+                  className="w-full px-4 py-3 sm:py-3.5 pr-12 bg-white border border-gray-300 rounded-[14px] text-sm outline-none transition-all focus:border-[#1284FD] focus:shadow-[0_0_0_4px_rgba(18,132,253,0.1)] peer"
+                />
+                <label className="absolute left-3 -top-2.5 bg-white px-1.5 text-sm font-bold text-[#1284FD] pointer-events-none">
+                  Confirm Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+
               {/* Remember Me & Forgot Password */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between my-4 sm:my-[18px] gap-2 sm:gap-0">
                 <label className="flex items-center gap-2 text-[13px] text-gray-500 cursor-pointer">
@@ -265,7 +312,7 @@ export default function Register() {
                   to="/forgot-password"
                   className="text-xs text-slate-500 hover:underline"
                 >
-                  Lupa Kata Sandi?
+                  Forgot Password?
                 </Link>
               </div>
 

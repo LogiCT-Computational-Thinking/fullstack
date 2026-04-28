@@ -105,6 +105,16 @@ export default function AdminMaterials() {
 
     useEffect(() => { fetchCourses(); }, []);
 
+    const closeFeedback = () => setFeedback(null);
+
+    const closeEdit = () => {
+        setEditTarget(null);
+        setEditStep(null);
+        setMaterials([]);
+        setAddFile(null);
+        setAddForm({ title: '', description: '', order: 1 });
+    };
+
     // Use escape key to close modals
     useEscapeKey(closeFeedback, feedback !== null);
     useEscapeKey(closeEdit, editStep !== null);
@@ -126,8 +136,6 @@ export default function AdminMaterials() {
         setToast({ type, msg });
         setTimeout(() => setToast(null), 3500);
     };
-
-    const closeFeedback = () => setFeedback(null);
 
     // ── Delete entire course — ask for confirmation ───────────────────────────
     const confirmDeleteCourse = (course) => {
@@ -165,14 +173,6 @@ export default function AdminMaterials() {
         setMatSearch('');
         setAddForm({ title: '', description: '', order: 1 });
         setAddFile(null);
-    };
-
-    const closeEdit = () => {
-        setEditTarget(null);
-        setEditStep(null);
-        setMaterials([]);
-        setAddFile(null);
-        setAddForm({ title: '', description: '', order: 1 });
     };
 
     // ── Cancel Add Content — ask if unsaved changes exist ────────────────────

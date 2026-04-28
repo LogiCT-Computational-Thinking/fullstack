@@ -248,15 +248,17 @@ function QuestionCard({ q, index }) {
             {/* Correct Answer / Your Answer */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>Correct Answer</span>
+                    <span style={{ fontSize: 13, color: '#94a3b8', fontWeight: 600 }}>
+                        {q.status === 'correct' ? 'Your Answer' : 'Correct Answer'}
+                    </span>
                     <span style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         background: '#a7f3d0', border: `1.2px solid #34d399`, color: '#0f172a',
-                        borderRadius: 999, padding: '4px 10px 4px 14px',
+                        borderRadius: 999, padding: q.status === 'wrong' ? '4px 14px' : '4px 10px 4px 14px',
                         fontSize: 13, fontWeight: 700, fontFamily: "'Outfit', sans-serif",
                     }}>
                         {Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : (q.correctAnswer ?? '—')}
-                        <Check style={{ width: 15, height: 15, color: '#059669', strokeWidth: 3 }} />
+                        {q.status !== 'wrong' && <Check style={{ width: 15, height: 15, color: '#059669', strokeWidth: 3 }} />}
                     </span>
                 </div>
                 {q.status !== 'correct' && (
@@ -265,11 +267,11 @@ function QuestionCard({ q, index }) {
                         <span style={{
                             display: 'inline-flex', alignItems: 'center', gap: 6,
                             background: answerBg, border: `1.2px solid ${answerBorder}`, color: '#0f172a',
-                            borderRadius: 999, padding: '4px 10px 4px 14px',
+                            borderRadius: 999, padding: q.status === 'wrong' ? '4px 14px' : '4px 10px 4px 14px',
                             fontSize: 13, fontWeight: 700, fontFamily: "'Outfit', sans-serif",
                         }}>
                             {Array.isArray(q.userAnswer) ? q.userAnswer.join(', ') : (q.userAnswer ?? '—')}
-                            <StatusIcon style={{ width: 15, height: 15, color: answerColor, strokeWidth: 3 }} />
+                            {q.status !== 'wrong' && <StatusIcon style={{ width: 15, height: 15, color: answerColor, strokeWidth: 3 }} />}
                         </span>
                     </div>
                 )}

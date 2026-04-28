@@ -76,13 +76,16 @@ export default function Login() {
       <section className="flex flex-1 items-center justify-center px-6 py-8 sm:px-8 sm:py-10 lg:px-16 lg:py-14">
         <div className="w-full max-w-[420px]">
           {/* Brand */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-2.5 h-16 mb-10">
             <img
               src="/images/logo-logict.png"
               alt="LogiCT"
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg"
+              className="h-14 w-auto object-contain"
             />
-            <div className="text-[#1284FD] font-extrabold text-2xl sm:text-3xl">LogiCT</div>
+            <div className="flex flex-col justify-center gap-1 mt-1">
+              <div className="text-[42px] font-black text-[#0F172A] font-['Outfit'] leading-none tracking-tighter">LogiCT</div>
+              <p className="text-[13px] font-black text-[#64748B] tracking-[0.14em] uppercase leading-none">Your AI Study Buddy</p>
+            </div>
           </div>
 
           {/* Title */}
@@ -162,7 +165,7 @@ export default function Login() {
                 to="/forgot-password"
                 className="text-xs text-slate-500 hover:underline"
               >
-                Lupa Kata Sandi?
+                Forgot Password?
               </Link>
             </div>
 
@@ -181,7 +184,7 @@ export default function Login() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="px-4 bg-white text-gray-500">atau</span>
+                <span className="px-4 bg-white text-gray-500">or</span>
               </div>
             </div>
 
@@ -200,9 +203,9 @@ export default function Login() {
 
             {/* Register Link */}
             <div className="mt-6 text-center text-sm text-gray-600">
-              Belum punya akun?{' '}
+              Don't have an account?{' '}
               <Link to="/register" className="text-blue-500 font-bold hover:underline">
-                Daftar
+                Sign up
               </Link>
             </div>
           </form>
